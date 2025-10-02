@@ -24,12 +24,11 @@ pub struct Corners {
 
 impl Corners {
     /// Size constants for indexing
-    pub const PRM_SIZE: i64 = factorial(8); // 40320
-    pub const ORI_SIZE: i64 = 3i64.pow(7); // 2187
-    pub const INDEX_SIZE: i64 = Self::PRM_SIZE * Self::ORI_SIZE; // 88179840
+    pub const PRM_SIZE: u64 = factorial(8); // 40'320
+    pub const ORI_SIZE: u64 = 3u64.pow(7); // 2'187
+    pub const INDEX_SIZE: u64 = Self::PRM_SIZE * Self::ORI_SIZE; // 88'179'840
 
-    /// Creates a new Corners from explicit cubie positions and orientations
-    pub fn new(corners: [u8; 8], orientations: [u8; 8]) -> Self {
+    fn new(corners: [u8; 8], orientations: [u8; 8]) -> Self {
         let mut s = [0u8; 8];
         for i in 0..8 {
             s[i] = (orientations[i] << 4) | corners[i];
@@ -37,54 +36,56 @@ impl Corners {
         Self { s }
     }
 
-    pub const fn solved() -> Self {
+    pub fn solved() -> Self {
         Self {
             s: [0, 1, 2, 3, 4, 5, 6, 7],
         }
     }
 
-    pub const fn cubie(&self, index: usize) -> u8 {
+    fn cubie(&self, index: usize) -> u8 {
         self.s[index] & 0x0F
     }
 
-    pub const fn orientation(&self, index: usize) -> u8 {
+    fn orientation(&self, index: usize) -> u8 {
         self.s[index] >> 4
     }
 
-    pub const fn cubies(&self) -> [u8; 8] {
-         [
-            self.cubie(0), self.cubie(1), self.cubie(2), self.cubie(3),
-            self.cubie(4), self.cubie(5), self.cubie(6), self.cubie(7),
-         ]
+    fn cubies(&self) -> [u8; 8] {
+        let mut ret = [0u8; 8];
+        for i in 0..8 {
+            ret[i] = self.cubie(i);
+        }
+        ret
     }
 
-    pub const fn orientations(&self) -> [u8; 8] {
-        [
-            self.orientation(0), self.orientation(1), self.orientation(2), self.orientation(3),
-            self.orientation(4), self.orientation(5), self.orientation(6), self.orientation(7),
-        ]
+    fn orientations(&self) -> [u8; 8] {
+        let mut ret = [0u8; 8];
+        for i in 0..8 {
+            ret[i] = self.orientation(i);
+        }
+        ret
     }
 
     pub fn twisted(&self, twist: Twist) -> Self {
         match twist {
-            Twist::L1 => ori_swap_l(shuffled(&self.s, [2, 1, 6, 3, 0, 5, 4, 7]).s),
-            Twist::L2 => shuffled(&self.s, [6, 1, 4, 3, 2, 5, 0, 7]),
-            Twist::L3 => ori_swap_l(shuffled(&self.s, [4, 1, 0, 3, 6, 5, 2, 7]).s),
-            Twist::R1 => ori_swap_r(shuffled(&self.s, [0, 5, 2, 1, 4, 7, 6, 3]).s),
-            Twist::R2 => shuffled(&self.s, [0, 7, 2, 5, 4, 3, 6, 1]),
-            Twist::R3 => ori_swap_r(shuffled(&self.s, [0, 3, 2, 7, 4, 1, 6, 5]).s),
-            Twist::U1 => ori_swap_u(shuffled(&self.s, [1, 3, 0, 2, 4, 5, 6, 7]).s),
-            Twist::U2 => shuffled(&self.s, [3, 2, 1, 0, 4, 5, 6, 7]),
-            Twist::U3 => ori_swap_u(shuffled(&self.s, [2, 0, 3, 1, 4, 5, 6, 7]).s),
-            Twist::D1 => ori_swap_d(shuffled(&self.s, [0, 1, 2, 3, 6, 4, 7, 5]).s),
-            Twist::D2 => shuffled(&self.s, [0, 1, 2, 3, 7, 6, 5, 4]),
-            Twist::D3 => ori_swap_d(shuffled(&self.s, [0, 1, 2, 3, 5, 7, 4, 6]).s),
-            Twist::F1 => ori_swap_f(shuffled(&self.s, [4, 0, 2, 3, 5, 1, 6, 7]).s),
-            Twist::F2 => shuffled(&self.s, [5, 4, 2, 3, 1, 0, 6, 7]),
-            Twist::F3 => ori_swap_f(shuffled(&self.s, [1, 5, 2, 3, 0, 4, 6, 7]).s),
-            Twist::B1 => ori_swap_b(shuffled(&self.s, [0, 1, 3, 7, 4, 5, 2, 6]).s),
-            Twist::B2 => shuffled(&self.s, [0, 1, 7, 6, 4, 5, 3, 2]),
-            Twist::B3 => ori_swap_b(shuffled(&self.s, [0, 1, 6, 2, 4, 5, 7, 3]).s),
+            Twist::L1 => Corners{ s: ori_swap_l(shuffled(&self.s, 2, 1, 6, 3, 0, 5, 4, 7)) },
+            Twist::L2 => Corners{ s: shuffled(&self.s, 6, 1, 4, 3, 2, 5, 0, 7) },
+            Twist::L3 => Corners{ s: ori_swap_l(shuffled(&self.s, 4, 1, 0, 3, 6, 5, 2, 7)) },
+            Twist::R1 => Corners{ s: ori_swap_r(shuffled(&self.s, 0, 5, 2, 1, 4, 7, 6, 3)) },
+            Twist::R2 => Corners{ s: shuffled(&self.s, 0, 7, 2, 5, 4, 3, 6, 1) },
+            Twist::R3 => Corners{ s: ori_swap_r(shuffled(&self.s, 0, 3, 2, 7, 4, 1, 6, 5)) },
+            Twist::U1 => Corners{ s: ori_swap_u(shuffled(&self.s, 1, 3, 0, 2, 4, 5, 6, 7)) },
+            Twist::U2 => Corners{ s: shuffled(&self.s, 3, 2, 1, 0, 4, 5, 6, 7) },
+            Twist::U3 => Corners{ s: ori_swap_u(shuffled(&self.s, 2, 0, 3, 1, 4, 5, 6, 7)) },
+            Twist::D1 => Corners{ s: ori_swap_d(shuffled(&self.s, 0, 1, 2, 3, 6, 4, 7, 5)) },
+            Twist::D2 => Corners{ s: shuffled(&self.s, 0, 1, 2, 3, 7, 6, 5, 4) },
+            Twist::D3 => Corners{ s: ori_swap_d(shuffled(&self.s, 0, 1, 2, 3, 5, 7, 4, 6)) },
+            Twist::F1 => Corners{ s: ori_swap_f(shuffled(&self.s, 4, 0, 2, 3, 5, 1, 6, 7)) },
+            Twist::F2 => Corners{ s: shuffled(&self.s, 5, 4, 2, 3, 1, 0, 6, 7) },
+            Twist::F3 => Corners{ s: ori_swap_f(shuffled(&self.s, 1, 5, 2, 3, 0, 4, 6, 7)) },
+            Twist::B1 => Corners{ s: ori_swap_b(shuffled(&self.s, 0, 1, 3, 7, 4, 5, 2, 6)) },
+            Twist::B2 => Corners{ s: shuffled(&self.s, 0, 1, 7, 6, 4, 5, 3, 2) },
+            Twist::B3 => Corners{ s: ori_swap_b(shuffled(&self.s, 0, 1, 6, 2, 4, 5, 7, 3)) },
         }
     }
 
@@ -92,12 +93,12 @@ impl Corners {
         *self == Self::solved()
     }
 
-    pub fn from_index(prm: i64, ori: i64) -> Self {
-        let mut c = [0i64; 8];
+    pub fn from_index(prm: u64, ori: u64) -> Self {
+        let mut c = [0u8; 8];
         nth_permutation(prm, &mut c);
         let corners: [u8; 8] = [
-            c[0] as u8, c[1] as u8, c[2] as u8, c[3] as u8,
-            c[4] as u8, c[5] as u8, c[6] as u8, c[7] as u8,
+            c[0], c[1], c[2], c[3],
+            c[4], c[5], c[6], c[7],
         ];
 
         // Decode orientations from base-3 representation
@@ -146,8 +147,6 @@ impl Corners {
 
 impl fmt::Display for Corners {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let c = self.cubies();
-        let o = self.orientations();
         write!(
             f, 
             "{} {} {} {} {} {} {} {} | {} {} {} {} {} {} {} {}", 
@@ -173,55 +172,50 @@ fn ori_swap_1_2(state: u8) -> u8 {
     (state & 0x0F) | l | r
 }
 
-fn ori_swap_l(mut s: [u8; 8]) -> Corners {
+fn ori_swap_l(mut s: [u8; 8]) -> [u8; 8] {
     for i in [0, 2, 4, 6] {
         s[i] = ori_swap_0_2(s[i]);
     }
-    Corners { s }
+    s
 }
 
-fn ori_swap_r(mut s: [u8; 8]) -> Corners {
+fn ori_swap_r(mut s: [u8; 8]) -> [u8; 8] {
     for i in [1, 3, 5, 7] {
         s[i] = ori_swap_0_2(s[i]);
     }
-    Corners { s }
+    s
 }
 
-fn ori_swap_u(mut s: [u8; 8]) -> Corners {
+fn ori_swap_u(mut s: [u8; 8]) -> [u8; 8] {
     for i in [0, 1, 2, 3] {
         s[i] = ori_swap_1_2(s[i]);
     }
-    Corners { s }
+    s
 }
 
-fn ori_swap_d(mut s: [u8; 8]) -> Corners {
+fn ori_swap_d(mut s: [u8; 8]) -> [u8; 8] {
     for i in [4, 5, 6, 7] {
         s[i] = ori_swap_1_2(s[i]);
     }
-    Corners { s }
+    s
 }
 
-fn ori_swap_f(mut s: [u8; 8]) -> Corners {
+fn ori_swap_f(mut s: [u8; 8]) -> [u8; 8] {
     for i in [0, 1, 4, 5] {
         s[i] = ori_swap_0_1(s[i]);
     }
-    Corners { s }
+    s
 }
 
-fn ori_swap_b(mut s: [u8; 8]) -> Corners {
+fn ori_swap_b(mut s: [u8; 8]) -> [u8; 8] {
     for i in [2, 3, 6, 7] {
         s[i] = ori_swap_0_1(s[i]);
     }
-    Corners { s }
+    s
 }
 
-fn shuffled(s: &[u8; 8], indices: [usize; 8]) -> Corners {
-    Corners {
-        s: [
-            s[indices[0]], s[indices[1]], s[indices[2]], s[indices[3]],
-            s[indices[4]], s[indices[5]], s[indices[6]], s[indices[7]],
-        ]
-    }
+fn shuffled(s: &[u8; 8], a: usize, b: usize, c: usize, d: usize, e: usize, f: usize, g: usize, h: usize) -> [u8; 8] {
+    [s[a], s[b], s[c], s[d], s[e], s[f], s[g], s[h]]
 }
 
 #[cfg(test)]
