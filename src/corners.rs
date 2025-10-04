@@ -1,5 +1,5 @@
-use crate::math::{factorial, permutation_index, nth_permutation};
-use crate::twist::Twist;
+use crate::math::*;
+use crate::twist::*;
 use std::fmt;
 
 /// Represents the corner pieces of a Rubik's cube.
@@ -94,19 +94,22 @@ impl Corners {
         *self == Self::solved()
     }
 
+    /// Create Corners from permutation and orientation indices
+    /// - `prm`: permutation index (0 to PRM_SIZE-1)
+    /// - `ori`: orientation index (0 to ORI_SIZE-1)
     pub fn from_index(prm: i64, ori: i64) -> Self {
         let p: [u8; 8] = nth_permutation(prm, 8).try_into().unwrap();
 
         // Decode orientations from base-3 representation
         let mut ori = ori;
-        let o6 = (ori % 3) as u8; ori /= 3;
-        let o5 = (ori % 3) as u8; ori /= 3;
-        let o4 = (ori % 3) as u8; ori /= 3;
-        let o3 = (ori % 3) as u8; ori /= 3;
-        let o2 = (ori % 3) as u8; ori /= 3;
+        let o0 = (ori % 3) as u8; ori /= 3;
         let o1 = (ori % 3) as u8; ori /= 3;
-        let o0 = (ori % 3) as u8;
-        let o7 = ((12 + o0 - o1 - o2 + o3 - o4 + o5 + o6) % 3) as u8;
+        let o2 = (ori % 3) as u8; ori /= 3;
+        let o3 = (ori % 3) as u8; ori /= 3;
+        let o4 = (ori % 3) as u8; ori /= 3;
+        let o5 = (ori % 3) as u8; ori /= 3;
+        let o6 = (ori % 3) as u8;
+        let o7 = ((12 + o0 + o1 - o2 + o3 - o4 - o5 + o6) % 3) as u8;
 
         Self::new(p, [o0, o1, o2, o3, o4, o5, o6, o7])
     }
@@ -128,6 +131,7 @@ impl Corners {
         + o[6] as i64 * 729
     }
 
+    /// Create Corners from a combined index (0 to INDEX_SIZE-1)
     pub fn from_combined_index(index: i64) -> Self {
         Self::from_index(
             index / Self::ORI_SIZE,
@@ -135,6 +139,7 @@ impl Corners {
         )
     }
 
+    /// Get the combined index (0 to INDEX_SIZE-1)
     pub fn index(&self) -> i64 {
         self.prm_index() * Self::ORI_SIZE + self.ori_index()
     }
@@ -152,8 +157,6 @@ impl fmt::Display for Corners {
         )
     }
 }
-
-/// Helper functions for orientation swaps
 
 fn ori_swap_0_1(state: u8) -> u8 {
     (((!state) & 0x20) >> 1) ^ state
@@ -218,23 +221,26 @@ fn shuffled(s: &[u8; 8], a: usize, b: usize, c: usize, d: usize, e: usize, f: us
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::{SeedableRng, Rng};
+    use rand::rngs::StdRng;
 
     #[test]
-    fn test_solved_corners() {
-        let corners = Corners::solved();
-        assert!(corners.is_solved());
-        assert_eq!(corners.to_string(), "0 1 2 3 4 5 6 7 | 0 0 0 0 0 0 0 0");
+    fn test_solved() {
+        let c = Corners::solved();
+        assert!(c.is_solved());
+        assert!(!c.twisted(Twist::L1).is_solved());
+        assert_eq!(c.to_string(), "0 1 2 3 4 5 6 7 | 0 0 0 0 0 0 0 0");
     }
 
     #[test]
     fn test_twist_results() {
-        let corners = Corners::solved();
-        assert_eq!(corners.twisted(Twist::L1).to_string(), "2 1 6 3 0 5 4 7 | 2 0 2 0 2 0 2 0");
-        assert_eq!(corners.twisted(Twist::R1).to_string(), "0 5 2 1 4 7 6 3 | 0 2 0 2 0 2 0 2");
-        assert_eq!(corners.twisted(Twist::U1).to_string(), "1 3 0 2 4 5 6 7 | 0 0 0 0 0 0 0 0");
-        assert_eq!(corners.twisted(Twist::D1).to_string(), "0 1 2 3 6 4 7 5 | 0 0 0 0 0 0 0 0");
-        assert_eq!(corners.twisted(Twist::F1).to_string(), "4 0 2 3 5 1 6 7 | 1 1 0 0 1 1 0 0");
-        assert_eq!(corners.twisted(Twist::B1).to_string(), "0 1 3 7 4 5 2 6 | 0 0 1 1 0 0 1 1");
+        let c = Corners::solved();
+        assert_eq!(c.twisted(Twist::L1).to_string(), "2 1 6 3 0 5 4 7 | 2 0 2 0 2 0 2 0");
+        assert_eq!(c.twisted(Twist::R1).to_string(), "0 5 2 1 4 7 6 3 | 0 2 0 2 0 2 0 2");
+        assert_eq!(c.twisted(Twist::U1).to_string(), "1 3 0 2 4 5 6 7 | 0 0 0 0 0 0 0 0");
+        assert_eq!(c.twisted(Twist::D1).to_string(), "0 1 2 3 6 4 7 5 | 0 0 0 0 0 0 0 0");
+        assert_eq!(c.twisted(Twist::F1).to_string(), "4 0 2 3 5 1 6 7 | 1 1 0 0 1 1 0 0");
+        assert_eq!(c.twisted(Twist::B1).to_string(), "0 1 3 7 4 5 2 6 | 0 0 1 1 0 0 1 1");
     }
 
     #[test]
@@ -256,71 +262,59 @@ mod tests {
 
     #[test] 
     fn test_inverse_twists() {
-        use crate::twist::Twist::*;
-        let all_twists = [
-            L1, L2, L3, R1, R2, R3, U1, U2, U3, 
-            D1, D2, D3, F1, F2, F3, B1, B2, B3
-        ];
-        let inverses = [
-            L3, L2, L1, R3, R2, R1, U3, U2, U1,
-            D3, D2, D1, F3, F2, F1, B3, B2, B1
-        ];
-
-        for (twist, inverse) in all_twists.iter().zip(inverses.iter()) {
-            assert!(Corners::solved().twisted_by(&[*twist, *inverse]).is_solved());
+        for twist in Twists::all().iter() {
+            assert!(Corners::solved().twisted(twist).twisted(inversed(twist)).is_solved(), "Inverse twist failed for {:?}", twist);
         }
     }
 
     #[test]
     fn test_twists_cycle() {
-        use crate::twist::Twist::*;
-        let all_twists = [
-            L1, L2, L3, R1, R2, R3, U1, U2, U3, 
-            D1, D2, D3, F1, F2, F3, B1, B2, B3
-        ];
-
-        for twist in all_twists {
-            assert!(Corners::solved().twisted_by(&[twist, twist, twist, twist]).is_solved());
+        for twist in Twists::all().iter() {
+            let mut c = Corners::solved();
+            for _ in 0..4 {
+                c = c.twisted(twist);
+            }
+            assert_eq!(c, Corners::solved(), "4x twist failed for {:?}", twist);
         }
     }
 
-    fn expect_twists_commute(a: Twist, b: Twist) {
+    fn assert_twists_commute(a: Twist, b: Twist) {
         assert_eq!(
-            Corners::solved().twisted_by(&[a, b]), 
-            Corners::solved().twisted_by(&[b, a])
+            Corners::solved().twisted(a).twisted(b),
+            Corners::solved().twisted(b).twisted(a),
+            "Twists {:?} and {:?} did not commute", a, b
         );
     }
 
     #[test]
     fn test_twist_commutation() {
-        expect_twists_commute(Twist::L1, Twist::R1);
-        expect_twists_commute(Twist::U1, Twist::D1);
-        expect_twists_commute(Twist::F1, Twist::B1);
+        assert_twists_commute(Twist::L1, Twist::R1);
+        assert_twists_commute(Twist::U1, Twist::D1);
+        assert_twists_commute(Twist::F1, Twist::B1);
     }
 
     #[test]
     fn test_index_bijection() {
-        // Test that from_index and index are inverses
-        for prm in 0..100 { // Test first 100 permutations
-            for ori in 0..100 { // Test first 100 orientations
-                if prm < Corners::PRM_SIZE && ori < Corners::ORI_SIZE {
-                    let c = Corners::from_index(prm, ori);
-                    assert_eq!(c.prm_index(), prm);
-                    assert_eq!(c.ori_index(), ori);
-                }
-            }
+        
+        let mut rng = StdRng::seed_from_u64(42);
+        let prm_dist = rand::distributions::Uniform::new(0, Corners::PRM_SIZE);
+        let ori_dist = rand::distributions::Uniform::new(0, Corners::ORI_SIZE);
+        let full_dist = rand::distributions::Uniform::new(0, Corners::INDEX_SIZE);
+
+        // Test from_index and prm_index/ori_index
+        for _ in 0..100_000 {
+            let prm = rng.sample(prm_dist);
+            let ori = rng.sample(ori_dist);
+            let c = Corners::from_index(prm, ori);
+            assert_eq!(c.prm_index(), prm);
+            assert_eq!(c.ori_index(), ori);
         }
 
-        // Test combined index
-        for index in 0..1000 { // Test first 1000 indices
+        // Test from_combined_index and index
+        for _ in 0..100_000 {
+            let index = rng.sample(full_dist);
             let c = Corners::from_combined_index(index);
             assert_eq!(c.index(), index);
         }
-    }
-
-    #[test]
-    fn test_is_solved() {
-        assert!(Corners::solved().is_solved());
-        assert!(!Corners::solved().twisted(Twist::L1).is_solved());
     }
 }

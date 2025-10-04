@@ -9,6 +9,29 @@ pub enum Twist {
     B1, B2, B3,
 }
 
+pub fn inversed(t: Twist) -> Twist {
+    match t {
+        Twist::L1 => Twist::L3,
+        Twist::L2 => Twist::L2,
+        Twist::L3 => Twist::L1,
+        Twist::R1 => Twist::R3,
+        Twist::R2 => Twist::R2,
+        Twist::R3 => Twist::R1,
+        Twist::U1 => Twist::U3,
+        Twist::U2 => Twist::U2,
+        Twist::U3 => Twist::U1,
+        Twist::D1 => Twist::D3,
+        Twist::D2 => Twist::D2,
+        Twist::D3 => Twist::D1,
+        Twist::F1 => Twist::F3,
+        Twist::F2 => Twist::F2,
+        Twist::F3 => Twist::F1,
+        Twist::B1 => Twist::B3,
+        Twist::B2 => Twist::B2,
+        Twist::B3 => Twist::B1,
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct Twists(u32);
 
@@ -90,6 +113,15 @@ impl Twists {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_inversed() {
+        for twist in Twists::all().iter() {
+            let inv = inversed(twist);
+            let inv2 = inversed(inv);
+            assert_eq!(twist, inv2, "Inversion failed for {:?}", twist);
+        }
+    }
 
     #[test]
     fn test_twists_h0() {
