@@ -24,16 +24,23 @@ pub struct Corners {
 
 impl Corners {
     /// Size constants for indexing
-    pub const PRM_SIZE: u64 = factorial(8); // 40'320
-    pub const ORI_SIZE: u64 = 3u64.pow(7); // 2'187
-    pub const INDEX_SIZE: u64 = Self::PRM_SIZE * Self::ORI_SIZE; // 88'179'840
+    pub const PRM_SIZE: i64 = factorial(8); // 40'320
+    pub const ORI_SIZE: i64 = 3i64.pow(7); // 2'187
+    pub const INDEX_SIZE: i64 = Self::PRM_SIZE * Self::ORI_SIZE; // 88'179'840
 
     fn new(corners: [u8; 8], orientations: [u8; 8]) -> Self {
-        let mut s = [0u8; 8];
-        for i in 0..8 {
-            s[i] = (orientations[i] << 4) | corners[i];
+        Self {
+            s: [
+                corners[0] | (orientations[0] << 4),
+                corners[1] | (orientations[1] << 4),
+                corners[2] | (orientations[2] << 4),
+                corners[3] | (orientations[3] << 4),
+                corners[4] | (orientations[4] << 4),
+                corners[5] | (orientations[5] << 4),
+                corners[6] | (orientations[6] << 4),
+                corners[7] | (orientations[7] << 4),
+            ]
         }
-        Self { s }
     }
 
     pub fn solved() -> Self {
@@ -51,19 +58,13 @@ impl Corners {
     }
 
     fn cubies(&self) -> [u8; 8] {
-        let mut ret = [0u8; 8];
-        for i in 0..8 {
-            ret[i] = self.cubie(i);
-        }
-        ret
+        [self.cubie(0), self.cubie(1), self.cubie(2), self.cubie(3),
+         self.cubie(4), self.cubie(5), self.cubie(6), self.cubie(7)]
     }
 
     fn orientations(&self) -> [u8; 8] {
-        let mut ret = [0u8; 8];
-        for i in 0..8 {
-            ret[i] = self.orientation(i);
-        }
-        ret
+        [self.orientation(0), self.orientation(1), self.orientation(2), self.orientation(3),
+         self.orientation(4), self.orientation(5), self.orientation(6), self.orientation(7)]
     }
 
     pub fn twisted(&self, twist: Twist) -> Self {
@@ -93,13 +94,8 @@ impl Corners {
         *self == Self::solved()
     }
 
-    pub fn from_index(prm: u64, ori: u64) -> Self {
-        let mut c = [0u8; 8];
-        nth_permutation(prm, &mut c);
-        let corners: [u8; 8] = [
-            c[0], c[1], c[2], c[3],
-            c[4], c[5], c[6], c[7],
-        ];
+    pub fn from_index(prm: i64, ori: i64) -> Self {
+        let p: [u8; 8] = nth_permutation(prm, 8).try_into().unwrap();
 
         // Decode orientations from base-3 representation
         let mut ori = ori;
@@ -111,42 +107,43 @@ impl Corners {
         let o1 = (ori % 3) as u8; ori /= 3;
         let o0 = (ori % 3) as u8;
         let o7 = ((12 + o0 - o1 - o2 + o3 - o4 + o5 + o6) % 3) as u8;
-        
-        Self::new(corners, [o0, o1, o2, o3, o4, o5, o6, o7])
+
+        Self::new(p, [o0, o1, o2, o3, o4, o5, o6, o7])
     }
 
-    /// Gets the permutation index (0 to PRM_SIZE-1)
-    pub fn prm_index(&self) -> u16 {
-        permutation_index(&self.cubies()) as u16
+    /// Get the permutation index (0 to PRM_SIZE-1)
+    pub fn prm_index(&self) -> i64 {
+        permutation_index(&self.cubies())
     }
 
-    /// Gets the orientation index (0 to ORI_SIZE-1)
-    pub const fn ori_index(&self) -> u16 {
-        let mut ret = 0u16;
-        let mut i = 0;
-        while i < 7 {
-            ret = ret * 3 + self.orientation(i) as u16;
-            i += 1;
-        }
-        ret
+    /// Get the orientation index (0 to ORI_SIZE-1)
+    pub fn ori_index(&self) -> i64 {
+        let o = self.orientations();
+        o[0] as i64
+        + o[1] as i64 * 3
+        + o[2] as i64 * 9
+        + o[3] as i64 * 27
+        + o[4] as i64 * 81
+        + o[5] as i64 * 243
+        + o[6] as i64 * 729
     }
 
-    /// Creates Corners from combined index
-    pub fn from_combined_index(index: u32) -> Self {
+    pub fn from_combined_index(index: i64) -> Self {
         Self::from_index(
-            (index / Self::ORI_SIZE as u32) as u16,
-            (index % Self::ORI_SIZE as u32) as u16,
+            index / Self::ORI_SIZE,
+            index % Self::ORI_SIZE,
         )
     }
 
-    /// Gets the combined index
-    pub fn index(&self) -> u32 {
-        self.prm_index() as u32 * Self::ORI_SIZE as u32 + self.ori_index() as u32
+    pub fn index(&self) -> i64 {
+        self.prm_index() * Self::ORI_SIZE + self.ori_index()
     }
 }
 
 impl fmt::Display for Corners {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let c = self.cubies();
+        let o = self.orientations();
         write!(
             f, 
             "{} {} {} {} {} {} {} {} | {} {} {} {} {} {} {} {}", 
@@ -243,18 +240,18 @@ mod tests {
     #[test]
     fn test_composed_twists() {
         let c = Corners::solved();
-        assert_eq!(c.twisted(Twist::L2), c.twisted_by(&[Twist::L1, Twist::L1]));
-        assert_eq!(c.twisted(Twist::L3), c.twisted_by(&[Twist::L1, Twist::L1, Twist::L1]));
-        assert_eq!(c.twisted(Twist::R2), c.twisted_by(&[Twist::R1, Twist::R1]));
-        assert_eq!(c.twisted(Twist::R3), c.twisted_by(&[Twist::R1, Twist::R1, Twist::R1]));
-        assert_eq!(c.twisted(Twist::U2), c.twisted_by(&[Twist::U1, Twist::U1]));
-        assert_eq!(c.twisted(Twist::U3), c.twisted_by(&[Twist::U1, Twist::U1, Twist::U1]));
-        assert_eq!(c.twisted(Twist::D2), c.twisted_by(&[Twist::D1, Twist::D1]));
-        assert_eq!(c.twisted(Twist::D3), c.twisted_by(&[Twist::D1, Twist::D1, Twist::D1]));
-        assert_eq!(c.twisted(Twist::F2), c.twisted_by(&[Twist::F1, Twist::F1]));
-        assert_eq!(c.twisted(Twist::F3), c.twisted_by(&[Twist::F1, Twist::F1, Twist::F1]));
-        assert_eq!(c.twisted(Twist::B2), c.twisted_by(&[Twist::B1, Twist::B1]));
-        assert_eq!(c.twisted(Twist::B3), c.twisted_by(&[Twist::B1, Twist::B1, Twist::B1]));
+        assert_eq!(c.twisted(Twist::L2), c.twisted(Twist::L1).twisted(Twist::L1));
+        assert_eq!(c.twisted(Twist::L3), c.twisted(Twist::L1).twisted(Twist::L1).twisted(Twist::L1));
+        assert_eq!(c.twisted(Twist::R2), c.twisted(Twist::R1).twisted(Twist::R1));
+        assert_eq!(c.twisted(Twist::R3), c.twisted(Twist::R1).twisted(Twist::R1).twisted(Twist::R1));
+        assert_eq!(c.twisted(Twist::U2), c.twisted(Twist::U1).twisted(Twist::U1));
+        assert_eq!(c.twisted(Twist::U3), c.twisted(Twist::U1).twisted(Twist::U1).twisted(Twist::U1));
+        assert_eq!(c.twisted(Twist::D2), c.twisted(Twist::D1).twisted(Twist::D1));
+        assert_eq!(c.twisted(Twist::D3), c.twisted(Twist::D1).twisted(Twist::D1).twisted(Twist::D1));
+        assert_eq!(c.twisted(Twist::F2), c.twisted(Twist::F1).twisted(Twist::F1));
+        assert_eq!(c.twisted(Twist::F3), c.twisted(Twist::F1).twisted(Twist::F1).twisted(Twist::F1));
+        assert_eq!(c.twisted(Twist::B2), c.twisted(Twist::B1).twisted(Twist::B1));
+        assert_eq!(c.twisted(Twist::B3), c.twisted(Twist::B1).twisted(Twist::B1).twisted(Twist::B1));
     }
 
     #[test] 
