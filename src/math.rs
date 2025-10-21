@@ -26,7 +26,7 @@ pub const fn factorial(n: i64) -> i64 {
     PRECOMPUTED[n as usize]
 }
 
-pub fn binomial(n: i64, k: i64) -> i64 {
+pub const fn binomial(n: i64, k: i64) -> i64 {
     if k > n {
         return 0;
     }
@@ -49,10 +49,12 @@ pub fn binomial(n: i64, k: i64) -> i64 {
         return PASCAL[n as usize][k as usize] as i64;
     }
 
-    let k = k.min(n - k); // Take advantage of symmetry
+    let k = if k > n - k { n - k } else { k };
     let mut result = 1;
-    for i in 0..k {
+    let mut i = 0;
+    while i < k {
         result = result * (n - i) / (i + 1);
+        i += 1;
     }
     result
 }

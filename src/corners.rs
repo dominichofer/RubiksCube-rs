@@ -24,9 +24,9 @@ pub struct Corners {
 
 impl Corners {
     /// Size constants for indexing
-    pub const PRM_SIZE: i64 = factorial(8); // 40'320
-    pub const ORI_SIZE: i64 = 3i64.pow(7); // 2'187
-    pub const INDEX_SIZE: i64 = Self::PRM_SIZE * Self::ORI_SIZE; // 88'179'840
+    pub const PRM_SIZE: u16 = factorial(8) as u16; // 40'320
+    pub const ORI_SIZE: u16 = 3u16.pow(7); // 2'187
+    pub const INDEX_SIZE: u32 = Self::PRM_SIZE as u32 * Self::ORI_SIZE as u32; // 88'179'840
 
     fn new(corners: [u8; 8], orientations: [u8; 8]) -> Self {
         Self {
@@ -58,16 +58,78 @@ impl Corners {
     }
 
     fn cubies(&self) -> [u8; 8] {
-        [self.cubie(0), self.cubie(1), self.cubie(2), self.cubie(3),
-         self.cubie(4), self.cubie(5), self.cubie(6), self.cubie(7)]
+        let mut c = [0u8; 8];
+        for i in 0..8 {
+            c[i] = self.cubie(i);
+        }
+        c
     }
 
     fn orientations(&self) -> [u8; 8] {
-        [self.orientation(0), self.orientation(1), self.orientation(2), self.orientation(3),
-         self.orientation(4), self.orientation(5), self.orientation(6), self.orientation(7)]
+        let mut o = [0u8; 8];
+        for i in 0..8 {
+            o[i] = self.orientation(i);
+        }
+        o
     }
 
-    pub fn twisted(&self, twist: Twist) -> Self {
+    pub fn is_solved(&self) -> bool {
+        *self == Self::solved()
+    }
+
+    /// Create Corners from permutation and orientation indices
+    /// - `prm`: permutation index (0 to PRM_SIZE-1)
+    /// - `ori`: orientation index (0 to ORI_SIZE-1)
+    pub fn from_index(prm: u16, ori: u16) -> Self {
+        let p: [u8; 8] = nth_permutation(prm as i64, 8).try_into().unwrap();
+
+        // Decode orientations from base-3 representation
+        let mut ori = ori;
+        let o0 = (ori % 3) as u8; ori /= 3;
+        let o1 = (ori % 3) as u8; ori /= 3;
+        let o2 = (ori % 3) as u8; ori /= 3;
+        let o3 = (ori % 3) as u8; ori /= 3;
+        let o4 = (ori % 3) as u8; ori /= 3;
+        let o5 = (ori % 3) as u8; ori /= 3;
+        let o6 = (ori % 3) as u8;
+        let o7 = ((12 + o0 - o1 - o2 + o3 - o4 + o5 + o6) % 3) as u8;
+
+        Self::new(p, [o0, o1, o2, o3, o4, o5, o6, o7])
+    }
+
+    /// Get the permutation index (0 to PRM_SIZE-1)
+    pub fn prm_index(&self) -> u16 {
+        permutation_index(&self.cubies()) as u16
+    }
+
+    /// Get the orientation index (0 to ORI_SIZE-1)
+    pub fn ori_index(&self) -> u16 {
+        let o = self.orientations();
+        o[0] as u16
+        + o[1] as u16 * 3
+        + o[2] as u16 * 9
+        + o[3] as u16 * 27
+        + o[4] as u16 * 81
+        + o[5] as u16 * 243
+        + o[6] as u16 * 729
+    }
+
+    /// Create Corners from a combined index (0 to INDEX_SIZE-1)
+    pub fn from_combined_index(index: u32) -> Self {
+        Self::from_index(
+            (index / Self::ORI_SIZE as u32) as u16,
+            (index % Self::ORI_SIZE as u32) as u16,
+        )
+    }
+
+    /// Get the combined index (0 to INDEX_SIZE-1)
+    pub fn index(&self) -> u32 {
+        self.prm_index() as u32 * Self::ORI_SIZE as u32 + self.ori_index() as u32
+    }
+}
+
+impl Twistable for Corners {
+    fn twisted(&self, twist: Twist) -> Self {
         match twist {
             Twist::L1 => Corners{ s: ori_swap_l(shuffled(&self.s, 2, 1, 6, 3, 0, 5, 4, 7)) },
             Twist::L2 => Corners{ s: shuffled(&self.s, 6, 1, 4, 3, 2, 5, 0, 7) },
@@ -89,71 +151,13 @@ impl Corners {
             Twist::B3 => Corners{ s: ori_swap_b(shuffled(&self.s, 0, 1, 6, 2, 4, 5, 7, 3)) },
         }
     }
-
-    pub fn is_solved(&self) -> bool {
-        *self == Self::solved()
-    }
-
-    /// Create Corners from permutation and orientation indices
-    /// - `prm`: permutation index (0 to PRM_SIZE-1)
-    /// - `ori`: orientation index (0 to ORI_SIZE-1)
-    pub fn from_index(prm: i64, ori: i64) -> Self {
-        let p: [u8; 8] = nth_permutation(prm, 8).try_into().unwrap();
-
-        // Decode orientations from base-3 representation
-        let mut ori = ori;
-        let o0 = (ori % 3) as u8; ori /= 3;
-        let o1 = (ori % 3) as u8; ori /= 3;
-        let o2 = (ori % 3) as u8; ori /= 3;
-        let o3 = (ori % 3) as u8; ori /= 3;
-        let o4 = (ori % 3) as u8; ori /= 3;
-        let o5 = (ori % 3) as u8; ori /= 3;
-        let o6 = (ori % 3) as u8;
-        let o7 = ((12 + o0 + o1 - o2 + o3 - o4 - o5 + o6) % 3) as u8;
-
-        Self::new(p, [o0, o1, o2, o3, o4, o5, o6, o7])
-    }
-
-    /// Get the permutation index (0 to PRM_SIZE-1)
-    pub fn prm_index(&self) -> i64 {
-        permutation_index(&self.cubies())
-    }
-
-    /// Get the orientation index (0 to ORI_SIZE-1)
-    pub fn ori_index(&self) -> i64 {
-        let o = self.orientations();
-        o[0] as i64
-        + o[1] as i64 * 3
-        + o[2] as i64 * 9
-        + o[3] as i64 * 27
-        + o[4] as i64 * 81
-        + o[5] as i64 * 243
-        + o[6] as i64 * 729
-    }
-
-    /// Create Corners from a combined index (0 to INDEX_SIZE-1)
-    pub fn from_combined_index(index: i64) -> Self {
-        Self::from_index(
-            index / Self::ORI_SIZE,
-            index % Self::ORI_SIZE,
-        )
-    }
-
-    /// Get the combined index (0 to INDEX_SIZE-1)
-    pub fn index(&self) -> i64 {
-        self.prm_index() * Self::ORI_SIZE + self.ori_index()
-    }
 }
 
 impl fmt::Display for Corners {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let c = self.cubies();
-        let o = self.orientations();
-        write!(
-            f, 
-            "{} {} {} {} {} {} {} {} | {} {} {} {} {} {} {} {}", 
-            c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7],
-            o[0], o[1], o[2], o[3], o[4], o[5], o[6], o[7],
+        write!(f, "{} | {}", 
+            self.cubies().iter().map(|c| c.to_string()).collect::<Vec<_>>().join(" "),
+            self.orientations().iter().map(|o| o.to_string()).collect::<Vec<_>>().join(" ")
         )
     }
 }
@@ -221,8 +225,6 @@ fn shuffled(s: &[u8; 8], a: usize, b: usize, c: usize, d: usize, e: usize, f: us
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::{SeedableRng, Rng};
-    use rand::rngs::StdRng;
 
     #[test]
     fn test_solved() {
@@ -294,27 +296,27 @@ mod tests {
     }
 
     #[test]
-    fn test_index_bijection() {
-        
-        let mut rng = StdRng::seed_from_u64(42);
-        let prm_dist = rand::distributions::Uniform::new(0, Corners::PRM_SIZE);
-        let ori_dist = rand::distributions::Uniform::new(0, Corners::ORI_SIZE);
-        let full_dist = rand::distributions::Uniform::new(0, Corners::INDEX_SIZE);
+    fn test_indexing() {
+        let mut rnd = RandomTwistGen::new(181086, Twists::all());
 
         // Test from_index and prm_index/ori_index
+        let mut c = Corners::solved();
         for _ in 0..100_000 {
-            let prm = rng.sample(prm_dist);
-            let ori = rng.sample(ori_dist);
-            let c = Corners::from_index(prm, ori);
-            assert_eq!(c.prm_index(), prm);
-            assert_eq!(c.ori_index(), ori);
+            c = c.twisted(rnd.gen_twist());
+            let prm = c.prm_index();
+            let ori = c.ori_index();
+            assert!(prm < Corners::PRM_SIZE);
+            assert!(ori < Corners::ORI_SIZE);
+            assert_eq!(c, Corners::from_index(prm, ori));
         }
 
         // Test from_combined_index and index
+        let mut c = Corners::solved();
         for _ in 0..100_000 {
-            let index = rng.sample(full_dist);
-            let c = Corners::from_combined_index(index);
-            assert_eq!(c.index(), index);
+            c = c.twisted(rnd.gen_twist());
+            let index = c.index();
+            assert!(index < Corners::INDEX_SIZE);
+            assert_eq!(c, Corners::from_combined_index(index));
         }
     }
 }

@@ -1,3 +1,9 @@
+use rand::{Rng, SeedableRng};
+
+pub trait Twistable {
+    fn twisted(&self, t: Twist) -> Self;
+}
+
 #[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Twist {
@@ -7,6 +13,12 @@ pub enum Twist {
     D1, D2, D3,
     F1, F2, F3,
     B1, B2, B3,
+}
+
+impl Twist {
+    pub fn from(value: u8) -> Self {
+        unsafe { std::mem::transmute(value) }
+    }
 }
 
 pub fn inversed(t: Twist) -> Twist {
@@ -58,6 +70,10 @@ impl Twists {
     pub fn from_bits(twists: u32) -> Self {
         Self(twists)
     }
+
+    pub fn bits(&self) -> u32 {
+        self.0
+    }
     
     pub fn empty() -> Self {
         Self(0)
@@ -92,8 +108,8 @@ impl Twists {
         self.0 & (1 << (t as u8)) != 0
     }
 
-    pub fn size(&self) -> u32 {
-        self.0.count_ones()
+    pub fn size(&self) -> usize {
+        self.0.count_ones() as usize
     }
 
     pub fn iter(&self) -> impl Iterator<Item = Twist> {
@@ -104,9 +120,32 @@ impl Twists {
             } else {
                 let pos = bits.trailing_zeros() as u8;
                 bits &= bits - 1; // Clear the lowest set bit
-                Some(unsafe { std::mem::transmute(pos) })
+                Some(Twist::from(pos))
             }
         })
+    }
+}
+
+pub struct RandomTwistGen {
+    rng: rand::rngs::StdRng,
+    twists: Twists,
+}
+
+impl RandomTwistGen {
+    pub fn new(seed: u64, twists: Twists) -> Self {
+        Self {
+            rng: rand::rngs::StdRng::seed_from_u64(seed),
+            twists,
+        }
+    }
+
+    pub fn gen_twist(&mut self) -> Twist {
+        let idx = self.rng.gen_range(0..self.twists.size());
+        self.twists.iter().nth(idx).unwrap()
+    }
+
+    pub fn gen_twists(&mut self, count: usize) -> Vec<Twist> {
+        (0..count).map(|_| self.gen_twist()).collect()
     }
 }
 
@@ -185,5 +224,15 @@ mod tests {
         assert_eq!(parse_twists("L1").unwrap(), vec![Twist::L1]);
         assert_eq!(parse_twists("L1 L2").unwrap(), vec![Twist::L1, Twist::L2]);
         assert!(parse_twists("XX").is_err());
+    }
+
+    #[test]
+    fn test_random_twist_gen() {
+        let mut rng = RandomTwistGen::new(42, Twists::h0());
+        let twists = rng.gen_twists(100);
+        assert_eq!(twists.len(), 100);
+        for twist in twists {
+            assert!(Twists::h0().contains(twist));
+        }
     }
 }

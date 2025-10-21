@@ -24,8 +24,7 @@ fn combination_index_benchmark(c: &mut Criterion) {
 
 fn nth_combination_benchmark(c: &mut Criterion) {
     c.bench_function("nth_combination", |b| {
-        let mut combo = vec![0i64; 4];
-        b.iter(|| nth_combination(black_box(10), black_box(4), black_box(100), black_box(&mut combo)))
+        b.iter(|| nth_combination(black_box(10), black_box(4), black_box(100)))
     });
 }
 
