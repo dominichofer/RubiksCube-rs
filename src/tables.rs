@@ -72,29 +72,29 @@ impl DistanceTable {
         self.max_distance
     }
 
-    // pub fn solution<Obj>(&self, cube: Obj, twists: Twists, index: impl Fn(Obj) -> usize) -> Vec<Twist>
-    // where
-    //     Obj: Twistable + Copy,
-    // {
-    //     let mut cube = cube;
-    //     let mut solution = Vec::new();
+    pub fn solution<Obj>(&self, cube: Obj, twists: Twists, index: impl Fn(Obj) -> usize) -> Vec<Twist>
+    where
+        Obj: Twistable + Copy,
+    {
+        let mut cube = cube;
+        let mut solution = Vec::new();
         
-    //     let mut d = self.distance(index(cube));
-    //     while d > 0 {
-    //         for twist in twists.iter() {
-    //             let next = cube.twisted(twist);
-    //             let next_d = self.distance(index(next));
-    //             if next_d < d {
-    //                 solution.push(twist);
-    //                 cube = next;
-    //                 d = next_d;
-    //                 break;
-    //             }
-    //         }
-    //     }
+        let mut d = self.distance(index(cube));
+        while d > 0 {
+            for twist in twists.iter() {
+                let next = cube.twisted(twist);
+                let next_d = self.distance(index(next));
+                if next_d < d {
+                    solution.push(twist);
+                    cube = next;
+                    d = next_d;
+                    break;
+                }
+            }
+        }
 
-    //     solution
-    // }
+        solution
+    }
 }
 
 pub fn create_directions_table<Obj, Index>(

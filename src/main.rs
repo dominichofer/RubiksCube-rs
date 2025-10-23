@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use rustiks_cube::*;
 
 fn corners_distance_table(path: &str) -> DistanceTable {
@@ -57,8 +58,33 @@ fn coset_distance_table(path: &str) -> DistanceTable {
     DistanceTable::from_file(path)
 }
 
+fn load_config(path: &str) -> HashMap<String, String> {
+    let contents = std::fs::read_to_string(path)
+        .expect("Failed to read config file");
+    
+    contents.lines()
+        .filter_map(|line| {
+            let parts: Vec<&str> = line.splitn(2, '=').collect();
+            if parts.len() == 2 {
+                Some((parts[0].trim().to_string(), parts[1].trim().to_string()))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
 fn main() {
-    let corners_table = corners_distance_table("D:\\corners_distance_table.bin");
-    let subset_table = subset_distance_table("D:\\subset_distance_table.bin");
-    let coset_table = coset_distance_table("D:\\coset_distance_table.bin");
+    let config = load_config("config.txt");
+    
+    let corners_path = config.get("corners_table")
+        .expect("corners_table not found in config");
+    let subset_path = config.get("subset_table")
+        .expect("subset_table not found in config");
+    let coset_path = config.get("coset_table")
+        .expect("coset_table not found in config");
+    
+    let corners_table = corners_distance_table(corners_path);
+    let subset_table = subset_distance_table(subset_path);
+    let coset_table = coset_distance_table(coset_path);
 }

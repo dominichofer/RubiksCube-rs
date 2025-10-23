@@ -1,5 +1,3 @@
-use num_traits::int;
-
 use crate::corners::*;
 use crate::edges::*;
 use crate::is_even_permutation;
@@ -143,6 +141,23 @@ impl Cube {
         self.c_ori == solved.c_ori
             && self.e_ori == solved.e_ori
             && self.e_slice_loc == solved.e_slice_loc
+    }
+
+    pub fn to_subset(&self) -> SubsetCube {
+        SubsetCube {
+            c_prm: self.c_prm,
+            e_slice_prm: self.e_slice_prm,
+            e_non_slice_prm: self.e_non_slice_prm,
+        }
+    }
+
+    pub fn coset_index(&self) -> u32 {
+        let coset_cube = CosetCube {
+            c_ori: self.c_ori,
+            e_ori: self.e_ori,
+            e_slice_loc: self.e_slice_loc,
+        };
+        coset_cube.index()
     }
 }
 

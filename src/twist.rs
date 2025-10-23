@@ -88,6 +88,17 @@ impl Twists {
         Self(0b010_010_111_111_010_010)
     }
 
+    pub fn face_of(t: Twist) -> Twists {
+        match t {
+            Twist::L1 | Twist::L2 | Twist::L3 => Self(0b000_000_000_000_000_111),
+            Twist::R1 | Twist::R2 | Twist::R3 => Self(0b000_000_000_000_111_000),
+            Twist::U1 | Twist::U2 | Twist::U3 => Self(0b000_000_000_111_000_000),
+            Twist::D1 | Twist::D2 | Twist::D3 => Self(0b000_000_111_000_000_000),
+            Twist::F1 | Twist::F2 | Twist::F3 => Self(0b000_111_000_000_000_000),
+            Twist::B1 | Twist::B2 | Twist::B3 => Self(0b111_000_000_000_000_000),
+        }
+    }
+
     pub fn set(&mut self, t: Twist) {
         self.0 |= 1 << (t as u8);
     }
@@ -102,6 +113,10 @@ impl Twists {
 
     pub fn unset_twists(&mut self, t: Twists) {
         self.0 &= !t.0;
+    }
+
+    pub fn keep_only(&mut self, t: Twists) {
+        self.0 &= t.0;
     }
 
     pub fn contains(&self, t: Twist) -> bool {
