@@ -21,12 +21,12 @@ pub struct CosetCube {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Cube {
-    c_prm: u16, // 0..=40'319
-    c_ori: u16, // 0..=2'186
-    e_non_slice_prm: u16, // 0..=40'319
-    e_slice_prm: u8, // 0..=23
-    e_slice_loc: u16, // 0..=494
-    e_ori: u16, // 0..=2'047
+    pub c_prm: u16, // 0..=40'319
+    pub c_ori: u16, // 0..=2'186
+    pub e_non_slice_prm: u16, // 0..=40'319
+    pub e_slice_prm: u8, // 0..=23
+    pub e_slice_loc: u16, // 0..=494
+    pub e_ori: u16, // 0..=2'047
 }
 
 impl SubsetCube {
@@ -137,10 +137,9 @@ impl Cube {
     }
 
     pub fn in_subset(&self) -> bool {
-        let solved = Self::solved();
-        self.c_ori == solved.c_ori
-            && self.e_ori == solved.e_ori
-            && self.e_slice_loc == solved.e_slice_loc
+        self.c_ori == 0
+            && self.e_ori == 0
+            && self.e_slice_loc == 494
     }
 
     pub fn to_subset(&self) -> SubsetCube {
@@ -159,15 +158,19 @@ impl Cube {
         };
         coset_cube.index()
     }
+
+    pub fn corners_index(&self) -> u32 {
+        Corners::combine_indices(self.c_prm, self.c_ori)
+    }
 }
 
 impl Twistable for SubsetCube {
     fn twisted(&self, twist: Twist) -> Self {
         let solved_e_slice_loc = Edges::solved().slice_loc_index();
         Self {
-            c_prm: c_prm_table().get(self.c_prm, twist),
-            e_slice_prm: e_slice_prm_table().get(self.e_slice_prm as u16 * Edges::SLICE_LOC_SIZE + solved_e_slice_loc, twist) as u8,
-            e_non_slice_prm: e_non_slice_prm_table().get(self.e_non_slice_prm as usize * Edges::SLICE_LOC_SIZE as usize + solved_e_slice_loc as usize, twist) as u16,
+            c_prm: TWISTER.twisted_c_prm(self.c_prm, twist),
+            e_slice_prm: TWISTER.twisted_e_slice_prm(self.e_slice_prm, solved_e_slice_loc, twist),
+            e_non_slice_prm: TWISTER.twisted_e_non_slice_prm(self.e_non_slice_prm, solved_e_slice_loc, twist),
         }
     }
 }
@@ -175,9 +178,9 @@ impl Twistable for SubsetCube {
 impl Twistable for CosetCube {
     fn twisted(&self, twist: Twist) -> Self {
         Self {
-            c_ori: c_ori_table().get(self.c_ori, twist),
-            e_ori: e_ori_table().get(self.e_ori, twist),
-            e_slice_loc: e_slice_loc_table().get(self.e_slice_loc, twist),
+            c_ori: TWISTER.twisted_c_ori(self.c_ori, twist),
+            e_ori: TWISTER.twisted_e_ori(self.e_ori, twist),
+            e_slice_loc: TWISTER.twisted_e_slice_loc(self.e_slice_loc, twist),
         }
     }
 }
@@ -185,12 +188,12 @@ impl Twistable for CosetCube {
 impl Twistable for Cube {
     fn twisted(&self, twist: Twist) -> Self {
         Self {
-            c_prm: c_prm_table().get(self.c_prm, twist),
-            c_ori: c_ori_table().get(self.c_ori, twist),
-            e_non_slice_prm: e_non_slice_prm_table().get(self.e_non_slice_prm as usize * Edges::SLICE_LOC_SIZE as usize + self.e_slice_loc as usize, twist) as u16,
-            e_slice_prm: e_slice_prm_table().get(self.e_slice_prm as u16 * Edges::SLICE_LOC_SIZE + self.e_slice_loc, twist) as u8,
-            e_slice_loc: e_slice_loc_table().get(self.e_slice_loc, twist),
-            e_ori: e_ori_table().get(self.e_ori, twist),
+            c_prm: TWISTER.twisted_c_prm(self.c_prm, twist),
+            c_ori: TWISTER.twisted_c_ori(self.c_ori, twist),
+            e_non_slice_prm: TWISTER.twisted_e_non_slice_prm(self.e_non_slice_prm, self.e_slice_loc, twist),
+            e_slice_prm: TWISTER.twisted_e_slice_prm(self.e_slice_prm, self.e_slice_loc, twist),
+            e_slice_loc: TWISTER.twisted_e_slice_loc(self.e_slice_loc, twist),
+            e_ori: TWISTER.twisted_e_ori(self.e_ori, twist),
         }
     }
 }

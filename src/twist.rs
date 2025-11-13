@@ -79,12 +79,12 @@ impl Twists {
         Self(0)
     }
 
-    pub fn all() -> Self {
+    pub const fn all() -> Self {
         Self(0b111_111_111_111_111_111)
     }
 
     /// H0 = { L2, R2, U, D, F2, B2 }
-    pub fn h0() -> Self {
+    pub const fn h0() -> Self {
         Self(0b010_010_111_111_010_010)
     }
 
@@ -123,7 +123,7 @@ impl Twists {
         self.0 & (1 << (t as u8)) != 0
     }
 
-    pub fn size(&self) -> usize {
+    pub fn count(&self) -> usize {
         self.0.count_ones() as usize
     }
 
@@ -155,7 +155,7 @@ impl RandomTwistGen {
     }
 
     pub fn gen_twist(&mut self) -> Twist {
-        let idx = self.rng.gen_range(0..self.twists.size());
+        let idx = self.rng.gen_range(0..self.twists.count());
         self.twists.iter().nth(idx).unwrap()
     }
 
@@ -180,7 +180,7 @@ mod tests {
     #[test]
     fn test_twists_h0() {
         let h0 = Twists::h0();
-        assert!(h0.size() == 10);
+        assert!(h0.count() == 10);
         for twist in [
             Twist::L2,
             Twist::R2,
@@ -200,24 +200,24 @@ mod tests {
     #[test]
     fn test_state() {
         let mut twists = Twists::empty();
-        assert!(twists.size() == 0);
+        assert!(twists.count() == 0);
 
         let twist = Twist::L3; // Arbitrary
 
         twists.set(twist);
-        assert!(twists.size() == 1);
+        assert!(twists.count() == 1);
         assert!(twists.contains(twist));
 
         twists.unset(twist);
-        assert!(twists.size() == 0);
+        assert!(twists.count() == 0);
         assert!(!twists.contains(twist));
 
         let multiple = Twists::from_bits(0b1010101); // Arbitrary
         twists.set_twists(multiple);
-        assert!(twists.size() == 4);
+        assert!(twists.count() == 4);
 
         twists.unset_twists(multiple);
-        assert!(twists.size() == 0);
+        assert!(twists.count() == 0);
     }
 
     #[test]

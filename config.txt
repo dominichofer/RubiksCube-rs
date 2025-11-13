@@ -1,0 +1,3 @@
+corners_table=D:\corners_table.dat
+subset_table=D:\subset_table.dat
+coset_table=D:\coset_table.dat

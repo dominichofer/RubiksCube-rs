@@ -1,9 +1,11 @@
 [package]
-name = "rustiks-cube"
+name = "rubikscube"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+num-format = "0.4.4"
+once_cell = "1.21.3"
 rand = "0.8"
 rayon = "1.11.0"
 
@@ -19,3 +21,7 @@ harness = false
 [[bench]]
 name = "twist_bench"
 harness = false
+
+[profile.profiling]
+inherits = "release"
+debug = true

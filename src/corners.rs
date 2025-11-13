@@ -122,9 +122,13 @@ impl Corners {
         )
     }
 
+    pub fn combine_indices(prm: u16, ori: u16) -> u32 {
+        (prm as u32) * (Self::ORI_SIZE as u32) + (ori as u32)
+    }
+
     /// Get the combined index (0 to INDEX_SIZE-1)
     pub fn index(&self) -> u32 {
-        self.prm_index() as u32 * Self::ORI_SIZE as u32 + self.ori_index() as u32
+        Self::combine_indices(self.prm_index(), self.ori_index())
     }
 }
 

@@ -6,6 +6,7 @@ pub mod tables;
 pub mod twist;
 pub mod twister;
 pub mod two_phase;
+pub mod stored_tables;
 
 pub use corners::*;
 pub use cube::*;
@@ -15,3 +16,4 @@ pub use tables::*;
 pub use twist::*;
 pub use twister::*;
 pub use two_phase::*;
+pub use stored_tables::*;
