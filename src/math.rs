@@ -1,5 +1,5 @@
-pub const fn factorial(n: i64) -> i64 {
-    const PRECOMPUTED: [i64; 21] = [
+pub const fn factorial(n: usize) -> usize {
+    const PRECOMPUTED: [usize; 21] = [
         1,
         1,
         2,
@@ -23,15 +23,15 @@ pub const fn factorial(n: i64) -> i64 {
         2432902008176640000,
     ];
 
-    PRECOMPUTED[n as usize]
+    PRECOMPUTED[n]
 }
 
-pub const fn binomial(n: i64, k: i64) -> i64 {
+pub const fn binomial(n: usize, k: usize) -> usize {
     if k > n {
         return 0;
     }
     if n < 13 {
-        const PASCAL: [[i16; 13]; 13] = [
+        const PASCAL: [[usize; 13]; 13] = [
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -46,10 +46,10 @@ pub const fn binomial(n: i64, k: i64) -> i64 {
             [1, 11, 55, 165, 330, 462, 462, 330, 165, 55, 11, 1, 0],
             [1, 12, 66, 220, 495, 792, 924, 792, 495, 220, 66, 12, 1],
         ];
-        return PASCAL[n as usize][k as usize] as i64;
+        return PASCAL[n][k];
     }
 
-    let k = if k > n - k { n - k } else { k };
+    let k = if k > n - k { n - k } else { k };  // Take advantage of symmetry
     let mut result = 1;
     let mut i = 0;
     while i < k {
@@ -62,14 +62,13 @@ pub const fn binomial(n: i64, k: i64) -> i64 {
 // Returns the index of the combination
 // in the lexicographically sorted list of all possible
 // combinations of n elements taken k at a time.
-pub fn combination_index<T>(n: i64, combination: &[T]) -> i64
+pub fn combination_index<T>(n: usize, combination: &[T]) -> usize
 where
-    T: Copy + Into<i64>,
+    T: Copy + Into<usize>,
 {
     let mut index = 0;
     let mut j = 0;
-    let k = combination.len() as i64;
-
+    let k = combination.len() as usize;
     for i in 0..k {
         j += 1;
         while j < combination[i as usize].into() + 1 {
@@ -80,7 +79,7 @@ where
     index
 }
 
-pub fn nth_combination(n: i64, k: i64, index: i64) -> Vec<u8>{
+pub fn nth_combination(n: usize, k: usize, index: usize) -> Vec<u8>{
     if k < 1 || k > n {
         return vec![];
     }
@@ -104,13 +103,13 @@ pub fn nth_combination(n: i64, k: i64, index: i64) -> Vec<u8>{
     combination
 }
 
-pub fn nth_permutation(index: i64, size: usize) -> Vec<u8> {
+pub fn nth_permutation(index: usize, size: usize) -> Vec<u8> {
     let mut unused = 0xFFFFFFFFFFFFFFFFusize;
     let mut index = index;
     let mut permutation = vec![0u8; size];
 
     for i in (0..size).rev() {
-        let f = factorial(i as i64);
+        let f = factorial(i as usize);
         let pos = index / f;
         index %= f;
 
@@ -127,21 +126,21 @@ pub fn nth_permutation(index: i64, size: usize) -> Vec<u8> {
     permutation
 }
 
-pub fn permutation_index(permutation: &[u8]) -> i64 {
+pub fn permutation_index(permutation: &[u8]) -> usize {
     let size = permutation.len();
     let mut index = 0;
     let mut bitboard = 0;
 
     for i in 0..size {
-        let mask: u64 = 1u64 << permutation[i];
+        let mask: usize = 1usize << permutation[i];
 
         // Number of remaining elements smaller than the current element
-        let smaller = permutation[i] as i64 - (bitboard & (mask - 1)).count_ones() as i64;
+        let smaller = permutation[i] as usize - (bitboard & (mask - 1)).count_ones() as usize;
 
         // Total number of elements bigger than the current element
         let bigger = size - i - 1;
 
-        index += smaller * factorial(bigger as i64);
+        index += smaller * factorial(bigger);
         bitboard |= mask;
     }
     index
@@ -161,7 +160,7 @@ where
             }
         }
     }
-    count % 2 == 0
+    count.is_multiple_of(2)
 }
 
 pub fn is_even_permutation(lexicographical_index: i64) -> bool {
@@ -190,7 +189,7 @@ mod tests {
     #[test]
     fn test_factorial() {
         for i in 0..=20 {
-            assert_eq!(factorial(i), (1..=i).product::<i64>());
+            assert_eq!(factorial(i), (1..=i).product::<usize>());
         }
     }
 
@@ -208,38 +207,38 @@ mod tests {
 
     #[test]
     fn test_combination_index() {
-        assert_eq!(combination_index(1, &[0]), 0);
+        assert_eq!(combination_index(1, &[0usize]), 0);
 
-        assert_eq!(combination_index(2, &[0]), 0);
-        assert_eq!(combination_index(2, &[1]), 1);
-        assert_eq!(combination_index(2, &[0, 1]), 0);
+        assert_eq!(combination_index(2, &[0usize]), 0);
+        assert_eq!(combination_index(2, &[1usize]), 1);
+        assert_eq!(combination_index(2, &[0usize, 1usize]), 0);
 
-        assert_eq!(combination_index(5, &[0, 1]), 0);
-        assert_eq!(combination_index(5, &[0, 2]), 1);
-        assert_eq!(combination_index(5, &[0, 3]), 2);
-        assert_eq!(combination_index(5, &[0, 4]), 3);
-        assert_eq!(combination_index(5, &[1, 2]), 4);
-        assert_eq!(combination_index(5, &[1, 3]), 5);
-        assert_eq!(combination_index(5, &[1, 4]), 6);
-        assert_eq!(combination_index(5, &[2, 3]), 7);
-        assert_eq!(combination_index(5, &[2, 4]), 8);
-        assert_eq!(combination_index(5, &[3, 4]), 9);
-        assert_eq!(combination_index(5, &[0, 1, 2]), 0);
-        assert_eq!(combination_index(5, &[0, 1, 3]), 1);
-        assert_eq!(combination_index(5, &[0, 1, 4]), 2);
-        assert_eq!(combination_index(5, &[0, 2, 3]), 3);
-        assert_eq!(combination_index(5, &[0, 2, 4]), 4);
-        assert_eq!(combination_index(5, &[0, 3, 4]), 5);
-        assert_eq!(combination_index(5, &[1, 2, 3]), 6);
-        assert_eq!(combination_index(5, &[1, 2, 4]), 7);
-        assert_eq!(combination_index(5, &[1, 3, 4]), 8);
-        assert_eq!(combination_index(5, &[2, 3, 4]), 9);
-        assert_eq!(combination_index(5, &[0, 1, 2, 3]), 0);
-        assert_eq!(combination_index(5, &[0, 1, 2, 4]), 1);
-        assert_eq!(combination_index(5, &[0, 1, 3, 4]), 2);
-        assert_eq!(combination_index(5, &[0, 2, 3, 4]), 3);
-        assert_eq!(combination_index(5, &[1, 2, 3, 4]), 4);
-        assert_eq!(combination_index(5, &[0, 1, 2, 3, 4]), 0);
+        assert_eq!(combination_index(5, &[0usize, 1usize]), 0);
+        assert_eq!(combination_index(5, &[0usize, 2usize]), 1);
+        assert_eq!(combination_index(5, &[0usize, 3usize]), 2);
+        assert_eq!(combination_index(5, &[0usize, 4usize]), 3);
+        assert_eq!(combination_index(5, &[1usize, 2usize]), 4);
+        assert_eq!(combination_index(5, &[1usize, 3usize]), 5);
+        assert_eq!(combination_index(5, &[1usize, 4usize]), 6);
+        assert_eq!(combination_index(5, &[2usize, 3usize]), 7);
+        assert_eq!(combination_index(5, &[2usize, 4usize]), 8);
+        assert_eq!(combination_index(5, &[3usize, 4usize]), 9);
+        assert_eq!(combination_index(5, &[0usize, 1usize, 2usize]), 0);
+        assert_eq!(combination_index(5, &[0usize, 1usize, 3usize]), 1);
+        assert_eq!(combination_index(5, &[0usize, 1usize, 4usize]), 2);
+        assert_eq!(combination_index(5, &[0usize, 2usize, 3usize]), 3);
+        assert_eq!(combination_index(5, &[0usize, 2usize, 4usize]), 4);
+        assert_eq!(combination_index(5, &[0usize, 3usize, 4usize]), 5);
+        assert_eq!(combination_index(5, &[1usize, 2usize, 3usize]), 6);
+        assert_eq!(combination_index(5, &[1usize, 2usize, 4usize]), 7);
+        assert_eq!(combination_index(5, &[1usize, 3usize, 4usize]), 8);
+        assert_eq!(combination_index(5, &[2usize, 3usize, 4usize]), 9);
+        assert_eq!(combination_index(5, &[0usize, 1usize, 2usize, 3usize]), 0);
+        assert_eq!(combination_index(5, &[0usize, 1usize, 2usize, 4usize]), 1);
+        assert_eq!(combination_index(5, &[0usize, 1usize, 3usize, 4usize]), 2);
+        assert_eq!(combination_index(5, &[0usize, 2usize, 3usize, 4usize]), 3);
+        assert_eq!(combination_index(5, &[1usize, 2usize, 3usize, 4usize]), 4);
+        assert_eq!(combination_index(5, &[0usize, 1usize, 2usize, 3usize, 4usize]), 0);
     }
 
     #[test]
@@ -262,7 +261,7 @@ mod tests {
             let base: Vec<usize> = (0..size).collect();
             
             for (index, expected_perm) in base.iter().permutations(size).enumerate() {
-                let computed_perm = nth_permutation(index as i64, size);
+                let computed_perm = nth_permutation(index, size);
                 let expected_u8: Vec<u8> = expected_perm.into_iter().map(|&x| x as u8).collect();
                 assert_eq!(computed_perm, expected_u8);
             }
@@ -275,7 +274,7 @@ mod tests {
             let base: Vec<usize> = (0..size).collect();
             for (index, perm) in base.iter().permutations(size).enumerate() {
                 let perm_vec: Vec<u8> = perm.into_iter().map(|&x| x as u8).collect();
-                assert_eq!(permutation_index(&perm_vec), index as i64);
+                assert_eq!(permutation_index(&perm_vec), index);
             }
         }
     }
@@ -303,13 +302,13 @@ mod tests {
     #[test]
     fn test_permutation_index_half_is_bijection() {
         // Tests that permutation_index/2 is a bijection,
-        // between even permutations and [0, factorial(n)/2);
-        // and between odd permutations and [0, factorial(n)/2).
+        // between even permutations and [0, factorial(n)/2 );
+        // and between odd permutations and [0, factorial(n)/2 ).
         for size in 0..=10 {
             let mut even_permutations = 0;
             let mut odd_permutations = 0;
             
-            for i in 0..factorial(size as i64) {
+            for i in 0..factorial(size) {
                 let p = nth_permutation(i, size);
                 if is_even_permutation_array(&p) {
                     assert_eq!(permutation_index(&p) / 2, even_permutations);

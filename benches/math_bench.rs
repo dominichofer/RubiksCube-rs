@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use rustiks_cube::{binomial, combination_index, nth_combination};
+use criterion::{criterion_group, criterion_main, Criterion};
+use rubikscube::{binomial, combination_index, nth_combination};
+use std::hint::black_box;
 
 fn binomial_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("binomial");

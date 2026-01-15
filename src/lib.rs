@@ -7,6 +7,8 @@ pub mod twist;
 pub mod twister;
 pub mod two_phase;
 pub mod stored_tables;
+pub mod multi_twister;
+pub mod coset_solver;
 
 pub use corners::*;
 pub use cube::*;
@@ -17,3 +19,5 @@ pub use twist::*;
 pub use twister::*;
 pub use two_phase::*;
 pub use stored_tables::*;
+pub use multi_twister::*;
+pub use coset_solver::*;

@@ -1,0 +1,77 @@
+classDiagram
+    namespace Cubies {
+        class Corners {
+            - state: [u8; 8]
+            + twisted(twist)
+            + from_indices(prm, ori)
+            + prm_index()
+            + ori_index()
+        }
+        class Edges {
+            - state: [u8; 12]
+            + twisted(twist)
+            + from_indices(slice_prm, non_slice_prm, slice_loc_index, ori)
+            + slice_prm_index()
+            + non_slice_prm_index()
+            + slice_loc_index()
+            + ori_index()
+        }
+    }
+    namespace Indices {
+        class CornersCube {
+            - c_prm
+            - c_ori
+            + from_index(idx)
+            + index()
+            + combine_indices(prm, ori)
+        }
+        class SubsetCube {
+            - c_prm
+            - e_slice_prm
+            - e_non_slice_prm
+            + from_index(idx)
+            + index()
+            + is_solved()
+        }
+        class CosetCube {
+            - c_ori
+            - e_ori
+            - e_sclice_loc
+            + from_index(idx)
+            + index()
+            + in_subset()
+        }
+    }
+
+    class Twister {
+        + twisted_c_ori(c_ori, twist) int
+        + twisted_c_prm(c_prm, twist) int
+        + twisted_e_ori(e_ori, twist) int
+        + twisted_e_slice_prm(e_slice_prm, e_slice_loc, twist) int
+        + twisted_e_non_slice_prm(e_non_slice_prm, e_slice_loc, twist) int
+        + twisted_e_slice_loc(e_slice_loc, twist) int
+    }
+    Twister ..> Corners
+    Twister ..> Edges
+
+    class DistanceTable {
+        + distance(idx)
+    }
+    DistanceTable ..> CornersCube
+    DistanceTable ..> SubsetCube
+    DistanceTable ..> CosetCube
+    DistanceTable ..> Twister
+
+    class DirectionTable {
+        + distance(idx)
+        + less_distance(idx) TwistSet
+        + more_distance(idx) TwistSet
+    }
+    DirectionTable ..> DistanceTable
+    DirectionTable ..> CosetCube
+
+    class TwoPhaseSolver {
+        + solve(cube) Twists
+    }
+    TwoPhaseSolver ..> DistanceTable
+    TwoPhaseSolver ..> DirectionTable
