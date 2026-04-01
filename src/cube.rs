@@ -1,6 +1,6 @@
 use crate::corners::*;
 use crate::edges::*;
-use crate::twist::Twist;
+use crate::twist::*;
 use crate::twister::*;
 use crate::is_even_permutation;
 use std::fmt;
@@ -142,6 +142,47 @@ impl Cube {
     pub fn is_solved(&self) -> bool {
         self.subset.is_solved() && self.coset.in_subset()
     }
+
+    pub fn rotated_colours(&self, rot: Rotation) -> Self {
+        let corners = Corners::from_indices(
+            self.subset.c_prm,
+            self.coset.c_ori)
+            .rotated_colours(rot);
+        let edges = Edges::from_indices(
+            self.subset.e_slice_prm,
+            self.subset.e_non_slice_prm,
+            self.coset.e_slice_loc,
+            self.coset.e_ori)
+            .rotated_colours(rot);
+        Self {
+            subset: SubsetCube {
+                c_prm: corners.prm_index(),
+                e_slice_prm: edges.slice_prm_index(),
+                e_non_slice_prm: edges.non_slice_prm_index(),
+            },
+            coset: CosetCube {
+                c_ori: corners.ori_index(),
+                e_ori: edges.ori_index(),
+                e_slice_loc: edges.slice_loc_index(),
+            }
+        }
+    }
+
+    pub fn rotated_colours_by(&self, rotations: &[Rotation]) -> Self {
+        rotations.iter().fold(self.clone(), |cube, &rot| {
+            cube.rotated_colours(rot)
+        })
+    }
+}
+
+pub trait Twistable: Clone {
+    fn twisted(&self, twister: &Twister, twist: Twist) -> Self;
+
+    fn twisted_by(&self, twister: &Twister, twists: &[Twist]) -> Self {
+        twists.iter().fold(self.clone(), |cube, &twist| {
+            cube.twisted(twister, twist)
+        })   
+    }
 }
 
 impl Twistable for CornersCube {
@@ -155,9 +196,10 @@ impl Twistable for CornersCube {
 
 impl Twistable for SubsetCube {
     fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
+        const SOLVED_SLICE_LOC_INDEX: usize = Edges::solved().slice_loc_index();
         Self {
-            e_slice_prm: twister.twisted_e_slice_prm(self.e_slice_prm, Edges::solved().slice_loc_index(), twist),
-            e_non_slice_prm: twister.twisted_e_non_slice_prm(self.e_non_slice_prm, Edges::solved().slice_loc_index(), twist),
+            e_slice_prm: twister.twisted_e_slice_prm(self.e_slice_prm, SOLVED_SLICE_LOC_INDEX, twist),
+            e_non_slice_prm: twister.twisted_e_non_slice_prm(self.e_non_slice_prm, SOLVED_SLICE_LOC_INDEX, twist),
             c_prm: twister.twisted_c_prm(self.c_prm, twist),
         }
     }
@@ -209,11 +251,11 @@ impl fmt::Display for CosetCube {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::{Rng, SeedableRng};
+    use rand::{RngExt, SeedableRng, rngs::StdRng};
 
     #[test]
     fn test_corners_index() {
-        let mut rnd = rand::rngs::StdRng::seed_from_u64(42);
+        let mut rnd = StdRng::seed_from_u64(42);
         for _ in 0..100_000 {
             let index = rnd.random_range(0..CornersCube::INDEX_SIZE);
             assert_eq!(CornersCube::from_index(index).index(), index);
@@ -222,7 +264,7 @@ mod tests {
 
     #[test]
     fn test_subset_index() {
-        let mut rnd = rand::rngs::StdRng::seed_from_u64(42);
+        let mut rnd = StdRng::seed_from_u64(42);
         for _ in 0..100_000 {
             let index = rnd.random_range(0..SubsetCube::INDEX_SIZE);
             assert_eq!(SubsetCube::from_index(index).index(), index);
@@ -231,7 +273,7 @@ mod tests {
 
     #[test]
     fn test_coset_index() {
-        let mut rnd = rand::rngs::StdRng::seed_from_u64(42);
+        let mut rnd = StdRng::seed_from_u64(42);
         for _ in 0..100_000 {
             let index = rnd.random_range(0..CosetCube::INDEX_SIZE);
             assert_eq!(CosetCube::from_index(index).index(), index);

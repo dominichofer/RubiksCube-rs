@@ -1,5 +1,6 @@
-use crate::twist::*;
+use crate::twist_set::*;
 use crate::twister::*;
+use crate::cube::Twistable;
 use rayon::prelude::*;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
@@ -50,13 +51,11 @@ impl DistanceTable {
     }
 
     pub fn from_file(path: &str) -> Result<Self, std::io::Error> {
-        let table = std::fs::read(path)?;
-        Ok(Self { table })
+        Ok(Self { table: std::fs::read(path)? })
     }
 
-    pub fn save_to_file(&self, path: &str) -> Result<(), std::io::Error> {
-        std::fs::write(path, &self.table)?;
-        Ok(())
+    pub fn save_to_file(&self, path: &str) -> std::io::Result<()> {
+        std::fs::write(path, &self.table)
     }
 
     pub fn distance(&self, index: usize) -> u8 {
@@ -124,9 +123,9 @@ impl DirectionsTable {
                     let next = obj.twisted(twister, twist);
                     let next_d = distance_table.distance(index(next));
                     if next_d < d {
-                        less.set(twist);
+                        less.set_twist(twist);
                     } else if next_d > d {
-                        more.set(twist);
+                        more.set_twist(twist);
                     }
                 }
 
@@ -148,13 +147,12 @@ impl DirectionsTable {
         Ok(Self { table })
     }
 
-    pub fn save_to_file(&self, path: &str) -> Result<(), std::io::Error> {
-        let data: Vec<u8> = self.table
-            .par_iter()
-            .flat_map(|value| value.0.to_le_bytes())
-            .collect();
-        std::fs::write(path, &data)?;
-        Ok(())
+    pub fn save_to_file(&self, path: &str) -> std::io::Result<()> {
+        let mut data = Vec::with_capacity(self.table.len() * 8);
+        for entry in &self.table {
+            data.extend_from_slice(&entry.0.to_le_bytes());
+        }
+        std::fs::write(path, data)
     }
 
     pub fn distance(&self, index: usize) -> u8 {
@@ -175,7 +173,8 @@ impl DirectionsTable {
 mod tests {
     use super::*;
     use crate::cube::CornersCube;
-    use rand::Rng;
+    use crate::twist_generator::*;
+    use rand::{RngExt, SeedableRng, rngs::StdRng};
 
     #[test]
     fn test_distance_table() {
@@ -227,6 +226,7 @@ mod tests {
 
     #[test]
     fn test_directions_table() {
+        let mut rnd = StdRng::seed_from_u64(42);
         let twister = Twister::new();
         let table = DirectionsTable::create(
             &twister,
@@ -238,7 +238,7 @@ mod tests {
         );
 
         for _ in 0..100_000 {
-            let i = rand::rng().random_range(0..CornersCube::INDEX_SIZE);
+            let i = rnd.random_range(0..CornersCube::INDEX_SIZE);
             let d = table.distance(i);
             let less = table.less_distance(i);
             let more = table.more_distance(i);

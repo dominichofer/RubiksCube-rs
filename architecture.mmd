@@ -1,20 +1,24 @@
 classDiagram
     namespace Cubies {
         class Corners {
-            - state: [u8; 8]
-            + twisted(twist)
-            + from_indices(prm, ori)
-            + prm_index()
-            + ori_index()
+            - prm: [usize; 8]
+            - ori: [usize; 8]
+            + twisted(twist) [28 ns]
+            + rotated_colours(rot) [56 ns]
+            + from_indices(prm, ori) [78 ns]
+            + prm_index() [8 ns]
+            + ori_index() [6 ns]
         }
         class Edges {
-            - state: [u8; 12]
-            + twisted(twist)
-            + from_indices(slice_prm, non_slice_prm, slice_loc_index, ori)
-            + slice_prm_index()
-            + non_slice_prm_index()
-            + slice_loc_index()
-            + ori_index()
+            - prm: [usize; 12]
+            - ori: [usize; 12]
+            + twisted(twist) [32 ns]
+            + rotated_colours(rot) [82 ns]
+            + from_indices(slice_prm, non_slice_prm, slice_loc_index, ori) [216 ns]
+            + slice_prm_index() [21 ns]
+            + non_slice_prm_index() [24 ns]
+            + slice_loc_index() [26 ns]
+            + ori_index() [4 ns]
         }
     }
     namespace Indices {
@@ -36,7 +40,7 @@ classDiagram
         class CosetCube {
             - c_ori
             - e_ori
-            - e_sclice_loc
+            - e_slice_loc
             + from_index(idx)
             + index()
             + in_subset()
@@ -44,12 +48,12 @@ classDiagram
     }
 
     class Twister {
-        + twisted_c_ori(c_ori, twist) int
-        + twisted_c_prm(c_prm, twist) int
-        + twisted_e_ori(e_ori, twist) int
-        + twisted_e_slice_prm(e_slice_prm, e_slice_loc, twist) int
-        + twisted_e_non_slice_prm(e_non_slice_prm, e_slice_loc, twist) int
-        + twisted_e_slice_loc(e_slice_loc, twist) int
+        + twisted_c_ori(c_ori, twist) usize
+        + twisted_c_prm(c_prm, twist) usize
+        + twisted_e_slice_prm(e_slice_prm, e_slice_loc, twist) usize
+        + twisted_e_non_slice_prm(e_non_slice_prm, e_slice_loc, twist) usize
+        + twisted_e_slice_loc(e_slice_loc, twist) usize
+        + twisted_e_ori(e_ori, twist) usize
     }
     Twister ..> Corners
     Twister ..> Edges

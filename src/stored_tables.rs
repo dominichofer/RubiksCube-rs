@@ -1,6 +1,6 @@
 use crate::tables::{DistanceTable, DirectionsTable};
 use crate::cube::{CornersCube, SubsetCube, CosetCube};
-use crate::twist::TwistSet;
+use crate::twist_set::*;
 use crate::twister::Twister;
 
 pub fn corners_distance_table(twister: &Twister, path: &str) -> DistanceTable {

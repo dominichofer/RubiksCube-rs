@@ -62,36 +62,35 @@ pub const fn binomial(n: usize, k: usize) -> usize {
 // Returns the index of the combination
 // in the lexicographically sorted list of all possible
 // combinations of n elements taken k at a time.
-pub fn combination_index<T>(n: usize, combination: &[T]) -> usize
-where
-    T: Copy + Into<usize>,
-{
+pub const fn combination_index(n: usize, combination: &[usize]) -> usize {
     let mut index = 0;
     let mut j = 0;
-    let k = combination.len() as usize;
-    for i in 0..k {
+    let k = combination.len();
+    let mut i = 0;
+    while i < k {
         j += 1;
-        while j < combination[i as usize].into() + 1 {
+        while j < combination[i] + 1 {
             index += binomial(n - j, k - i - 1);
             j += 1;
         }
+        i += 1;
     }
     index
 }
 
-pub fn nth_combination(n: usize, k: usize, index: usize) -> Vec<u8>{
+pub fn nth_combination(n: usize, k: usize, index: usize) -> Vec<usize>{
     if k < 1 || k > n {
         return vec![];
     }
 
     let mut size = 0;
     let mut index = index;
-    let mut combination = vec![0u8; k as usize];
+    let mut combination = vec![0usize; k as usize];
 
     for i in 0..n {
         let count = binomial(n - 1 - i, k - size - 1);
         if count > index {
-            combination[size as usize] = i as u8;
+            combination[size] = i;
             size += 1;
             if size == k {
                 break;
@@ -103,13 +102,13 @@ pub fn nth_combination(n: usize, k: usize, index: usize) -> Vec<u8>{
     combination
 }
 
-pub fn nth_permutation(index: usize, size: usize) -> Vec<u8> {
+pub fn nth_permutation(index: usize, size: usize) -> Vec<usize> {
     let mut unused = 0xFFFFFFFFFFFFFFFFusize;
     let mut index = index;
-    let mut permutation = vec![0u8; size];
+    let mut permutation = vec![0usize; size];
 
     for i in (0..size).rev() {
-        let f = factorial(i as usize);
+        let f = factorial(i);
         let pos = index / f;
         index %= f;
 
@@ -120,13 +119,13 @@ pub fn nth_permutation(index: usize, size: usize) -> Vec<u8> {
         }
         let selected_bit = mask & (!mask + 1); // Get lowest set bit
 
-        permutation[size - 1 - i] = selected_bit.trailing_zeros() as u8;
+        permutation[size - 1 - i] = selected_bit.trailing_zeros() as usize;
         unused ^= selected_bit;
     }
     permutation
 }
 
-pub fn permutation_index(permutation: &[u8]) -> usize {
+pub fn permutation_index(permutation: &[usize]) -> usize {
     let size = permutation.len();
     let mut index = 0;
     let mut bitboard = 0;
@@ -135,7 +134,7 @@ pub fn permutation_index(permutation: &[u8]) -> usize {
         let mask: usize = 1usize << permutation[i];
 
         // Number of remaining elements smaller than the current element
-        let smaller = permutation[i] as usize - (bitboard & (mask - 1)).count_ones() as usize;
+        let smaller = permutation[i] - (bitboard & (mask - 1)).count_ones() as usize;
 
         // Total number of elements bigger than the current element
         let bigger = size - i - 1;
@@ -262,8 +261,8 @@ mod tests {
             
             for (index, expected_perm) in base.iter().permutations(size).enumerate() {
                 let computed_perm = nth_permutation(index, size);
-                let expected_u8: Vec<u8> = expected_perm.into_iter().map(|&x| x as u8).collect();
-                assert_eq!(computed_perm, expected_u8);
+                let expected_perm: Vec<usize> = expected_perm.into_iter().copied().collect();
+                assert_eq!(computed_perm, expected_perm);
             }
         }
     }
@@ -273,7 +272,7 @@ mod tests {
         for size in 1..=8 {
             let base: Vec<usize> = (0..size).collect();
             for (index, perm) in base.iter().permutations(size).enumerate() {
-                let perm_vec: Vec<u8> = perm.into_iter().map(|&x| x as u8).collect();
+                let perm_vec: Vec<usize> = perm.into_iter().copied().collect();
                 assert_eq!(permutation_index(&perm_vec), index);
             }
         }

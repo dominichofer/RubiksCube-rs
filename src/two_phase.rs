@@ -1,31 +1,34 @@
-use crate::cube::{CornersCube, CosetCube, SubsetCube};
-use crate::twist::{Twist, TwistSet};
-use crate::twister::{Twister, Twistable};
+use crate::Cube;
+use crate::cube::*;
+use crate::twist::*;
+use crate::twist_set::*;
+use crate::twister::Twister;
 use crate::tables::{DistanceTable, DirectionsTable};
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashMap};
 use num_format::ToFormattedString;
 
-pub struct TwoPhaseSolver {
-    twister: Twister,
-    phase_1: DirectionsTable,
-    phase_2: DistanceTable,
-    corners: DistanceTable,
+pub struct TwoPhaseSolver<'a> {
+    twister: &'a Twister,
+    phase_1: &'a DirectionsTable,
+    phase_2: &'a DistanceTable,
+    corners: &'a DistanceTable,
+    solution: VecDeque<Twist>,
     relevant_twists: Vec<TwistSet>,
+    search_depths: HashMap<u8, usize>,
     phase_1_probes: usize,
     phase_2_probes: usize,
     subset_cuts: usize,
     corner_probes: usize,
     corner_cuts: usize,
-    no_twists_cut: usize,
-    solution: VecDeque<Twist>,  
+    no_twist_cut: usize,
 }
 
-impl TwoPhaseSolver {
+impl<'a> TwoPhaseSolver<'a> {
     pub fn new(
-        twister: Twister,
-        phase_1: DirectionsTable,
-        phase_2: DistanceTable,
-        corners: DistanceTable,
+        twister: &'a Twister,
+        phase_1: &'a DirectionsTable,
+        phase_2: &'a DistanceTable,
+        corners: &'a DistanceTable,
     ) -> Self {
         let relevant_twists = vec![
             TwistSet::from_bits(0b111_111_111_111_111_000),
@@ -53,39 +56,69 @@ impl TwoPhaseSolver {
             phase_1,
             phase_2,
             corners,
+            search_depths: HashMap::new(),
+            solution: VecDeque::new(),
             relevant_twists,
             phase_1_probes: 0,
             phase_2_probes: 0,
             subset_cuts: 0,
             corner_probes: 0,
             corner_cuts: 0,
-            no_twists_cut: 0,
-            solution: VecDeque::new(),
+            no_twist_cut: 0,
         }
     }
 
     pub fn print_stats(&self) {
         let locale = &num_format::Locale::de_CH;
+        println!("Search depths:");
+        let mut sorted_depths: Vec<_> = self.search_depths.iter().collect();
+        sorted_depths.sort_by_key(|(depth, _)| *depth);
+        for (depth, count) in sorted_depths {
+            println!("  Depth {}: {}", depth, count.to_formatted_string(locale));
+        }
         println!("Phase 1 probes: {}", self.phase_1_probes.to_formatted_string(locale));
         println!("Phase 2 probes: {}", self.phase_2_probes.to_formatted_string(locale));
         println!("Subset cuts: {}", self.subset_cuts.to_formatted_string(locale));
         println!("Corner probes: {}", self.corner_probes.to_formatted_string(locale));
-        println!("Corner cuts: {}", self.corner_cuts.to_formatted_string(locale));
-        println!("No twists cuts: {}", self.no_twists_cut.to_formatted_string(locale));
+        println!("Corner cuts: {} ({:.2}%)", self.corner_cuts.to_formatted_string(locale), (self.corner_cuts as f64 / self.corner_probes as f64) * 100.0);
+        println!("No twist cuts: {}", self.no_twist_cut.to_formatted_string(locale));
     }
 
-    pub fn solve(&mut self, subset: SubsetCube, coset: CosetCube, max_solution_length: u8) -> Result<Vec<Twist>, String> {
-        let subset_distance = self.phase_1.distance(coset.index());
-        for p1_depth in subset_distance..=max_solution_length {
-            let result = self.search_phase_1(subset, coset, p1_depth, max_solution_length - p1_depth, Twist::None);
-            if result {
-                return Ok(self.solution.drain(..).collect());
+    pub fn solve(&mut self, cube: Cube, max_solution_length: u8) -> Result<Vec<Twist>, String> {
+        let cubes = [
+            cube,
+            cube.rotated_colours(Rotation::L),
+            cube.rotated_colours_by(&[Rotation::U, Rotation::L]),
+        ];
+        let solution_transforms = [
+            |twists: Vec<Twist>| twists,
+            |twists: Vec<Twist>| twists.into_iter().map(|t| t.counter_rotated(Rotation::L)).collect(),
+            |twists: Vec<Twist>| twists.into_iter().map(|t| t.counter_rotated_by(&[Rotation::U, Rotation::L])).collect(),
+        ];
+        let subset_distances = Vec::from_iter(cubes.iter().map(|c| self.phase_1.distance(c.coset.index())));
+        let min_distance = *subset_distances.iter().min().unwrap();
+
+        for p1_depth in min_distance..=max_solution_length {
+            for i in 0..cubes.len() {
+                let cube = &cubes[i];
+                let subset_distance = subset_distances[i];
+                let solution_transform = solution_transforms[i];
+
+                if subset_distance > p1_depth {
+                    continue;
+                }
+                *self.search_depths.entry(p1_depth).or_insert(0) += 1;
+                let result = self.search_phase_1(cube.subset, cube.coset, p1_depth, max_solution_length - p1_depth, Twist::None);
+                if result {
+                    let solution = solution_transform(self.solution.drain(..).collect());
+                    return Ok(solution);
+                }
             }
         }
         Err("No solution found".into())
     }
 
-    fn search_phase_2(&mut self, subset: SubsetCube, depth: u8) -> bool {
+    pub fn search_phase_2(&mut self, subset: SubsetCube, depth: u8) -> bool {
         let mut subset = subset;
         self.phase_2_probes += 1;
         let solution_distance = self.phase_2.distance(subset.index());
@@ -137,27 +170,26 @@ impl TwoPhaseSolver {
         }
         let coset_index = next_coset.index();
         let subset_distance = self.phase_1.distance(coset_index);
-        let mut twists = self.relevant_twists[twist as usize];
+        let mut twist_set = self.relevant_twists[twist as usize];
         if p1_depth == subset_distance {
-            twists.keep_only(self.phase_1.less_distance(coset_index));
+            twist_set.keep_only(self.phase_1.less_distance(coset_index));
         }
         else if p1_depth == subset_distance + 1 {
-            twists.unset_twists(self.phase_1.more_distance(coset_index));
+            twist_set.unset_twists(self.phase_1.more_distance(coset_index));
         }
         if p1_depth == 1 {
-            twists.unset_twists(TwistSet::h0());
+            twist_set.unset_twists(TwistSet::h0());
         }
-        if twists.is_empty() {
-            self.no_twists_cut += 1;
+        if twist_set.is_empty() {
+            self.no_twist_cut += 1;
             return false;
         }
 
         let e_slice_prm = self.twister.twisted_e_slice_prm(subset.e_slice_prm, coset.e_slice_loc, twist);
         let e_non_slice_prm = self.twister.twisted_e_non_slice_prm(subset.e_non_slice_prm, coset.e_slice_loc, twist);
         let next_subset = SubsetCube{ e_slice_prm, e_non_slice_prm, c_prm };
-        for twist in twists.iter() {
-            let next_p1_depth: u8 = if twist == Twist::None { p1_depth } else { p1_depth - 1 };
-            let result = self.search_phase_1(next_subset, next_coset, next_p1_depth, p2_depth, twist);
+        for twist in twist_set.iter() {
+            let result = self.search_phase_1(next_subset, next_coset, p1_depth - 1, p2_depth, twist);
             if result {
                 self.solution.push_front(twist);
                 return true;

@@ -1,42 +1,8 @@
 use crate::corners::*;
 use crate::edges::*;
 use crate::twist::*;
+use crate::twist_set::*;
 use rayon::prelude::*;
-
-pub trait Twistable: Clone {
-    fn twisted(&self, twister: &Twister, twist: Twist) -> Self;
-
-    fn twisted_by(&self, twister: &Twister, twists: &[Twist]) -> Self {
-        twists.iter().fold(self.clone(), |cube, &twist| {
-            cube.twisted(twister, twist)
-        })   
-    }
-}
-
-// pub struct SliceLocPermutationParity {
-//     table: Vec<bool>,
-// }
-
-// impl SliceLocPermutationParity {
-//     pub fn new() -> Self {
-//         let mut table = vec![false; Edges::SLICE_LOC_SIZE as usize];
-//         let e_solved = Edges::solved();
-//         for i in 0..Edges::SLICE_LOC_SIZE {
-//             let e = Edges::from_index(
-//                 e_solved.slice_prm_index(),
-//                 e_solved.non_slice_prm_index(),
-//                 i as u16,
-//                 e_solved.ori_index(),
-//             );
-//             table[i as usize] = is_even_permutation_array(&e.cubies());
-//         }
-//         Self { table }
-//     }
-
-//     pub fn get(&self, index: u16) -> bool {
-//         self.table[index as usize]
-//     }
-// }
 
 #[derive(Clone)]
 pub struct Twister {
@@ -90,7 +56,7 @@ impl Twister {
             .par_chunks_mut(COUNT)
             .enumerate()
             .for_each(|(i, chunk)| {
-                let obj = Edges::from_indices(i / Edges::SLICE_LOC_SIZE, 0, i % Edges::SLICE_LOC_SIZE, 0);
+                let obj = Edges::from_indices(i % Edges::SLICE_PRM_SIZE, 0, i / Edges::SLICE_PRM_SIZE, 0);
                 for twist in TwistSet::full_and_none().iter() {
                     chunk[twist as usize] = obj.twisted(twist).slice_prm_index() as u8;
                 }
@@ -99,7 +65,7 @@ impl Twister {
             .par_chunks_mut(COUNT)
             .enumerate()
             .for_each(|(i, chunk)| {
-                let obj = Edges::from_indices(0, i / Edges::SLICE_LOC_SIZE, i % Edges::SLICE_LOC_SIZE, 0);
+                let obj = Edges::from_indices(0, i % Edges::NON_SLICE_PRM_SIZE, i / Edges::NON_SLICE_PRM_SIZE, 0);
                 for twist in TwistSet::full_and_none().iter() {
                     chunk[twist as usize] = obj.twisted(twist).non_slice_prm_index() as u16;
                 }
@@ -134,10 +100,10 @@ impl Twister {
         self.e_ori[e_ori * COUNT + twist as usize] as usize
     }
     pub fn twisted_e_slice_prm(&self, e_slice_prm: usize, e_slice_loc: usize, twist: Twist) -> usize {
-        self.e_slice_prm[(e_slice_prm * Edges::SLICE_LOC_SIZE + e_slice_loc) * COUNT + twist as usize] as usize
+        self.e_slice_prm[(e_slice_loc * Edges::SLICE_PRM_SIZE + e_slice_prm) * COUNT + twist as usize] as usize
     }
     pub fn twisted_e_non_slice_prm(&self, e_non_slice_prm: usize, e_slice_loc: usize, twist: Twist) -> usize {
-        self.e_non_slice_prm[(e_non_slice_prm * Edges::SLICE_LOC_SIZE + e_slice_loc) * COUNT + twist as usize] as usize
+        self.e_non_slice_prm[(e_slice_loc * Edges::NON_SLICE_PRM_SIZE + e_non_slice_prm) * COUNT + twist as usize] as usize
     }
     pub fn twisted_e_slice_loc(&self, e_slice_loc: usize, twist: Twist) -> usize {
         self.e_slice_loc[e_slice_loc * COUNT + twist as usize] as usize
@@ -148,6 +114,7 @@ impl Twister {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::twist_generator::*;
 
     // Tests 'twisted_c_prm' and 'twisted_c_ori'
     #[test]
