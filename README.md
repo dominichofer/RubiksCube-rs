@@ -126,21 +126,33 @@ To install Rust, follow the instructions at [rustup.rs](https://rustup.rs/).
 cargo build --release
 ```
 
-### Running the Project
+### Solving cube states
 
+To solve a file, run
 ```bash
-cargo run --release
+cargo run --release --bin rubikscube <file>
 ```
 
-### Running Tests
+The file is expected to contain a space-separated sequence of twists on each line of the file. Each line is interpreted as the sequence of twists that are applied to a solved cube. The result is interpreted as an input cube state.
 
+This project comes with two files:
+
+- `test_pos_small.txt` contains 1'000 input sequences. Containing:
+  - 1 empty sequence
+  - all 18 1-twist sequences
+  - all 18*18 2-twist sequences
+  - the [superflip](https://en.wikipedia.org/wiki/Superflip) sequence
+  - the rest are randomly generated sequences
+- `test_pos_big.txt` contains 10'000 randomly generated sequences
+
+To run them, run
 ```bash
-cargo test --release
+cargo run --release --bin rubikscube test_pos_small.txt
+cargo run --release --bin rubikscube test_pos_big.txt
 ```
 
-## Speed
-On an AMD Ryzen 9 9950X3D 16-Core Processor with HT and DDR5 RAM with 4x 32-bit channels at 3600 MT/s, this program solves
-test_cubes_big.txt in 13.8s (720 cubes per second) with a single thread.
+Here's an example output of `test_pos_big.txt` on an AMD Ryzen 9 9950X3D 16-Core Processor with HT and DDR5 RAM with 4x 32-bit channels at 3600 MT/s.
+If solved `test_cubes_big.txt` in 13.8s (720 cubes per second) with a single thread.
 ```
 Corners table loaded in: 19.3856ms
 Subset table loaded in: 3.4855558s
@@ -166,25 +178,40 @@ Corner cuts: 2’717’995 (59.29%)
 No twist cuts: 17’105’909
 ```
 
-### Benchmarking
+### Running Benchmarks
 
+To run the benchmark, execute
 ```bash
 cargo run --release --bin benchmark
 ```
 
-On an AMD Ryzen 9 9950X3D 16-Core Processor with DDR5 RAM at 3600 MT/s, we measured twisting
-
-Corners twisted               27.7 ns
-Corners rotated_colours       53.2 ns
-Corners from_indices          71.6 ns
-Corners prm_index              7.9 ns
+Here's an example output of an AMD Ryzen 9 9950X3D 16-Core Processor with DDR5 RAM at 3600 MT/s
+```
+Corners twisted               27.3 ns
+Corners rotated_colours       53.7 ns
+Corners from_indices          70.5 ns
+Corners prm_index              7.3 ns
 Corners ori_index              5.8 ns
-Edges twisted                 32.8 ns
-Edges rotated_colours         81.4 ns
-Edges from_indices           203.5 ns
-Edges slice_prm_index         20.4 ns
-Edges non_slice_prm_index     25.2 ns
-Edges slice_loc_index         27.1 ns
-Edges ori_index                4.1 ns
-SubsetCube twisted            13.6 ns
-CosetCube twisted              7.3 ns
+Edges twisted                 31.4 ns
+Edges rotated_colours         79.6 ns
+Edges from_indices           204.8 ns
+Edges slice_prm_index         22.4 ns
+Edges non_slice_prm_index     24.7 ns
+Edges slice_loc_index         26.6 ns
+Edges ori_index                4.2 ns
+SubsetIndex twisted            12.9 ns
+CosetIndex twisted              7.8 ns
+```
+
+### Running the GUI
+
+To run the graphical user interface, execute
+```bash
+cargo run --release --bin gui
+```
+
+### Running Tests
+
+```bash
+cargo test --release
+```

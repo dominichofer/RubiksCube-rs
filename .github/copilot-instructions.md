@@ -8,10 +8,10 @@ High-performance Rubik's Cube solver using **Kociemba's two-phase algorithm**. S
 ### Core Cube Representations
 The solver uses **three complementary cube representations** (see [architecture.mmd](../architecture.mmd)):
 
-1. **`CornersCube`** - Corner permutation + orientation indices
-2. **`SubsetCube`** - H0 subgroup state (slice edges + all corners in home position)
-3. **`CosetCube`** - Coset representative (orientations + slice locations)
-4. **`Cube`** - Full state combining `SubsetCube` + `CosetCube`
+1. **`CornerIndex`** - Corner permutation + orientation indices
+2. **`SubsetIndex`** - H0 subgroup state (slice edges + all corners in home position)
+3. **`CosetIndex`** - Coset representative (orientations + slice locations)
+4. **`Cube`** - Full state combining `SubsetIndex` + `CosetIndex`
 
 **Critical:** Each representation uses **index-based encoding** (e.g., `c_prm: usize`, `e_ori: usize`). These are NOT raw cubie arrays but compressed indices for table lookups.
 
@@ -46,7 +46,7 @@ Enables O(1) state transitions without reconstructing cubie arrays. `Twistable` 
 ### Index Encoding
 All cube state uses **indices, not arrays**. Example from [cube.rs](../src/cube.rs#L78-L86):
 ```rust
-SubsetCube::index() -> (c_prm/2) * E_SLICE * E_NON_SLICE + e_non_slice_prm * E_SLICE + e_slice_prm
+SubsetIndex::index() -> (c_prm/2) * E_SLICE * E_NON_SLICE + e_non_slice_prm * E_SLICE + e_slice_prm
 ```
 Division by 2 exploits parity constraints (corner/edge permutations must have matching parity).
 

@@ -1,0 +1,18 @@
+%%{ init: { 'flowchart': {'defaultRenderer': 'elk' } } }%%
+flowchart LR
+    C_Cubies["Corner Cubies"]
+    RC["Rubik's Cube"]
+    E_Cubies["Edge Cubies"]
+    
+    RC --78 ns--> C_Cubies
+    C_Cubies --twist 27 ns--> C_Cubies
+    C_Cubies --colour rot 55 ns--> C_Cubies
+    C_Cubies --13 ns--> RC
+
+    RC --206 ns--> E_Cubies
+    E_Cubies --twist 33 ns--> E_Cubies
+    E_Cubies --colour rot 85 ns--> E_Cubies
+    E_Cubies --76 ns--> RC
+
+    RC -.twist 21 ns.-> RC
+    RC -.colour rot 513 ns.-> RC

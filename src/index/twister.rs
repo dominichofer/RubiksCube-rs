@@ -4,7 +4,6 @@ use crate::twist::*;
 use crate::twist_set::*;
 use rayon::prelude::*;
 
-#[derive(Clone)]
 pub struct Twister {
     c_ori: Vec<u16>,
     c_prm: Vec<u16>,
@@ -14,7 +13,7 @@ pub struct Twister {
     e_slice_loc: Vec<u16>,
 }
 
-const COUNT: usize = TwistSet::full_and_none().count();
+const COUNT: usize = TwistSet::FULL_AND_NONE.count();
 
 impl Twister {
     pub fn new() -> Self {
@@ -22,7 +21,8 @@ impl Twister {
         let mut c_prm = vec![0u16; Corners::PRM_SIZE * COUNT];
         let mut e_ori = vec![0u16; Edges::ORI_SIZE * COUNT];
         let mut e_slice_prm = vec![0u8; Edges::SLICE_PRM_SIZE * Edges::SLICE_LOC_SIZE * COUNT];
-        let mut e_non_slice_prm = vec![0u16; Edges::NON_SLICE_PRM_SIZE * Edges::SLICE_LOC_SIZE * COUNT];
+        let mut e_non_slice_prm =
+            vec![0u16; Edges::NON_SLICE_PRM_SIZE * Edges::SLICE_LOC_SIZE * COUNT];
         let mut e_slice_loc = vec![0u16; Edges::SLICE_LOC_SIZE * COUNT];
 
         c_ori
@@ -30,7 +30,7 @@ impl Twister {
             .enumerate()
             .for_each(|(i, chunk)| {
                 let obj = Corners::from_indices(0, i);
-                for twist in TwistSet::full_and_none().iter() {
+                for twist in TwistSet::FULL_AND_NONE.iter() {
                     chunk[twist as usize] = obj.twisted(twist).ori_index() as u16;
                 }
             });
@@ -39,7 +39,7 @@ impl Twister {
             .enumerate()
             .for_each(|(i, chunk)| {
                 let obj = Corners::from_indices(i, 0);
-                for twist in TwistSet::full_and_none().iter() {
+                for twist in TwistSet::FULL_AND_NONE.iter() {
                     chunk[twist as usize] = obj.twisted(twist).prm_index() as u16;
                 }
             });
@@ -48,7 +48,7 @@ impl Twister {
             .enumerate()
             .for_each(|(i, chunk)| {
                 let obj = Edges::from_indices(0, 0, 0, i);
-                for twist in TwistSet::full_and_none().iter() {
+                for twist in TwistSet::FULL_AND_NONE.iter() {
                     chunk[twist as usize] = obj.twisted(twist).ori_index() as u16;
                 }
             });
@@ -56,8 +56,9 @@ impl Twister {
             .par_chunks_mut(COUNT)
             .enumerate()
             .for_each(|(i, chunk)| {
-                let obj = Edges::from_indices(i % Edges::SLICE_PRM_SIZE, 0, i / Edges::SLICE_PRM_SIZE, 0);
-                for twist in TwistSet::full_and_none().iter() {
+                let obj =
+                    Edges::from_indices(i % Edges::SLICE_PRM_SIZE, 0, i / Edges::SLICE_PRM_SIZE, 0);
+                for twist in TwistSet::FULL_AND_NONE.iter() {
                     chunk[twist as usize] = obj.twisted(twist).slice_prm_index() as u8;
                 }
             });
@@ -65,8 +66,13 @@ impl Twister {
             .par_chunks_mut(COUNT)
             .enumerate()
             .for_each(|(i, chunk)| {
-                let obj = Edges::from_indices(0, i % Edges::NON_SLICE_PRM_SIZE, i / Edges::NON_SLICE_PRM_SIZE, 0);
-                for twist in TwistSet::full_and_none().iter() {
+                let obj = Edges::from_indices(
+                    0,
+                    i % Edges::NON_SLICE_PRM_SIZE,
+                    i / Edges::NON_SLICE_PRM_SIZE,
+                    0,
+                );
+                for twist in TwistSet::FULL_AND_NONE.iter() {
                     chunk[twist as usize] = obj.twisted(twist).non_slice_prm_index() as u16;
                 }
             });
@@ -75,7 +81,7 @@ impl Twister {
             .enumerate()
             .for_each(|(i, chunk)| {
                 let obj = Edges::from_indices(0, 0, i, 0);
-                for twist in TwistSet::full_and_none().iter() {
+                for twist in TwistSet::FULL_AND_NONE.iter() {
                     chunk[twist as usize] = obj.twisted(twist).slice_loc_index() as u16;
                 }
             });
@@ -99,17 +105,35 @@ impl Twister {
     pub fn twisted_e_ori(&self, e_ori: usize, twist: Twist) -> usize {
         self.e_ori[e_ori * COUNT + twist as usize] as usize
     }
-    pub fn twisted_e_slice_prm(&self, e_slice_prm: usize, e_slice_loc: usize, twist: Twist) -> usize {
-        self.e_slice_prm[(e_slice_loc * Edges::SLICE_PRM_SIZE + e_slice_prm) * COUNT + twist as usize] as usize
+    pub fn twisted_e_slice_prm(
+        &self,
+        e_slice_prm: usize,
+        e_slice_loc: usize,
+        twist: Twist,
+    ) -> usize {
+        self.e_slice_prm
+            [(e_slice_loc * Edges::SLICE_PRM_SIZE + e_slice_prm) * COUNT + twist as usize]
+            as usize
     }
-    pub fn twisted_e_non_slice_prm(&self, e_non_slice_prm: usize, e_slice_loc: usize, twist: Twist) -> usize {
-        self.e_non_slice_prm[(e_slice_loc * Edges::NON_SLICE_PRM_SIZE + e_non_slice_prm) * COUNT + twist as usize] as usize
+    pub fn twisted_e_non_slice_prm(
+        &self,
+        e_non_slice_prm: usize,
+        e_slice_loc: usize,
+        twist: Twist,
+    ) -> usize {
+        self.e_non_slice_prm
+            [(e_slice_loc * Edges::NON_SLICE_PRM_SIZE + e_non_slice_prm) * COUNT + twist as usize]
+            as usize
     }
     pub fn twisted_e_slice_loc(&self, e_slice_loc: usize, twist: Twist) -> usize {
         self.e_slice_loc[e_slice_loc * COUNT + twist as usize] as usize
     }
 }
 
+pub trait Twistable: Sized + Copy {
+    fn twisted(&self, twister: &Twister, twist: Twist) -> Self;
+    fn twisted_by(&self, twister: &Twister, twists: &[Twist]) -> Self;
+}
 
 #[cfg(test)]
 mod tests {
@@ -120,7 +144,7 @@ mod tests {
     #[test]
     fn test_corners() {
         let twister = Twister::new();
-        let mut rnd = RandomTwistGen::new(42, TwistSet::full());
+        let mut rnd = RandomTwistGen::new(42, &ALL_TWISTS);
         let mut c = Corners::solved();
         let mut prm = c.prm_index();
         let mut ori = c.ori_index();
@@ -138,7 +162,7 @@ mod tests {
     #[test]
     fn test_edges() {
         let twister = Twister::new();
-        let mut rnd = RandomTwistGen::new(42, TwistSet::full());
+        let mut rnd = RandomTwistGen::new(42, &ALL_TWISTS);
         let mut e = Edges::solved();
         let mut ori = e.ori_index();
         let mut slice_prm = e.slice_prm_index();

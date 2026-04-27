@@ -1,5 +1,5 @@
-use rubikscube::*;
 use kiss3d::prelude::*;
+use rubikscube::*;
 
 fn pos_from_location(s: impl ToString) -> Vec3 {
     let mut v = Vec3::ZERO;
@@ -51,7 +51,8 @@ fn axis_from_rotation(rot: Rotation) -> Vec3 {
 
 fn create_scene(corners: Corners, edges: Edges) -> (SceneNode3d, RubiksCube) {
     let mut scene = SceneNode3d::empty();
-    scene.add_light(Light::point(50.0))
+    scene
+        .add_light(Light::point(50.0))
         .set_position(Vec3::new(5.0, 8.0, 5.0));
     let cube = RubiksCube::new(&mut scene, corners, edges);
     (scene, cube)
@@ -85,14 +86,9 @@ struct RubiksCube {
 impl RubiksCube {
     const CENTER_LOCATIONS: [&str; 6] = ["U", "F", "R", "B", "L", "D"];
     const EDGE_LOCATIONS: [&str; 12] = [
-        "UF", "UB", "DB", "DF",
-        "UL", "UR", "DR", "DL",
-        "LF", "RF", "RB", "LB",
+        "UF", "UB", "DB", "DF", "UL", "UR", "DR", "DL", "LF", "RF", "RB", "LB",
     ];
-    const CORNER_LOCATIONS: [&str; 8] = [
-        "UFL", "URF", "ULB", "UBR",
-        "DLF", "DFR", "DBL", "DRB",
-    ];
+    const CORNER_LOCATIONS: [&str; 8] = ["UFL", "URF", "ULB", "UBR", "DLF", "DFR", "DBL", "DRB"];
 
     pub fn new(scene: &mut SceneNode3d, corners: Corners, edges: Edges) -> Self {
         let mut cubies: Vec<Cubie> = Self::CENTER_LOCATIONS
@@ -183,7 +179,10 @@ impl Animation {
                 *remaining -= step;
                 *remaining <= 0.0
             }
-            Animation::CubeRotation { rotation, remaining } => {
+            Animation::CubeRotation {
+                rotation,
+                remaining,
+            } => {
                 let step = ANIMATION_SPEED.min(*remaining);
                 cube.rotate_whole(*rotation, step);
                 *remaining -= step;
@@ -265,9 +264,12 @@ fn handle_input(
 ) -> Option<Animation> {
     // Face twist keys
     const FACE_KEYS: [(Key, char); 6] = [
-        (Key::L, 'L'), (Key::R, 'R'),
-        (Key::U, 'U'), (Key::D, 'D'),
-        (Key::F, 'F'), (Key::B, 'B'),
+        (Key::L, 'L'),
+        (Key::R, 'R'),
+        (Key::U, 'U'),
+        (Key::D, 'D'),
+        (Key::F, 'F'),
+        (Key::B, 'B'),
     ];
 
     for (key, face) in FACE_KEYS {

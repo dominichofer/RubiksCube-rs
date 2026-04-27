@@ -2,9 +2,10 @@
 mod tests {
     use crate::corners::*;
     use crate::edges::*;
-    use crate::twist::*;
-    use crate::twist_set::*;
+    use crate::rotation::*;
     use crate::twist_generator::*;
+    use crate::twist_set::*;
+    use crate::twist::*;
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
     struct Cubies {
@@ -43,11 +44,11 @@ mod tests {
 
     #[test]
     fn test_twists_cycle() {
-        let mut rnd = RandomTwistGen::new(3423598, TwistSet::full());
+        let mut rnd = RandomTwistGen::new(3423598, &ALL_TWISTS);
         let mut c = Cubies::solved();
         for _ in 0..100_000 {
             c = c.twisted(rnd.gen_twist());
-            for t in TwistSet::full().iter() {
+            for t in ALL_TWISTS {
                 assert_eq!(c.twisted_by(&[t, t, t, t]), c, "Twist {:?} did not cycle correctly after 4 applications", t);
             }
         }
@@ -59,7 +60,7 @@ mod tests {
 
     #[test]
     fn test_twist_commutation() {
-        let mut rnd = RandomTwistGen::new(32468723, TwistSet::full());
+        let mut rnd = RandomTwistGen::new(32468723, &ALL_TWISTS);
         let mut c = Cubies::solved();
         for _ in 0..100_000 {
             c = c.twisted(rnd.gen_twist());
@@ -84,12 +85,15 @@ mod tests {
         assert!(solved.twisted(Twist::L1).rotated_colours(Rotation::F) == solved.twisted(Twist::D1));
 
         // Fuzzing
-        let mut rnd = RandomTwistGen::new(12345678, TwistSet::full());
+        let mut rnd = RandomTwistGen::new(12345678, &ALL_TWISTS);
         for _ in 0..100_000 {
-            let twists = rnd.gen_twists(1);
+            let rnd_cube = solved.twisted_by(&rnd.gen_twists(100));
+            let twists = rnd.gen_twists(100);
             for rot in [Rotation::L, Rotation::U, Rotation::F].iter() {
-                let rotated_twists = twists.iter().map(|&t| t.counter_rotated(*rot)).collect::<Vec<_>>();
-                assert!(solved.twisted_by(&twists).rotated_colours(*rot) == solved.twisted_by(&rotated_twists), "Failed for twists {:?} and rotation {:?}", twists, rot);
+                // The sequence (rot, twists, rot^-1) should be equivalent to simpify_rot_twists(rot, twists)
+                let a = rnd_cube.rotated_colours(*rot).twisted_by(&twists).rotated_colours(*rot).rotated_colours(*rot).rotated_colours(*rot);
+                let b = rnd_cube.twisted_by(&simplify_rot_twists(*rot, &twists));
+                assert_eq!(a, b, "Failed for rot {:?} and twists {:?}", rot, twists);
             }
         }
     }
