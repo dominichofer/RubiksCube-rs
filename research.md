@@ -45,6 +45,8 @@ Cube 3x3 from https://oeis.org/A080601
 | 20 |                        ? |            |               |               |
 
 
+With "wsl ./twophase -s 20 -q < test_pos_big.txt", cube20src can solve test_pos_big.txt in 3.75 seconds. That's 375 us per pos on average.
+
 # Open research questions
 
 ## Which of the 4x6 colour rotations are independent?
