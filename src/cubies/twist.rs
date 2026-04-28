@@ -10,56 +10,28 @@
 #[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Twist {
-    L1,
-    L2,
-    L3,
-    R1,
-    R2,
-    R3,
-    U1,
-    U2,
-    U3,
-    D1,
-    D2,
-    D3,
-    F1,
-    F2,
-    F3,
-    B1,
-    B2,
-    B3,
+    L1, L2, L3,
+    R1, R2, R3,
+    U1, U2, U3,
+    D1, D2, D3,
+    F1, F2, F3,
+    B1, B2, B3,
 }
 
 pub const ALL_TWISTS: [Twist; 18] = [
-    Twist::L1,
-    Twist::L2,
-    Twist::L3,
-    Twist::R1,
-    Twist::R2,
-    Twist::R3,
-    Twist::U1,
-    Twist::U2,
-    Twist::U3,
-    Twist::D1,
-    Twist::D2,
-    Twist::D3,
-    Twist::F1,
-    Twist::F2,
-    Twist::F3,
-    Twist::B1,
-    Twist::B2,
-    Twist::B3,
+    Twist::L1, Twist::L2, Twist::L3,
+    Twist::R1, Twist::R2, Twist::R3,
+    Twist::U1, Twist::U2, Twist::U3,
+    Twist::D1, Twist::D2, Twist::D3,
+    Twist::F1, Twist::F2, Twist::F3,
+    Twist::B1, Twist::B2, Twist::B3,
 ];
 
 pub const H0_TWISTS: [Twist; 10] = [
     Twist::L2,
     Twist::R2,
-    Twist::U1,
-    Twist::U2,
-    Twist::U3,
-    Twist::D1,
-    Twist::D2,
-    Twist::D3,
+    Twist::U1, Twist::U2, Twist::U3,
+    Twist::D1, Twist::D2, Twist::D3,
     Twist::F2,
     Twist::B2,
 ];
@@ -89,8 +61,8 @@ impl Twist {
         }
     }
 
+    //TODO: Use this!
     pub fn to_index(&self) -> u8 {
-        //TODO: Use this!
         *self as u8
     }
 }

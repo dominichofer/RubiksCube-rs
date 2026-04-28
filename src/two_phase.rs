@@ -2,18 +2,6 @@ use crate::*;
 use num_format::ToFormattedString;
 use std::collections::HashMap;
 
-
-fn unique_twists_after(twist: Twist) -> TwistSet {
-    match twist {
-        Twist::L1 | Twist::L2 | Twist::L3 => TwistSet::from(0b111_111_111_111_111_000),
-        Twist::R1 | Twist::R2 | Twist::R3 => TwistSet::from(0b111_111_111_111_000_000),
-        Twist::U1 | Twist::U2 | Twist::U3 => TwistSet::from(0b111_111_111_000_111_111),
-        Twist::D1 | Twist::D2 | Twist::D3 => TwistSet::from(0b111_111_000_000_111_111),
-        Twist::F1 | Twist::F2 | Twist::F3 => TwistSet::from(0b111_000_111_111_111_111),
-        Twist::B1 | Twist::B2 | Twist::B3 => TwistSet::from(0b000_000_111_111_111_111),
-    }
-}
-
 pub struct TwoPhaseSolver<'a> {
     twister: &'a Twister,
     phase_1: &'a DirectionsTable,
