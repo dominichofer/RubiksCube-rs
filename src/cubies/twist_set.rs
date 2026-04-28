@@ -6,7 +6,6 @@ pub struct TwistSet(u32);
 impl TwistSet {
     pub const EMPTY: Self = Self(0b000_000_000_000_000_000);
     pub const FULL: Self = Self(0b111_111_111_111_111_111);
-    pub const FULL_AND_NONE: Self = Self(0b1_111_111_111_111_111_111);
     pub const H0: Self = Self(0b010_010_111_111_010_010); // H0 = { L2, R2, U, D, F2, B2 }
 
     pub fn bits(&self) -> u32 {
@@ -46,9 +45,9 @@ impl TwistSet {
     }
 
     pub fn iter(&self) -> impl Iterator<Item = Twist> {
-        (0..32).filter_map(|i| {
+        (0..18u8).filter_map(|i| {
             if self.0 & (1 << i) != 0 {
-                Some(Twist::from(i as u8))
+                Some(Twist::from(i))
             } else {
                 None
             }

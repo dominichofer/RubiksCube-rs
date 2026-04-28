@@ -38,7 +38,6 @@ pub fn simplify_rot_twist(rot: Rotation, twist: Twist) -> Twist {
             Twist::B1 => Twist::U1,
             Twist::B2 => Twist::U2,
             Twist::B3 => Twist::U3,
-            Twist::None => Twist::None,
         },
         Rotation::U => match twist {
             Twist::L1 => Twist::B1,
@@ -59,7 +58,6 @@ pub fn simplify_rot_twist(rot: Rotation, twist: Twist) -> Twist {
             Twist::B1 => Twist::R1,
             Twist::B2 => Twist::R2,
             Twist::B3 => Twist::R3,
-            Twist::None => Twist::None,
         },
         Rotation::F => match twist {
             Twist::L1 => Twist::U1,
@@ -80,7 +78,6 @@ pub fn simplify_rot_twist(rot: Rotation, twist: Twist) -> Twist {
             Twist::B1 => Twist::B1,
             Twist::B2 => Twist::B2,
             Twist::B3 => Twist::B3,
-            Twist::None => Twist::None,
         },
     }
 }

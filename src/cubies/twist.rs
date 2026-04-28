@@ -28,7 +28,6 @@ pub enum Twist {
     B1,
     B2,
     B3,
-    None,
 }
 
 pub const ALL_TWISTS: [Twist; 18] = [
@@ -86,7 +85,6 @@ impl Twist {
             15 => Twist::B1,
             16 => Twist::B2,
             17 => Twist::B3,
-            18 => Twist::None,
             _ => panic!("Invalid twist value: {}", value),
         }
     }

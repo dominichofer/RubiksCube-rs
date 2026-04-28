@@ -216,7 +216,6 @@ impl Edges {
             Twist::F3 => self.twisted_by(&[Twist::F1, Twist::F2]),
             Twist::B2 => self.twisted_by(&[Twist::B1, Twist::B1]),
             Twist::B3 => self.twisted_by(&[Twist::B1, Twist::B2]),
-            Twist::None => *self,
         }
     }
 

@@ -1,7 +1,6 @@
 use crate::corners::*;
 use crate::edges::*;
 use crate::twist::*;
-use crate::twist_set::*;
 use rayon::prelude::*;
 
 pub struct Twister {
@@ -13,7 +12,7 @@ pub struct Twister {
     e_slice_loc: Vec<u16>,
 }
 
-const COUNT: usize = TwistSet::FULL_AND_NONE.count();
+const COUNT: usize = ALL_TWISTS.len();
 
 impl Twister {
     pub fn new() -> Self {
@@ -30,7 +29,7 @@ impl Twister {
             .enumerate()
             .for_each(|(i, chunk)| {
                 let obj = Corners::from_indices(0, i);
-                for twist in TwistSet::FULL_AND_NONE.iter() {
+                for twist in ALL_TWISTS {
                     chunk[twist as usize] = obj.twisted(twist).ori_index() as u16;
                 }
             });
@@ -39,7 +38,7 @@ impl Twister {
             .enumerate()
             .for_each(|(i, chunk)| {
                 let obj = Corners::from_indices(i, 0);
-                for twist in TwistSet::FULL_AND_NONE.iter() {
+                for twist in ALL_TWISTS {
                     chunk[twist as usize] = obj.twisted(twist).prm_index() as u16;
                 }
             });
@@ -48,7 +47,7 @@ impl Twister {
             .enumerate()
             .for_each(|(i, chunk)| {
                 let obj = Edges::from_indices(0, 0, 0, i);
-                for twist in TwistSet::FULL_AND_NONE.iter() {
+                for twist in ALL_TWISTS {
                     chunk[twist as usize] = obj.twisted(twist).ori_index() as u16;
                 }
             });
@@ -58,7 +57,7 @@ impl Twister {
             .for_each(|(i, chunk)| {
                 let obj =
                     Edges::from_indices(i % Edges::SLICE_PRM_SIZE, 0, i / Edges::SLICE_PRM_SIZE, 0);
-                for twist in TwistSet::FULL_AND_NONE.iter() {
+                for twist in ALL_TWISTS {
                     chunk[twist as usize] = obj.twisted(twist).slice_prm_index() as u8;
                 }
             });
@@ -72,7 +71,7 @@ impl Twister {
                     i / Edges::NON_SLICE_PRM_SIZE,
                     0,
                 );
-                for twist in TwistSet::FULL_AND_NONE.iter() {
+                for twist in ALL_TWISTS {
                     chunk[twist as usize] = obj.twisted(twist).non_slice_prm_index() as u16;
                 }
             });
@@ -81,7 +80,7 @@ impl Twister {
             .enumerate()
             .for_each(|(i, chunk)| {
                 let obj = Edges::from_indices(0, 0, i, 0);
-                for twist in TwistSet::FULL_AND_NONE.iter() {
+                for twist in ALL_TWISTS {
                     chunk[twist as usize] = obj.twisted(twist).slice_loc_index() as u16;
                 }
             });

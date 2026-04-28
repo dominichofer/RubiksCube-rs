@@ -1,5 +1,5 @@
 use super::{CosetIndex, SubsetIndex, Twister};
-use crate::cubies::*;
+use crate::{CornerIndex, cubies::*};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CubeIndex {
@@ -13,6 +13,18 @@ impl CubeIndex {
             subset: SubsetIndex::solved(),
             coset: CosetIndex::solved(),
         }
+    }
+
+    pub fn corner_index(&self) -> usize {
+        CornerIndex {
+            prm: self.subset.c_prm,
+            ori: self.coset.c_ori,
+        }
+        .index()
+    }
+
+    pub fn in_subset(&self) -> bool {
+        self.coset.in_subset()
     }
 
     pub fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
