@@ -61,9 +61,8 @@ impl Twist {
         }
     }
 
-    //TODO: Use this!
-    pub fn to_index(&self) -> u8 {
-        *self as u8
+    pub fn to_index(&self) -> usize {
+        *self as usize
     }
 }
 

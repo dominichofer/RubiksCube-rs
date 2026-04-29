@@ -30,7 +30,7 @@ impl Twister {
             .for_each(|(i, chunk)| {
                 let obj = Corners::from_indices(0, i);
                 for twist in ALL_TWISTS {
-                    chunk[twist as usize] = obj.twisted(twist).ori_index() as u16;
+                    chunk[twist.to_index()] = obj.twisted(twist).ori_index() as u16;
                 }
             });
         c_prm
@@ -39,7 +39,7 @@ impl Twister {
             .for_each(|(i, chunk)| {
                 let obj = Corners::from_indices(i, 0);
                 for twist in ALL_TWISTS {
-                    chunk[twist as usize] = obj.twisted(twist).prm_index() as u16;
+                    chunk[twist.to_index()] = obj.twisted(twist).prm_index() as u16;
                 }
             });
         e_ori
@@ -48,7 +48,7 @@ impl Twister {
             .for_each(|(i, chunk)| {
                 let obj = Edges::from_indices(0, 0, 0, i);
                 for twist in ALL_TWISTS {
-                    chunk[twist as usize] = obj.twisted(twist).ori_index() as u16;
+                    chunk[twist.to_index()] = obj.twisted(twist).ori_index() as u16;
                 }
             });
         e_slice_prm
@@ -58,7 +58,7 @@ impl Twister {
                 let obj =
                     Edges::from_indices(i % Edges::SLICE_PRM_SIZE, 0, i / Edges::SLICE_PRM_SIZE, 0);
                 for twist in ALL_TWISTS {
-                    chunk[twist as usize] = obj.twisted(twist).slice_prm_index() as u8;
+                    chunk[twist.to_index()] = obj.twisted(twist).slice_prm_index() as u8;
                 }
             });
         e_non_slice_prm
@@ -72,7 +72,7 @@ impl Twister {
                     0,
                 );
                 for twist in ALL_TWISTS {
-                    chunk[twist as usize] = obj.twisted(twist).non_slice_prm_index() as u16;
+                    chunk[twist.to_index()] = obj.twisted(twist).non_slice_prm_index() as u16;
                 }
             });
         e_slice_loc
@@ -81,7 +81,7 @@ impl Twister {
             .for_each(|(i, chunk)| {
                 let obj = Edges::from_indices(0, 0, i, 0);
                 for twist in ALL_TWISTS {
-                    chunk[twist as usize] = obj.twisted(twist).slice_loc_index() as u16;
+                    chunk[twist.to_index()] = obj.twisted(twist).slice_loc_index() as u16;
                 }
             });
 
@@ -96,13 +96,13 @@ impl Twister {
     }
 
     pub fn twisted_c_ori(&self, c_ori: usize, twist: Twist) -> usize {
-        self.c_ori[c_ori * COUNT + twist as usize] as usize
+        self.c_ori[c_ori * COUNT + twist.to_index()] as usize
     }
     pub fn twisted_c_prm(&self, c_prm: usize, twist: Twist) -> usize {
-        self.c_prm[c_prm * COUNT + twist as usize] as usize
+        self.c_prm[c_prm * COUNT + twist.to_index()] as usize
     }
     pub fn twisted_e_ori(&self, e_ori: usize, twist: Twist) -> usize {
-        self.e_ori[e_ori * COUNT + twist as usize] as usize
+        self.e_ori[e_ori * COUNT + twist.to_index()] as usize
     }
     pub fn twisted_e_slice_prm(
         &self,
@@ -111,7 +111,7 @@ impl Twister {
         twist: Twist,
     ) -> usize {
         self.e_slice_prm
-            [(e_slice_loc * Edges::SLICE_PRM_SIZE + e_slice_prm) * COUNT + twist as usize]
+            [(e_slice_loc * Edges::SLICE_PRM_SIZE + e_slice_prm) * COUNT + twist.to_index()]
             as usize
     }
     pub fn twisted_e_non_slice_prm(
@@ -121,11 +121,11 @@ impl Twister {
         twist: Twist,
     ) -> usize {
         self.e_non_slice_prm
-            [(e_slice_loc * Edges::NON_SLICE_PRM_SIZE + e_non_slice_prm) * COUNT + twist as usize]
+            [(e_slice_loc * Edges::NON_SLICE_PRM_SIZE + e_non_slice_prm) * COUNT + twist.to_index()]
             as usize
     }
     pub fn twisted_e_slice_loc(&self, e_slice_loc: usize, twist: Twist) -> usize {
-        self.e_slice_loc[e_slice_loc * COUNT + twist as usize] as usize
+        self.e_slice_loc[e_slice_loc * COUNT + twist.to_index()] as usize
     }
 }
 
