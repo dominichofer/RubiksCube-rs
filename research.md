@@ -49,25 +49,26 @@ With "wsl ./twophase -s 20 -q < test_pos_big.txt", cube20src can solve test_pos_
 
 # Open research questions
 
-## Which of the 4x6 colour rotations are independent?
+## Q: Which of the 4x6 colour rotations are independent?
 Task 1: Create all 4x6 colour rotations for a given cube.
 Task 2: Take 1 million randomly twisted cubes and calculate the coset distance of each colour rotation.
 Task 3: Create a correlation plot for this data to see how the different colour rotations correlate.
 Task 4: Use the uncorrelated colour rotations to speed up the two phase solver.
 
-## When does the corner table cut in the two phase solver?
+## Q: When does the corner table cut in the two phase solver?
 Task 1: Log at which depth in the search the corner tables prunes.
 Task 2: If it's only relevant to know that a corner configuration is above a given depth, compactify the corner table. Maybe this reduces RAM pressure and leads to better cache usage.
 
-## Are there subset configurations in the subset table that have a shorter distance to the solution when all possible twists are considered?
+## Q: Are there subset configurations in the subset table that have a shorter distance to the solution when all possible twists are considered?
 Task 1: Create a brute force solver.
 Task 2: Randomly pick configurations from the subset table and check if the brute force solver finds quicker solutions.
 Task 3: If it does, use this information to improve the subset table.
 
-## With the twist generator that uses "no L after L no L+R after R", what's the shortest distance of a subset config to an other subset config?
+## Q: With the twist generator that uses "no L after L no L+R after R", what's the shortest distance of a subset config to an other subset config?
 Task 1: Starting from the solved cube, do an iterative deepening search to a subset cube.
 Task 2: Use this number to prune the search in the two step solver, if an intermediate cube is in the subset.
 
-## In the two phase solver, if an intermediate cube is in the subset, can the search really be pruned because the search was already performed in a previous iteration?
+## Q: In the two phase solver, if an intermediate cube is in the subset, can the search really be pruned because the search was already performed in a previous iteration?
 
-## Is the two phase solver equally fast, if the Twist::None is removed and the logic replaced by branching?
+## Q: Is the two phase solver equally fast, if the Twist::None is removed and the logic replaced by branching?
+A: Yes.
