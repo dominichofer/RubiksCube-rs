@@ -36,7 +36,7 @@ impl TwistSet {
         self.0 & (1 << t.to_index()) != 0
     }
 
-    pub const fn count(&self) -> usize {
+    pub fn count(&self) -> usize {
         self.0.count_ones() as usize
     }
 

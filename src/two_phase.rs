@@ -118,12 +118,7 @@ impl<'a> TwoPhaseSolver<'a> {
             return self.search_phase_2(cube.subset, p2_depth);
         }
 
-        if cube.in_subset() {
-            self.subset_cuts += 1;
-            return false;
-        }
-
-        if p1_depth + p2_depth < 9 {
+        if p1_depth + p2_depth < 10 {
             self.corner_probes += 1;
             let corner_distance = self.corners.distance(cube.corner_index());
             if corner_distance > p1_depth + p2_depth {
@@ -134,7 +129,7 @@ impl<'a> TwoPhaseSolver<'a> {
 
         let mut twist_set;
         if self.twists.is_empty() {
-            twist_set = TwistSet::from(0b111_111_111_111_111_111);
+            twist_set = TwistSet::FULL;
         } else {
             twist_set = unique_twists_after(*self.twists.last().unwrap());
         }
@@ -157,8 +152,8 @@ impl<'a> TwoPhaseSolver<'a> {
         for twist in twist_set.iter() {
             let next_cube = cube.twisted(self.twister, twist);
             self.twists.push(twist);
-            let result = self.search_phase_1(next_cube, p1_depth - 1, p2_depth);
-            if result {
+            let found_solution = self.search_phase_1(next_cube, p1_depth - 1, p2_depth);
+            if found_solution {
                 return true;
             }
             self.twists.pop();

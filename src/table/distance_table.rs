@@ -58,9 +58,7 @@ impl DistanceTable {
     }
 
     pub fn from_file(path: &str) -> Result<Self, std::io::Error> {
-        Ok(Self {
-            table: std::fs::read(path)?,
-        })
+        Ok(Self { table: std::fs::read(path)?,})
     }
 
     pub fn save_to_file(&self, path: &str) -> std::io::Result<()> {
