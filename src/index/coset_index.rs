@@ -40,11 +40,7 @@ impl CosetIndex {
         let e_ori = index % Edges::ORI_SIZE;
         index /= Edges::ORI_SIZE;
         let c_ori = index;
-        Self {
-            c_ori,
-            e_ori,
-            e_slice_loc,
-        }
+        Self { c_ori, e_ori, e_slice_loc }
     }
 
     pub fn twisted(&self, twister: &Twister, twist: Twist) -> Self {

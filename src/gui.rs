@@ -85,9 +85,7 @@ struct RubiksCube {
 
 impl RubiksCube {
     const CENTER_LOCATIONS: [&str; 6] = ["U", "F", "R", "B", "L", "D"];
-    const EDGE_LOCATIONS: [&str; 12] = [
-        "UF", "UB", "DB", "DF", "UL", "UR", "DR", "DL", "LF", "RF", "RB", "LB",
-    ];
+    const EDGE_LOCATIONS: [&str; 12] = ["UF", "UB", "DB", "DF", "UL", "UR", "DR", "DL", "LF", "RF", "RB", "LB"];
     const CORNER_LOCATIONS: [&str; 8] = ["UFL", "URF", "ULB", "UBR", "DLF", "DFR", "DBL", "DRB"];
 
     pub fn new(scene: &mut SceneNode3d, corners: Corners, edges: Edges) -> Self {

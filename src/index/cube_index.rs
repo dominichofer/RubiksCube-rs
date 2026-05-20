@@ -30,16 +30,8 @@ impl CubeIndex {
     pub fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
         CubeIndex {
             subset: SubsetIndex {
-                e_slice_prm: twister.twisted_e_slice_prm(
-                    self.subset.e_slice_prm,
-                    self.coset.e_slice_loc,
-                    twist,
-                ),
-                e_non_slice_prm: twister.twisted_e_non_slice_prm(
-                    self.subset.e_non_slice_prm,
-                    self.coset.e_slice_loc,
-                    twist,
-                ),
+                e_slice_prm: twister.twisted_e_slice_prm(self.subset.e_slice_prm, self.coset.e_slice_loc, twist),
+                e_non_slice_prm: twister.twisted_e_non_slice_prm(self.subset.e_non_slice_prm, self.coset.e_slice_loc, twist),
                 c_prm: twister.twisted_c_prm(self.subset.c_prm, twist),
             },
             coset: self.coset.twisted(twister, twist),
@@ -60,7 +52,8 @@ impl CubeIndex {
         let e_slice_loc = self.coset.e_slice_loc;
         let e_ori = self.coset.e_ori;
 
-        let corners = Corners::from_indices(c_prm, c_ori).rotated_colours(rot);
+        let corners = Corners::from_indices(c_prm, c_ori)
+            .rotated_colours(rot);
         let edges = Edges::from_indices(e_slice_prm, e_non_slice_prm, e_slice_loc, e_ori)
             .rotated_colours(rot);
 

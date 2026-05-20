@@ -207,37 +207,17 @@ mod tests {
 
     #[test]
     fn test_solved() {
-        let c = Corners::solved();
-        assert_eq!(c.to_string(), "0 1 2 3 4 5 6 7 | 0 0 0 0 0 0 0 0");
+        assert_eq!(Corners::solved().to_string(), "0 1 2 3 4 5 6 7 | 0 0 0 0 0 0 0 0");
     }
 
     #[test]
     fn test_twist_results() {
-        let c = Corners::solved();
-        assert_eq!(
-            c.twisted(Twist::L1).to_string(),
-            "2 1 6 3 0 5 4 7 | 1 0 2 0 2 0 1 0"
-        );
-        assert_eq!(
-            c.twisted(Twist::R1).to_string(),
-            "0 5 2 1 4 7 6 3 | 0 2 0 1 0 1 0 2"
-        );
-        assert_eq!(
-            c.twisted(Twist::U1).to_string(),
-            "1 3 0 2 4 5 6 7 | 0 0 0 0 0 0 0 0"
-        );
-        assert_eq!(
-            c.twisted(Twist::D1).to_string(),
-            "0 1 2 3 6 4 7 5 | 0 0 0 0 0 0 0 0"
-        );
-        assert_eq!(
-            c.twisted(Twist::F1).to_string(),
-            "4 0 2 3 5 1 6 7 | 2 1 0 0 1 2 0 0"
-        );
-        assert_eq!(
-            c.twisted(Twist::B1).to_string(),
-            "0 1 3 7 4 5 2 6 | 0 0 1 2 0 0 2 1"
-        );
+        assert_eq!(Corners::solved().twisted(Twist::L1).to_string(), "2 1 6 3 0 5 4 7 | 1 0 2 0 2 0 1 0");
+        assert_eq!(Corners::solved().twisted(Twist::R1).to_string(), "0 5 2 1 4 7 6 3 | 0 2 0 1 0 1 0 2");
+        assert_eq!(Corners::solved().twisted(Twist::U1).to_string(), "1 3 0 2 4 5 6 7 | 0 0 0 0 0 0 0 0");
+        assert_eq!(Corners::solved().twisted(Twist::D1).to_string(), "0 1 2 3 6 4 7 5 | 0 0 0 0 0 0 0 0");
+        assert_eq!(Corners::solved().twisted(Twist::F1).to_string(), "4 0 2 3 5 1 6 7 | 2 1 0 0 1 2 0 0");
+        assert_eq!(Corners::solved().twisted(Twist::B1).to_string(), "0 1 3 7 4 5 2 6 | 0 0 1 2 0 0 2 1");
     }
 
     #[test]

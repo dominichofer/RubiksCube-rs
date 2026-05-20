@@ -47,12 +47,7 @@ impl Edges {
     /// - `non_slice_prm`: Non-slice permutation index (0 to NON_SLICE_PRM_SIZE - 1).
     /// - `slice_loc_index`: Slice location index (0 to SLICE_LOC_SIZE - 1).
     /// - `ori_index`: Orientation index (0 to ORI_SIZE - 1).
-    pub fn from_indices(
-        slice_prm: usize,
-        non_slice_prm: usize,
-        slice_loc_index: usize,
-        ori_index: usize,
-    ) -> Self {
+    pub fn from_indices(slice_prm: usize, non_slice_prm: usize, slice_loc_index: usize, ori_index: usize) -> Self {
         let slice_loc = nth_combination_size_4(12, slice_loc_index);
         let slice = nth_permutation_size_4(slice_prm);
         let mut prm = nth_permutation(non_slice_prm, 8);
@@ -121,104 +116,36 @@ impl Edges {
     pub fn ori_index(&self) -> usize {
         let mut index = 0;
         for i in 0..11 {
-            index |= (self.ori[i] as usize) << i;
+            index |= self.ori[i] << i;
         }
         index
     }
 
     pub fn twisted(&self, twist: Twist) -> Self {
-        let p = self.prm;
-        let o = self.ori;
         match twist {
-            Twist::L1 => Self {
-                prm: [
-                    p[0], p[1], p[2], p[3], p[11], p[5], p[6], p[8], p[4], p[9], p[10], p[7],
-                ],
-                ori: [
-                    o[0],
-                    o[1],
-                    o[2],
-                    o[3],
-                    1 - o[11],
-                    o[5],
-                    o[6],
-                    1 - o[8],
-                    1 - o[4],
-                    o[9],
-                    o[10],
-                    1 - o[7],
-                ],
-            },
-            Twist::R1 => Self {
-                prm: [
-                    p[0], p[1], p[2], p[3], p[4], p[9], p[10], p[7], p[8], p[6], p[5], p[11],
-                ],
-                ori: [
-                    o[0],
-                    o[1],
-                    o[2],
-                    o[3],
-                    o[4],
-                    1 - o[9],
-                    1 - o[10],
-                    o[7],
-                    o[8],
-                    1 - o[6],
-                    1 - o[5],
-                    o[11],
-                ],
-            },
-            Twist::U1 => Self {
-                prm: [
-                    p[5], p[4], p[2], p[3], p[0], p[1], p[6], p[7], p[8], p[9], p[10], p[11],
-                ],
-                ori: [
-                    o[5], o[4], o[2], o[3], o[0], o[1], o[6], o[7], o[8], o[9], o[10], o[11],
-                ],
-            },
-            Twist::D1 => Self {
-                prm: [
-                    p[0], p[1], p[6], p[7], p[4], p[5], p[3], p[2], p[8], p[9], p[10], p[11],
-                ],
-                ori: [
-                    o[0], o[1], o[6], o[7], o[4], o[5], o[3], o[2], o[8], o[9], o[10], o[11],
-                ],
-            },
-            Twist::F1 => Self {
-                prm: [
-                    p[8], p[1], p[2], p[9], p[4], p[5], p[6], p[7], p[3], p[0], p[10], p[11],
-                ],
-                ori: [
-                    o[8], o[1], o[2], o[9], o[4], o[5], o[6], o[7], o[3], o[0], o[10], o[11],
-                ],
-            },
-            Twist::B1 => Self {
-                prm: [
-                    p[0], p[10], p[11], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[2], p[1],
-                ],
-                ori: [
-                    o[0], o[10], o[11], o[3], o[4], o[5], o[6], o[7], o[8], o[9], o[2], o[1],
-                ],
-            },
-            Twist::L2 => self.twisted_by(&[Twist::L1, Twist::L1]),
-            Twist::L3 => self.twisted_by(&[Twist::L1, Twist::L2]),
-            Twist::R2 => self.twisted_by(&[Twist::R1, Twist::R1]),
-            Twist::R3 => self.twisted_by(&[Twist::R1, Twist::R2]),
-            Twist::U2 => self.twisted_by(&[Twist::U1, Twist::U1]),
-            Twist::U3 => self.twisted_by(&[Twist::U1, Twist::U2]),
-            Twist::D2 => self.twisted_by(&[Twist::D1, Twist::D1]),
-            Twist::D3 => self.twisted_by(&[Twist::D1, Twist::D2]),
-            Twist::F2 => self.twisted_by(&[Twist::F1, Twist::F1]),
-            Twist::F3 => self.twisted_by(&[Twist::F1, Twist::F2]),
-            Twist::B2 => self.twisted_by(&[Twist::B1, Twist::B1]),
-            Twist::B3 => self.twisted_by(&[Twist::B1, Twist::B2]),
+            Twist::L1 => self.permuted_locations([0, 1, 2, 3, 11, 5, 6, 8, 4, 9, 10, 7]).reoriented_locations([0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1]),
+            Twist::R1 => self.permuted_locations([0, 1, 2, 3, 4, 9, 10, 7, 8, 6, 5, 11]).reoriented_locations([0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0]),
+            Twist::U1 => self.permuted_locations([5, 4, 2, 3, 0, 1, 6, 7, 8, 9, 10, 11]),
+            Twist::D1 => self.permuted_locations([0, 1, 6, 7, 4, 5, 3, 2, 8, 9, 10, 11]),
+            Twist::F1 => self.permuted_locations([8, 1, 2, 9, 4, 5, 6, 7, 3, 0, 10, 11]),
+            Twist::B1 => self.permuted_locations([0, 10, 11, 3, 4, 5, 6, 7, 8, 9, 2, 1]),
+            Twist::L2 => self.twisted(Twist::L1).twisted(Twist::L1),
+            Twist::L3 => self.twisted(Twist::L1).twisted(Twist::L2),
+            Twist::R2 => self.twisted(Twist::R1).twisted(Twist::R1),
+            Twist::R3 => self.twisted(Twist::R1).twisted(Twist::R2),
+            Twist::U2 => self.twisted(Twist::U1).twisted(Twist::U1),
+            Twist::U3 => self.twisted(Twist::U1).twisted(Twist::U2),
+            Twist::D2 => self.twisted(Twist::D1).twisted(Twist::D1),
+            Twist::D3 => self.twisted(Twist::D1).twisted(Twist::D2),
+            Twist::F2 => self.twisted(Twist::F1).twisted(Twist::F1),
+            Twist::F3 => self.twisted(Twist::F1).twisted(Twist::F2),
+            Twist::B2 => self.twisted(Twist::B1).twisted(Twist::B1),
+            Twist::B3 => self.twisted(Twist::B1).twisted(Twist::B2),
         }
     }
 
     pub fn twisted_by(&self, twists: &[Twist]) -> Self {
-        twists
-            .iter()
-            .fold(*self, |state, &twist| state.twisted(twist))
+        twists.iter().fold(*self, |state, &twist| state.twisted(twist))
     }
 
     // Return the counter-rotated (rotated in the opposite direction) version of the edges.
@@ -355,41 +282,18 @@ mod tests {
 
     #[test]
     fn test_solved() {
-        let e = Edges::solved();
-        assert_ne!(e.twisted(Twist::L1), Edges::solved());
-        assert_eq!(
-            e.to_string(),
-            "0 1 2 3 4 5 6 7 8 9 10 11 | 0 0 0 0 0 0 0 0 0 0 0 0"
-        );
+        assert_ne!(Edges::solved().twisted(Twist::L1), Edges::solved());
+        assert_eq!(Edges::solved().to_string(), "0 1 2 3 4 5 6 7 8 9 10 11 | 0 0 0 0 0 0 0 0 0 0 0 0");
     }
 
     #[test]
     fn test_twist_results() {
-        let e = Edges::solved();
-        assert_eq!(
-            e.twisted(Twist::L1).to_string(),
-            "0 1 2 3 11 5 6 8 4 9 10 7 | 0 0 0 0 1 0 0 1 1 0 0 1"
-        );
-        assert_eq!(
-            e.twisted(Twist::R1).to_string(),
-            "0 1 2 3 4 9 10 7 8 6 5 11 | 0 0 0 0 0 1 1 0 0 1 1 0"
-        );
-        assert_eq!(
-            e.twisted(Twist::U1).to_string(),
-            "5 4 2 3 0 1 6 7 8 9 10 11 | 0 0 0 0 0 0 0 0 0 0 0 0"
-        );
-        assert_eq!(
-            e.twisted(Twist::D1).to_string(),
-            "0 1 6 7 4 5 3 2 8 9 10 11 | 0 0 0 0 0 0 0 0 0 0 0 0"
-        );
-        assert_eq!(
-            e.twisted(Twist::F1).to_string(),
-            "8 1 2 9 4 5 6 7 3 0 10 11 | 0 0 0 0 0 0 0 0 0 0 0 0"
-        );
-        assert_eq!(
-            e.twisted(Twist::B1).to_string(),
-            "0 10 11 3 4 5 6 7 8 9 2 1 | 0 0 0 0 0 0 0 0 0 0 0 0"
-        );
+        assert_eq!(Edges::solved().twisted(Twist::L1).to_string(), "0 1 2 3 11 5 6 8 4 9 10 7 | 0 0 0 0 1 0 0 1 1 0 0 1");
+        assert_eq!(Edges::solved().twisted(Twist::R1).to_string(), "0 1 2 3 4 9 10 7 8 6 5 11 | 0 0 0 0 0 1 1 0 0 1 1 0");
+        assert_eq!(Edges::solved().twisted(Twist::U1).to_string(), "5 4 2 3 0 1 6 7 8 9 10 11 | 0 0 0 0 0 0 0 0 0 0 0 0");
+        assert_eq!(Edges::solved().twisted(Twist::D1).to_string(), "0 1 6 7 4 5 3 2 8 9 10 11 | 0 0 0 0 0 0 0 0 0 0 0 0");
+        assert_eq!(Edges::solved().twisted(Twist::F1).to_string(), "8 1 2 9 4 5 6 7 3 0 10 11 | 0 0 0 0 0 0 0 0 0 0 0 0");
+        assert_eq!(Edges::solved().twisted(Twist::B1).to_string(), "0 10 11 3 4 5 6 7 8 9 2 1 | 0 0 0 0 0 0 0 0 0 0 0 0");
     }
 
     #[test]
@@ -406,10 +310,7 @@ mod tests {
             assert!(non_slice_prm < Edges::NON_SLICE_PRM_SIZE);
             assert!(slice_loc < Edges::SLICE_LOC_SIZE);
             assert!(ori < Edges::ORI_SIZE);
-            assert_eq!(
-                e,
-                Edges::from_indices(slice_prm, non_slice_prm, slice_loc, ori)
-            );
+            assert_eq!(e, Edges::from_indices(slice_prm, non_slice_prm, slice_loc, ori));
         }
     }
 }

@@ -11,8 +11,7 @@ pub struct SubsetIndex {
 }
 
 impl SubsetIndex {
-    pub const INDEX_SIZE: usize =
-        Edges::SLICE_PRM_SIZE * Edges::NON_SLICE_PRM_SIZE * Corners::PRM_SIZE / 2; // 19'508'428'800
+    pub const INDEX_SIZE: usize = Edges::SLICE_PRM_SIZE * Edges::NON_SLICE_PRM_SIZE * Corners::PRM_SIZE / 2; // 19'508'428'800
 
     pub fn solved() -> Self {
         let c = Corners::solved();
@@ -43,27 +42,15 @@ impl SubsetIndex {
         if e_even_prm != is_even_permutation(c_prm as i64) {
             c_prm += 1;
         }
-        Self {
-            e_slice_prm,
-            e_non_slice_prm,
-            c_prm,
-        }
+        Self { e_slice_prm, e_non_slice_prm, c_prm }
     }
 
     pub fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
         const SOLVED_SLICE_LOC_INDEX: usize = Edges::solved().slice_loc_index(); // TODO: can we make this 0 by changing the definition of slice_loc_index?
         SubsetIndex {
             c_prm: twister.twisted_c_prm(self.c_prm, twist),
-            e_slice_prm: twister.twisted_e_slice_prm(
-                self.e_slice_prm,
-                SOLVED_SLICE_LOC_INDEX,
-                twist,
-            ),
-            e_non_slice_prm: twister.twisted_e_non_slice_prm(
-                self.e_non_slice_prm,
-                SOLVED_SLICE_LOC_INDEX,
-                twist,
-            ),
+            e_slice_prm: twister.twisted_e_slice_prm(self.e_slice_prm, SOLVED_SLICE_LOC_INDEX, twist),
+            e_non_slice_prm: twister.twisted_e_non_slice_prm(self.e_non_slice_prm, SOLVED_SLICE_LOC_INDEX, twist),
         }
     }
 

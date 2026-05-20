@@ -20,8 +20,7 @@ impl Twister {
         let mut c_prm = vec![0u16; Corners::PRM_SIZE * COUNT];
         let mut e_ori = vec![0u16; Edges::ORI_SIZE * COUNT];
         let mut e_slice_prm = vec![0u8; Edges::SLICE_PRM_SIZE * Edges::SLICE_LOC_SIZE * COUNT];
-        let mut e_non_slice_prm =
-            vec![0u16; Edges::NON_SLICE_PRM_SIZE * Edges::SLICE_LOC_SIZE * COUNT];
+        let mut e_non_slice_prm = vec![0u16; Edges::NON_SLICE_PRM_SIZE * Edges::SLICE_LOC_SIZE * COUNT];
         let mut e_slice_loc = vec![0u16; Edges::SLICE_LOC_SIZE * COUNT];
 
         c_ori
@@ -85,14 +84,7 @@ impl Twister {
                 }
             });
 
-        Self {
-            c_ori,
-            c_prm,
-            e_ori,
-            e_slice_prm,
-            e_non_slice_prm,
-            e_slice_loc,
-        }
+        Self { c_ori, c_prm, e_ori, e_slice_prm, e_non_slice_prm, e_slice_loc }
     }
 
     pub fn twisted_c_ori(&self, c_ori: usize, twist: Twist) -> usize {
@@ -104,25 +96,11 @@ impl Twister {
     pub fn twisted_e_ori(&self, e_ori: usize, twist: Twist) -> usize {
         self.e_ori[e_ori * COUNT + twist.to_index()] as usize
     }
-    pub fn twisted_e_slice_prm(
-        &self,
-        e_slice_prm: usize,
-        e_slice_loc: usize,
-        twist: Twist,
-    ) -> usize {
-        self.e_slice_prm
-            [(e_slice_loc * Edges::SLICE_PRM_SIZE + e_slice_prm) * COUNT + twist.to_index()]
-            as usize
+    pub fn twisted_e_slice_prm(&self, e_slice_prm: usize, e_slice_loc: usize, twist: Twist) -> usize {
+        self.e_slice_prm[(e_slice_loc * Edges::SLICE_PRM_SIZE + e_slice_prm) * COUNT + twist.to_index()] as usize
     }
-    pub fn twisted_e_non_slice_prm(
-        &self,
-        e_non_slice_prm: usize,
-        e_slice_loc: usize,
-        twist: Twist,
-    ) -> usize {
-        self.e_non_slice_prm
-            [(e_slice_loc * Edges::NON_SLICE_PRM_SIZE + e_non_slice_prm) * COUNT + twist.to_index()]
-            as usize
+    pub fn twisted_e_non_slice_prm(&self, e_non_slice_prm: usize, e_slice_loc: usize, twist: Twist) -> usize {
+        self.e_non_slice_prm[(e_slice_loc * Edges::NON_SLICE_PRM_SIZE + e_non_slice_prm) * COUNT + twist.to_index()] as usize
     }
     pub fn twisted_e_slice_loc(&self, e_slice_loc: usize, twist: Twist) -> usize {
         self.e_slice_loc[e_slice_loc * COUNT + twist.to_index()] as usize
