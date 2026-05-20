@@ -42,10 +42,6 @@ impl Edges {
         self.ori
     }
 
-    pub fn is_even_permutation(&self) -> bool {
-        is_even_permutation_array(&self.prm)
-    }
-
     /// Constructs an `Edges` instance from the given indices.
     /// - `slice_prm`: Slice permutation index (0 to SLICE_PRM_SIZE - 1).
     /// - `non_slice_prm`: Non-slice permutation index (0 to NON_SLICE_PRM_SIZE - 1).
