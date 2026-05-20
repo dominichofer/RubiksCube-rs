@@ -3,6 +3,7 @@ use crate::edges::*;
 use crate::twist::*;
 use rayon::prelude::*;
 
+// Size: 720'683'640 bytes (~690 MiB)
 pub struct Twister {
     c_ori: Vec<u16>,
     c_prm: Vec<u16>,
