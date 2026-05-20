@@ -4,7 +4,6 @@ mod tests {
     use crate::edges::*;
     use crate::rotation::*;
     use crate::twist_generator::*;
-    use crate::twist_set::*;
     use crate::twist::*;
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

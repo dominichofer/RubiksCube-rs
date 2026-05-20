@@ -213,6 +213,11 @@ impl CubeState {
         self.edges = self.edges.rotated_colours(rotation);
     }
 
+    fn invert(&mut self) {
+        self.corners = self.corners.inverted();
+        self.edges = self.edges.inverted();
+    }
+
     fn reset(&mut self) {
         *self = Self::solved();
     }
@@ -228,11 +233,12 @@ async fn main() {
     let (mut scene, mut cube) = create_scene(state.corners, state.edges);
 
     let mut animation: Option<Animation> = None;
+    let mut last_inverted: Option<std::time::Instant> = None;
 
     while window.render_3d(&mut scene, &mut camera).await {
         // Handle input when no animation is running
         if animation.is_none() {
-            animation = handle_input(&window, &mut state, &mut scene, &mut cube);
+            animation = handle_input(&window, &mut state, &mut scene, &mut cube, &mut last_inverted);
         }
 
         // Step the running animation
@@ -259,6 +265,7 @@ fn handle_input(
     state: &mut CubeState,
     scene: &mut SceneNode3d,
     cube: &mut RubiksCube,
+    last_inverted: &mut Option<std::time::Instant>,
 ) -> Option<Animation> {
     // Face twist keys
     const FACE_KEYS: [(Key, char); 6] = [
@@ -286,6 +293,19 @@ fn handle_input(
     for (key, rotation) in ROTATION_KEYS {
         if window.get_key(key) == kiss3d::event::Action::Press {
             return Some(Animation::new_cube_rotation(rotation));
+        }
+    }
+
+    // Invert key (immediate, no animation) with cooldown to prevent repeated triggers
+    if window.get_key(Key::I) == kiss3d::event::Action::Press {
+        let ready = last_inverted
+            .map_or(true, |t| t.elapsed() >= std::time::Duration::from_millis(500));
+        if ready {
+            state.invert();
+            let (new_scene, new_cube) = create_scene(state.corners, state.edges);
+            *scene = new_scene;
+            *cube = new_cube;
+            *last_inverted = Some(std::time::Instant::now());
         }
     }
 

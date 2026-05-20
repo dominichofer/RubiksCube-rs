@@ -5,6 +5,7 @@ pub mod rotation;
 pub mod twist;
 pub mod twist_generator;
 pub mod twist_set;
+pub mod test;
 
 pub use corners::*;
 pub use edges::*;

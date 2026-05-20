@@ -76,4 +76,31 @@ impl CubeIndex {
             .iter()
             .fold(*self, |cube, &rot| cube.rotated_colours(rot))
     }
+
+    pub fn inverted(&self) -> Self {
+        let c_prm = self.subset.c_prm;
+        let c_ori = self.coset.c_ori;
+        let e_slice_prm = self.subset.e_slice_prm;
+        let e_non_slice_prm = self.subset.e_non_slice_prm;
+        let e_slice_loc = self.coset.e_slice_loc;
+        let e_ori = self.coset.e_ori;
+
+        let corners = Corners::from_indices(c_prm, c_ori)
+            .inverted();
+        let edges = Edges::from_indices(e_slice_prm, e_non_slice_prm, e_slice_loc, e_ori)
+            .inverted();
+
+        Self {
+            subset: SubsetIndex {
+                c_prm: corners.prm_index(),
+                e_slice_prm: edges.slice_prm_index(),
+                e_non_slice_prm: edges.non_slice_prm_index(),
+            },
+            coset: CosetIndex {
+                c_ori: corners.ori_index(),
+                e_ori: edges.ori_index(),
+                e_slice_loc: edges.slice_loc_index(),
+            },
+        }
+    }
 }

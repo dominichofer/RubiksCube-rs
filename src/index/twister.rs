@@ -5,12 +5,12 @@ use rayon::prelude::*;
 
 // Size: 720'683'640 bytes (~690 MiB)
 pub struct Twister {
-    c_ori: Vec<u16>,
-    c_prm: Vec<u16>,
-    e_ori: Vec<u16>,
-    e_slice_prm: Vec<u8>,
-    e_non_slice_prm: Vec<u16>,
-    e_slice_loc: Vec<u16>,
+    c_ori: Vec<u16>, // 18 * 3^7 = 39'366
+    c_prm: Vec<u16>, // 18 * 8! = 725'760
+    e_ori: Vec<u16>, // 18 * 2^11 = 36'864
+    e_slice_prm: Vec<u8>, // 18 * 4! * (12 choose 4) = 213'840
+    e_non_slice_prm: Vec<u16>, // 18 * 8! * (12 choose 4) = 359'424'000
+    e_slice_loc: Vec<u16>, // 18 * (12 choose 4) = 8'910
 }
 
 const COUNT: usize = ALL_TWISTS.len();

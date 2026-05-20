@@ -61,11 +61,17 @@ impl<'a> TwoPhaseSolver<'a> {
             cube,
             cube.rotated_colours(Rotation::L),
             cube.rotated_colours_by(&[Rotation::U, Rotation::L]),
+            cube.inverted(),
+            cube.inverted().rotated_colours(Rotation::L),
+            cube.inverted().rotated_colours_by(&[Rotation::U, Rotation::L]),
         ];
         let solution_transforms = [
             |twists: &[Twist]| twists.to_vec(),
             |twists: &[Twist]| simplify_rot_twists(Rotation::L, twists),
             |twists: &[Twist]| simplify_rots_twists(&[Rotation::U, Rotation::L], twists),
+            |twists: &[Twist]| inverse(twists),
+            |twists: &[Twist]| inverse(&simplify_rot_twists(Rotation::L, twists)),
+            |twists: &[Twist]| inverse(&simplify_rots_twists(&[Rotation::U, Rotation::L], twists)),
         ];
         let subset_distances = Vec::from_iter(cubes.iter().map(|c| self.phase_1.distance(c.coset.index())));
         let min_distance = *subset_distances.iter().min().unwrap();
@@ -148,7 +154,7 @@ impl<'a> TwoPhaseSolver<'a> {
             self.no_twist_cut += 1;
             return false;
         }
-
+        
         for twist in twist_set.iter() {
             let next_cube = cube.twisted(self.twister, twist);
             self.twists.push(twist);

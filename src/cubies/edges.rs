@@ -56,10 +56,7 @@ impl Edges {
             prm.insert(slice_loc[i], slice[i] + 8);
         }
 
-        let mut ori = [0usize; 12];
-        for i in 0..11 {
-            ori[i] = (ori_index >> i) & 1;
-        }
+        let mut ori: [usize; 12] = std::array::from_fn(|i| (ori_index >> i) & 1);
         ori[11] = (ori_index.count_ones() % 2) as usize; // Ensure orientation parity is even
         Self {
             prm: prm.try_into().unwrap(),
@@ -121,6 +118,46 @@ impl Edges {
         index
     }
 
+    /// Return the permuted cubies and orientations according to their location.
+    /// `from`'s value at index i indicates the location of the cubie/orientation that will be moved to index i.
+    /// For example, if `from` is `[2, ...]`, it means the cubie/orientation currently at location 2 will be moved to location 0.
+    fn permuted_locations(&self, from: [usize; 12]) -> Self {
+        Self {
+            prm: std::array::from_fn(|i| self.prm[from[i]]),
+            ori: std::array::from_fn(|i| self.ori[from[i]]),
+        }
+    }
+
+    /// Return the reoriented cubies according to their location.
+    /// `ori`'s value at index i indicates how much the cubie at location i will be twisted (0 = identity, 1 = flipped).
+    /// For example, if `ori` is `[1, ...]`, it means the cubie at location 0 will be flipped.
+    fn reoriented_locations(&self, ori: [usize; 12]) -> Self {
+        Self {
+            prm: self.prm,
+            ori: std::array::from_fn(|i| (self.ori[i] + ori[i]) % 2),
+        }
+    }
+
+    /// Return the permuted cubies according to their cubie number.
+    /// `from`'s value at index i indicates the cubie number of the cubie that will be moved to the location of cubie i.
+    /// For example, if `from` is `[2, ...]`, it means cubie 2 will be moved to the location of cubie 0.
+    fn permuted_cubies(&self, prm: [usize; 12]) -> Self {
+        Self {
+            prm: std::array::from_fn(|i| prm[self.prm[i]]),
+            ori: self.ori
+        }
+    }
+
+    /// Return the reoriented cubies according to their cubie number.
+    /// `ori`'s value at index i indicates how much the cubie with cubie number i will be twisted (0 = identity, 1 = flipped).
+    /// For example, if `ori` is `[1, ...]`, it means the cubie 0 will be flipped.
+    fn reoriented_cubies(&self, ori: [usize; 12]) -> Self {
+        Self {
+            prm: self.prm,
+            ori: std::array::from_fn(|i| (self.ori[i] + ori[self.prm[i]]) % 2),
+        }
+    }
+
     pub fn twisted(&self, twist: Twist) -> Self {
         match twist {
             Twist::L1 => self.permuted_locations([0, 1, 2, 3, 11, 5, 6, 8, 4, 9, 10, 7]).reoriented_locations([0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1]),
@@ -148,108 +185,25 @@ impl Edges {
         twists.iter().fold(*self, |state, &twist| state.twisted(twist))
     }
 
-    // Return the counter-rotated (rotated in the opposite direction) version of the edges.
-    pub fn counter_rotated(&self, rot: Rotation) -> Self {
-        match rot {
-            Rotation::L => {
-                let newself = self.twisted_by(&[Twist::L3, Twist::R1]);
-                let p = newself.prm;
-                let o = newself.ori;
-
-                // Rotate middle layer
-                Self {
-                    prm: [
-                        p[3], p[0], p[1], p[2], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11],
-                    ],
-                    ori: [
-                        1 - o[3],
-                        1 - o[0],
-                        1 - o[1],
-                        1 - o[2],
-                        o[4],
-                        o[5],
-                        o[6],
-                        o[7],
-                        o[8],
-                        o[9],
-                        o[10],
-                        o[11],
-                    ],
-                }
-            }
-            Rotation::U => {
-                let newself = self.twisted_by(&[Twist::U3, Twist::D1]);
-                let p = newself.prm;
-                let o = newself.ori;
-
-                // Rotate middle layer
-                Self {
-                    prm: [
-                        p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[11], p[8], p[9], p[10],
-                    ],
-                    ori: [
-                        o[0],
-                        o[1],
-                        o[2],
-                        o[3],
-                        o[4],
-                        o[5],
-                        o[6],
-                        o[7],
-                        1 - o[11],
-                        1 - o[8],
-                        1 - o[9],
-                        1 - o[10],
-                    ],
-                }
-            }
-            Rotation::F => {
-                let newself = self.twisted_by(&[Twist::F3, Twist::B1]);
-                let p = newself.prm;
-                let o = newself.ori;
-
-                // Rotate middle layer
-                Self {
-                    prm: [
-                        p[0], p[1], p[2], p[3], p[5], p[6], p[7], p[4], p[8], p[9], p[10], p[11],
-                    ],
-                    ori: [
-                        o[0],
-                        o[1],
-                        o[2],
-                        o[3],
-                        1 - o[5],
-                        1 - o[6],
-                        1 - o[7],
-                        1 - o[4],
-                        o[8],
-                        o[9],
-                        o[10],
-                        o[11],
-                    ],
-                }
-            }
+    pub fn twisted_middle_layer(&self, twist: Twist) -> Self {
+        match twist {
+            Twist::L3 => self.permuted_locations([3, 0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11]).reoriented_locations([1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
+            Twist::U3 => self.permuted_locations([0, 1, 2, 3, 4, 5, 6, 7, 11, 8, 9, 10]).reoriented_locations([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]),
+            Twist::F3 => self.permuted_locations([0, 1, 2, 3, 7, 4, 5, 6, 8, 9, 10, 11]).reoriented_locations([0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0]),
+            _ => panic!("Invalid middle layer twist"),
         }
     }
 
     pub fn rotated_colours(&self, rot: Rotation) -> Self {
-        let i = |o: usize| o; // Identity orientation change
-        let f = |o: usize| 1 - o; // Flip orientation
-        let l_prm = [1, 2, 3, 0, 11, 10, 9, 8, 4, 5, 6, 7];
-        let u_prm = [5, 4, 7, 6, 0, 1, 2, 3, 9, 10, 11, 8];
-        let u_ori = [i, i, i, i, i, i, i, i, f, f, f, f];
         match rot {
-            Rotation::L => Self {
-                prm: self.prm.map(|x| l_prm[x]),
-                ori: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(|i| 1 - self.ori[i]),
-            }
-            .counter_rotated(rot),
-            Rotation::U => Self {
-                prm: self.prm.map(|x| u_prm[x]),
-                ori: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-                    .map(|i| u_ori[self.prm[i]](self.ori[i])),
-            }
-            .counter_rotated(rot),
+            Rotation::L => self
+                .permuted_cubies([1, 2, 3, 0, 11, 10, 9, 8, 4, 5, 6, 7])
+                .reoriented_locations([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+                .twisted_middle_layer(Twist::L3).twisted(Twist::L3).twisted(Twist::R1), // Twist back to match the original colour scheme.
+            Rotation::U => self
+                .permuted_cubies([5, 4, 7, 6, 0, 1, 2, 3, 9, 10, 11, 8])
+                .reoriented_cubies([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1])
+                .twisted_middle_layer(Twist::U3).twisted(Twist::U3).twisted(Twist::D1), // Twist back to match the original colour scheme.
             Rotation::F => {
                 const L: Rotation = Rotation::L;
                 const U: Rotation = Rotation::U;
@@ -259,8 +213,16 @@ impl Edges {
     }
 
     pub fn rotated_colours_by(&self, rots: &[Rotation]) -> Self {
-        rots.iter()
-            .fold(self.clone(), |cube, &rot| cube.rotated_colours(rot))
+        rots.iter().fold(*self, |cube, &rot| cube.rotated_colours(rot))
+    }
+    
+    pub fn inverted(&self) -> Self {
+        let mut inv = Self::solved();
+        for i in 0..12 {
+            inv.prm[self.prm[i]] = i;
+            inv.ori[self.prm[i]] = self.ori[i];
+        }
+        inv
     }
 }
 

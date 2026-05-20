@@ -64,6 +64,29 @@ impl Twist {
     pub fn to_index(&self) -> usize {
         *self as usize
     }
+
+    pub fn inverse(&self) -> Self {
+        match self {
+            Twist::L1 => Twist::L3,
+            Twist::L2 => Twist::L2,
+            Twist::L3 => Twist::L1,
+            Twist::R1 => Twist::R3,
+            Twist::R2 => Twist::R2,
+            Twist::R3 => Twist::R1,
+            Twist::U1 => Twist::U3,
+            Twist::U2 => Twist::U2,
+            Twist::U3 => Twist::U1,
+            Twist::D1 => Twist::D3,
+            Twist::D2 => Twist::D2,
+            Twist::D3 => Twist::D1,
+            Twist::F1 => Twist::F3,
+            Twist::F2 => Twist::F2,
+            Twist::F3 => Twist::F1,
+            Twist::B1 => Twist::B3,
+            Twist::B2 => Twist::B2,
+            Twist::B3 => Twist::B1,
+        }
+    }
 }
 
 impl std::str::FromStr for Twist {
@@ -80,6 +103,10 @@ impl std::str::FromStr for Twist {
     }
 }
 
+pub fn inverse(twists: &[Twist]) -> Vec<Twist> {
+    twists.iter().rev().map(|t| t.inverse()).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -88,5 +115,18 @@ mod tests {
     fn test_parse() {
         assert_eq!("L1".parse::<Twist>().unwrap(), Twist::L1);
         assert!("XX".parse::<Twist>().is_err());
+    }
+
+    #[test]
+    fn test_inverse() {
+        for twist in ALL_TWISTS {
+            assert_eq!(twist.inverse().inverse(), twist);
+        }
+    }
+
+    #[test]
+    fn test_inverse_sequence() {
+        let twists = [Twist::L1, Twist::U2, Twist::F3];
+        assert_eq!(inverse(&inverse(&twists)), twists);
     }
 }
