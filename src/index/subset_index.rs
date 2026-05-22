@@ -3,7 +3,7 @@ use super::Twister;
 use crate::cubies::*;
 use std::fmt;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SubsetIndex {
     pub e_slice_prm: usize,     // 0..=23
     pub e_non_slice_prm: usize, // 0..=40'319

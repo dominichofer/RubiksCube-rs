@@ -3,7 +3,7 @@ use super::Twister;
 use crate::cubies::*;
 use std::fmt;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CosetIndex {
     pub c_ori: usize,       // 0..=2'186
     pub e_ori: usize,       // 0..=2'047

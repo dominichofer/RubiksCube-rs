@@ -51,26 +51,26 @@ With "wsl ./twophase -s 20 -q < test_pos_big.txt", cube20src can solve test_pos_
 # Answered research questions
 
 ## Q1: With "unique_twists_after", what's the shortest distance of a subset config to an other subset config?
-A: 5 (e.g. L1 R1 U2 L1 R1).
+5 (e.g. L1 R1 U2 L1 R1).
 
 ## Q2: Is the two phase solver equally fast, if the Twist::None is removed and the logic replaced by branching?
-A: Yes.
+Yes.
+
+## Q3: Which of the 4x6 colour rotations are independent?
+{cube, cube.rotated_colours(Rotation::L), cube.rotated_colours(Rotation::F)} are uncorrelated.
+All other colour rotations are correlated with one of the former three.
+See "cargo run --release --bin correlation"
 
 # Open research questions
 
-## Q1: Which of the 4x6 colour rotations are independent?
-Task 1: Create all 4x6 colour rotations for a given cube.
-Task 2: Take 1 million randomly twisted cubes and calculate the coset distance of each colour rotation.
-Task 3: Create a correlation plot for this data to see how the different colour rotations correlate.
-Task 4: Use the uncorrelated colour rotations to speed up the two phase solver.
-
-## Q2: When does the corner table cut in the two phase solver?
+## Q1: When does the corner table cut in the two phase solver?
 Task 1: Log at which depth in the search the corner tables prunes.
 Task 2: If it's only relevant to know that a corner configuration is above a given depth, compactify the corner table. Maybe this reduces RAM pressure and leads to better cache usage.
 
-## Q3: Are there subset configurations in the subset table that have a shorter distance to the solution when all possible twists are considered?
+## Q2: Are there subset configurations in the subset table that have a shorter distance to the solution when all possible twists are considered?
 Task 1: Create a brute force solver.
 Task 2: Randomly pick configurations from the subset table and check if the brute force solver finds quicker solutions.
 Task 3: If it does, use this information to improve the subset table.
 
-
+## Q3: What is rokicki doing?
+His kocsymm is my CosetIndex

@@ -1,7 +1,7 @@
 use super::{CosetIndex, SubsetIndex, Twister};
 use crate::{CornerIndex, cubies::*};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CubeIndex {
     pub subset: SubsetIndex,
     pub coset: CosetIndex,

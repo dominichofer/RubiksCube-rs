@@ -3,15 +3,12 @@ name = "rubikscube"
 version = "0.1.0"
 edition = "2024"
 
-[features]
-default = []
-gui = ["dep:kiss3d"]
-
 [dependencies]
 num-format = "0.4.4"
 rand = "0.10.1"
-rayon = "1.11.0"
-kiss3d = { version = "0.41.0", features = ["egui"], optional = true }
+rayon = "1.12.0"
+plotters = { version = "0.3" }
+kiss3d = { version = "0.41.0", features = ["egui"] }
 
 [dev-dependencies]
 itertools = "0.14"
@@ -21,6 +18,9 @@ name = "benchmark"
 path = "src/benchmark.rs"
 
 [[bin]]
+name = "correlation"
+path = "src/correlation.rs"
+
+[[bin]]
 name = "gui"
 path = "src/gui.rs"
-required-features = ["gui"]

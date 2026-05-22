@@ -64,6 +64,36 @@ impl Edges {
         }
     }
 
+    pub fn x_loc_index(&self) -> usize {
+        let loc: Vec<usize> = self.prm.iter().enumerate().filter_map(|(i, &p)| if p < 4 { Some(i) } else { None }).collect();
+        combination_index(12, &loc)
+    }
+
+    pub fn y_loc_index(&self) -> usize {
+        let loc: Vec<usize> = self.prm.iter().enumerate().filter_map(|(i, &p)| if p >= 4 && p < 8 { Some(i) } else { None }).collect();
+        combination_index(12, &loc)
+    }
+
+    pub fn z_loc_index(&self) -> usize {
+        let loc: Vec<usize> = self.prm.iter().enumerate().filter_map(|(i, &p)| if p >= 8 { Some(i) } else { None }).collect();
+        combination_index(12, &loc)
+    }
+
+    pub fn x_prm_index(&self) -> usize {
+        let prm: Vec<usize> = self.prm.iter().filter_map(|&p| if p < 4 { Some(p) } else { None }).collect();
+        permutation_index(&prm)
+    }
+
+    pub fn y_prm_index(&self) -> usize {
+        let prm: Vec<usize> = self.prm.iter().filter_map(|&p| if p >= 4 && p < 8 { Some(p - 4) } else { None }).collect();
+        permutation_index(&prm)
+    }
+
+    pub fn z_prm_index(&self) -> usize {
+        let prm: Vec<usize> = self.prm.iter().filter_map(|&p| if p >= 8 { Some(p - 8) } else { None }).collect();
+        permutation_index(&prm)
+    }
+
     /// Get the slice permutation index (0 to SLICE_PRM_SIZE - 1).
     pub fn slice_prm_index(&self) -> usize {
         let mut slice: [usize; 4] = [0; 4];
