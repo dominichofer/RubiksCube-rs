@@ -59,21 +59,21 @@ impl<'a> TwoPhaseSolver<'a> {
     pub fn solve(&mut self, cube: CubeIndex, max_solution_length: u8) -> Result<Vec<Twist>, String> {
         let cubes = [
             cube,
-            cube.rotated_colours(Rotation::L),
-            cube.rotated_colours_by(&[Rotation::U, Rotation::L]),
-            cube.inverted(),
-            cube.inverted().rotated_colours(Rotation::L),
-            cube.inverted().rotated_colours_by(&[Rotation::U, Rotation::L]),
+            cube.conjugated_by(Rotation::X),
+            cube.conjugated_by(Rotation::Y),
+            cube.inverse(),
+            cube.inverse().conjugated_by(Rotation::X),
+            cube.inverse().conjugated_by(Rotation::Y),
         ];
         let solution_transforms = [
             |twists: &[Twist]| twists.to_vec(),
-            |twists: &[Twist]| simplify_rot_twists(Rotation::L, twists),
-            |twists: &[Twist]| simplify_rots_twists(&[Rotation::U, Rotation::L], twists),
+            |twists: &[Twist]| conjugate_by_inv(twists, Rotation::X),
+            |twists: &[Twist]| conjugate_by_inv(twists, Rotation::Y),
             |twists: &[Twist]| inverse(twists),
-            |twists: &[Twist]| inverse(&simplify_rot_twists(Rotation::L, twists)),
-            |twists: &[Twist]| inverse(&simplify_rots_twists(&[Rotation::U, Rotation::L], twists)),
+            |twists: &[Twist]| inverse(&conjugate_by_inv(twists, Rotation::X)),
+            |twists: &[Twist]| inverse(&conjugate_by_inv(twists, Rotation::Y)),
         ];
-        let subset_distances = Vec::from_iter(cubes.iter().map(|c| self.phase_1.distance(c.coset.index())));
+        let subset_distances = cubes.map(|c| self.phase_1.distance(c.coset.index()));
         let min_distance = *subset_distances.iter().min().unwrap();
 
         for p1_depth in min_distance..=max_solution_length {

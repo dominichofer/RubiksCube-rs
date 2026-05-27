@@ -30,7 +30,7 @@ impl Twister {
             .for_each(|(i, chunk)| {
                 let obj = Corners::from_indices(0, i);
                 for twist in ALL_TWISTS {
-                    chunk[twist.to_index()] = obj.twisted(twist).ori_index() as u16;
+                    chunk[twist.to_index()] = (Corners::twist(twist) * obj).ori_index() as u16;
                 }
             });
         c_prm
@@ -39,7 +39,7 @@ impl Twister {
             .for_each(|(i, chunk)| {
                 let obj = Corners::from_indices(i, 0);
                 for twist in ALL_TWISTS {
-                    chunk[twist.to_index()] = obj.twisted(twist).prm_index() as u16;
+                    chunk[twist.to_index()] = (Corners::twist(twist) * obj).prm_index() as u16;
                 }
             });
         e_ori
@@ -48,7 +48,7 @@ impl Twister {
             .for_each(|(i, chunk)| {
                 let obj = Edges::from_indices(0, 0, 0, i);
                 for twist in ALL_TWISTS {
-                    chunk[twist.to_index()] = obj.twisted(twist).ori_index() as u16;
+                    chunk[twist.to_index()] = (Edges::twist(twist) * obj).ori_index() as u16;
                 }
             });
         e_slice_prm
@@ -58,7 +58,7 @@ impl Twister {
                 let obj =
                     Edges::from_indices(i % Edges::SLICE_PRM_SIZE, 0, i / Edges::SLICE_PRM_SIZE, 0);
                 for twist in ALL_TWISTS {
-                    chunk[twist.to_index()] = obj.twisted(twist).slice_prm_index() as u8;
+                    chunk[twist.to_index()] = (Edges::twist(twist) * obj).slice_prm_index() as u8;
                 }
             });
         e_non_slice_prm
@@ -72,7 +72,7 @@ impl Twister {
                     0,
                 );
                 for twist in ALL_TWISTS {
-                    chunk[twist.to_index()] = obj.twisted(twist).non_slice_prm_index() as u16;
+                    chunk[twist.to_index()] = (Edges::twist(twist) * obj).non_slice_prm_index() as u16;
                 }
             });
         e_slice_loc
@@ -81,7 +81,7 @@ impl Twister {
             .for_each(|(i, chunk)| {
                 let obj = Edges::from_indices(0, 0, i, 0);
                 for twist in ALL_TWISTS {
-                    chunk[twist.to_index()] = obj.twisted(twist).slice_loc_index() as u16;
+                    chunk[twist.to_index()] = (Edges::twist(twist) * obj).slice_loc_index() as u16;
                 }
             });
 
@@ -128,7 +128,7 @@ mod tests {
         let mut ori = c.ori_index();
         for _ in 0..100_000 {
             let twist = rnd.gen_twist();
-            c = c.twisted(twist);
+            c = Corners::twist(twist) * c;
             prm = twister.twisted_c_prm(prm, twist);
             ori = twister.twisted_c_ori(ori, twist);
             assert_eq!(c.prm_index(), prm);
@@ -148,7 +148,7 @@ mod tests {
         let mut slice_loc = e.slice_loc_index();
         for _ in 0..100_000 {
             let twist = rnd.gen_twist();
-            e = e.twisted(twist);
+            e = Edges::twist(twist) * e;
             ori = twister.twisted_e_ori(ori, twist);
             slice_prm = twister.twisted_e_slice_prm(slice_prm, slice_loc, twist);
             non_slice_prm = twister.twisted_e_non_slice_prm(non_slice_prm, slice_loc, twist);

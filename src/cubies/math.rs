@@ -1,3 +1,24 @@
+pub fn encode(data: &[usize], base: usize) -> usize {
+    let mut result = 0;
+    for &value in data {
+        result = result * base + value;
+    }
+    result
+}
+
+pub fn decode(mut value: usize, base: usize, length: usize) -> Vec<usize> {
+    let mut result = vec![0; length];
+    for i in (0..length).rev() {
+        result[i] = value % base;
+        value /= base;
+    }
+    result
+}
+
+pub fn add_mod<const N: usize>(a: [usize; N], b: [usize; N], m: usize) -> [usize; N] {
+    std::array::from_fn(|i| (a[i] + b[i]) % m)
+}
+
 pub const fn factorial(n: usize) -> usize {
     const PRECOMPUTED: [usize; 21] = [
         1,
@@ -168,29 +189,6 @@ pub fn nth_permutation_size_4(index: usize) -> [usize; 4] {
     permutation
 }
 
-pub fn nth_permutation_size_8(index: usize) -> [usize; 8] {
-    let mut unused = 0xFFFFFFFFFFFFFFFFusize;
-    let mut index = index;
-    let mut permutation = [0usize; 8];
-
-    for i in (0..8).rev() {
-        let f = factorial(i);
-        let pos = index / f;
-        index %= f;
-
-        // Find the pos-th set bit in unused
-        let mut mask = unused;
-        for _ in 0..pos {
-            mask &= mask - 1; // Clear lowest set bit
-        }
-        let selected_bit = mask & (!mask + 1); // Get lowest set bit
-
-        permutation[8 - 1 - i] = selected_bit.trailing_zeros() as usize;
-        unused ^= selected_bit;
-    }
-    permutation
-}
-
 pub fn permutation_index(permutation: &[usize]) -> usize {
     let size = permutation.len();
     let mut index = 0;
@@ -209,40 +207,6 @@ pub fn permutation_index(permutation: &[usize]) -> usize {
         bitboard |= mask;
     }
     index
-}
-
-pub fn is_even_permutation_array<T>(permutation: &[T]) -> bool
-where
-    T: PartialOrd,
-{
-    let size = permutation.len();
-    let mut count = 0u32;
-
-    for i in 0..size {
-        for j in (i + 1)..size {
-            if permutation[i] > permutation[j] {
-                count += 1;
-            }
-        }
-    }
-    count.is_multiple_of(2)
-}
-
-pub fn is_even_permutation(lexicographical_index: i64) -> bool {
-    // Convert the index to its factoradic representation and sum the digits.
-    let mut index = lexicographical_index;
-    let mut sum = 0;
-    let mut i = 2;
-    while index > 0 {
-        sum += index % i;
-        index /= i;
-        i += 1;
-    }
-    sum % 2 == 0
-}
-
-pub fn is_odd_permutation(lexicographical_index: i64) -> bool {
-    !is_even_permutation(lexicographical_index)
 }
 
 #[cfg(test)]
@@ -331,59 +295,6 @@ mod tests {
                 let computed_perm = nth_permutation(index, size);
                 let expected_perm: Vec<usize> = expected_perm.into_iter().copied().collect();
                 assert_eq!(computed_perm, expected_perm);
-            }
-        }
-    }
-
-    #[test]
-    fn test_permutation_index() {
-        for size in 1..=8 {
-            let base: Vec<usize> = (0..size).collect();
-            for (index, perm) in base.iter().permutations(size).enumerate() {
-                let perm_vec: Vec<usize> = perm.into_iter().copied().collect();
-                assert_eq!(permutation_index(&perm_vec), index);
-            }
-        }
-    }
-
-    #[test]
-    fn test_is_even_permutation() {
-        // Test that both methods give the same result
-        for size in 1..=6 {
-            let base: Vec<usize> = (0..size).collect();
-            for (index, perm) in base.iter().permutations(size).enumerate() {
-                let perm_vec: Vec<usize> = perm.into_iter().copied().collect();
-                let even_from_array = is_even_permutation_array(&perm_vec);
-                let even_from_index = is_even_permutation(index as i64);
-                assert_eq!(even_from_array, even_from_index);
-            }
-        }
-
-        // Test specific known cases
-        assert!(is_even_permutation_array(&[0, 1, 2])); // identity is even
-        assert!(!is_even_permutation_array(&[0, 2, 1])); // one swap is odd
-        assert!(!is_even_permutation_array(&[1, 0, 2])); // one swap is odd
-        assert!(is_even_permutation_array(&[2, 0, 1])); // two swaps is even
-    }
-
-    #[test]
-    fn test_permutation_index_half_is_bijection() {
-        // Tests that permutation_index/2 is a bijection,
-        // between even permutations and [0, factorial(n)/2 );
-        // and between odd permutations and [0, factorial(n)/2 ).
-        for size in 0..=10 {
-            let mut even_permutations = 0;
-            let mut odd_permutations = 0;
-
-            for i in 0..factorial(size) {
-                let p = nth_permutation(i, size);
-                if is_even_permutation_array(&p) {
-                    assert_eq!(permutation_index(&p) / 2, even_permutations);
-                    even_permutations += 1;
-                } else {
-                    assert_eq!(permutation_index(&p) / 2, odd_permutations);
-                    odd_permutations += 1;
-                }
             }
         }
     }

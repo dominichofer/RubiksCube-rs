@@ -43,9 +43,9 @@ fn twist_from_char(c: char) -> Twist {
 
 fn axis_from_rotation(rot: Rotation) -> Vec3 {
     match rot {
-        Rotation::L => Vec3::new(-1.0, 0.0, 0.0),
-        Rotation::U => Vec3::new(0.0, 1.0, 0.0),
-        Rotation::F => Vec3::new(0.0, 0.0, 1.0),
+        Rotation::X => Vec3::new(-1.0, 0.0, 0.0),
+        Rotation::Y => Vec3::new(0.0, 1.0, 0.0),
+        Rotation::Z => Vec3::new(0.0, 0.0, 1.0),
     }
 }
 
@@ -204,18 +204,18 @@ impl CubeState {
     }
 
     fn apply_twist(&mut self, twist: Twist) {
-        self.corners = self.corners.twisted(twist);
-        self.edges = self.edges.twisted(twist);
+        self.corners = Corners::twist(twist) * self.corners;
+        self.edges = Edges::twist(twist) * self.edges;
     }
 
     fn apply_rotation(&mut self, rotation: Rotation) {
-        self.corners = self.corners.rotated_colours(rotation);
-        self.edges = self.edges.rotated_colours(rotation);
+        self.corners = self.corners.conjugated_by(rotation);
+        self.edges = self.edges.conjugated_by(rotation);
     }
 
     fn invert(&mut self) {
-        self.corners = self.corners.inverted();
-        self.edges = self.edges.inverted();
+        self.corners = self.corners.inverse();
+        self.edges = self.edges.inverse();
     }
 
     fn reset(&mut self) {
@@ -285,9 +285,9 @@ fn handle_input(
 
     // Cube rotation keys
     const ROTATION_KEYS: [(Key, Rotation); 3] = [
-        (Key::Q, Rotation::L),
-        (Key::W, Rotation::U),
-        (Key::E, Rotation::F),
+        (Key::X, Rotation::X),
+        (Key::Y, Rotation::Y),
+        (Key::Z, Rotation::Z),
     ];
 
     for (key, rotation) in ROTATION_KEYS {

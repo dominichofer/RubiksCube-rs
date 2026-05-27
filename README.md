@@ -187,20 +187,21 @@ cargo run --release --bin benchmark
 
 Here's an example output of an AMD Ryzen 9 9950X3D 16-Core Processor with DDR5 RAM at 3600 MT/s
 ```
-Corners twisted               27.3 ns
-Corners rotated_colours       53.7 ns
-Corners from_indices          70.5 ns
-Corners prm_index              7.3 ns
-Corners ori_index              5.8 ns
-Edges twisted                 31.4 ns
-Edges rotated_colours         79.6 ns
-Edges from_indices           204.8 ns
-Edges slice_prm_index         22.4 ns
-Edges non_slice_prm_index     24.7 ns
-Edges slice_loc_index         26.6 ns
-Edges ori_index                4.2 ns
-SubsetIndex twisted            12.9 ns
-CosetIndex twisted              7.8 ns
+Corners twisted               26.7 ns
+Corners conjugated_by         62.3 ns
+Corners from_indices          86.6 ns
+Corners prm_index              7.6 ns
+Corners ori_index              5.6 ns
+Edges twisted                 28.0 ns
+Edges conjugated_by           75.8 ns
+Edges from_indices           206.8 ns
+Edges slice_prm_index         21.2 ns
+Edges non_slice_prm_index     24.4 ns
+Edges slice_loc_index         30.2 ns
+Edges ori_index                4.5 ns
+SubsetIndex twisted           13.0 ns
+CosetIndex twisted             7.5 ns
+CubeIndex twisted            115.3 ns
 ```
 
 ### Running the GUI

@@ -29,17 +29,16 @@ impl SubsetIndex {
             + self.e_slice_prm
     }
 
-    pub fn from_index(index: usize) -> Self {
-        let mut index = index;
+    pub fn from_index(mut index: usize) -> Self {
         let e_slice_prm = index % Edges::SLICE_PRM_SIZE;
         index /= Edges::SLICE_PRM_SIZE;
         let e_non_slice_prm = index % Edges::NON_SLICE_PRM_SIZE;
         index /= Edges::NON_SLICE_PRM_SIZE;
         let mut c_prm = index * 2;
-        let e_even_prm = is_even_permutation(e_non_slice_prm as i64)
-            ^ is_even_permutation(e_slice_prm as i64)
+        let e_even_prm = is_even_permutation(e_non_slice_prm)
+            ^ is_even_permutation(e_slice_prm)
             ^ true; // in subset e_slice_loc is an even permutation
-        if e_even_prm != is_even_permutation(c_prm as i64) {
+        if e_even_prm != is_even_permutation(c_prm) {
             c_prm += 1;
         }
         Self { e_slice_prm, e_non_slice_prm, c_prm }

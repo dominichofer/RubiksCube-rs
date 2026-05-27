@@ -45,7 +45,7 @@ impl TwistSet {
     }
 
     pub fn iter(&self) -> impl Iterator<Item = Twist> {
-        (0..18u8).filter_map(|i| {
+        (0..18).filter_map(|i| {
             if self.0 & (1 << i) != 0 {
                 Some(Twist::from(i))
             } else {
@@ -61,11 +61,11 @@ impl From<u32> for TwistSet {
     }
 }
 
-impl From<Twist> for TwistSet {
-    fn from(twist: Twist) -> Self {
-        TwistSet(1 << twist.to_index())
-    }
-}
+// impl From<Twist> for TwistSet {
+//     fn from(twist: Twist) -> Self {
+//         TwistSet(1 << twist.to_index())
+//     }
+// }
 
 impl From<&[Twist]> for TwistSet {
     fn from(twists: &[Twist]) -> Self {

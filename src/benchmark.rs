@@ -25,61 +25,35 @@ fn main() {
     let mut rnd = StdRng::seed_from_u64(42);
     let rnd_twists = rnd_twist.gen_twists(ITERATIONS);
     let rnd_subset_twists = rnd_subset_twist.gen_twists(ITERATIONS);
-    let rnd_rotation = Vec::from_iter((0..ITERATIONS).map(|_| {
-        if rnd.random_bool(0.5) {
-            Rotation::L
-        } else {
-            Rotation::U
-        }
-    }));
-    let rnd_corners = Vec::from_iter(
-        (0..ITERATIONS).map(|_| Corners::solved().twisted_by(&rnd_twist.gen_twists(100))),
-    );
-    let rnd_edges = Vec::from_iter(
-        (0..ITERATIONS).map(|_| Edges::solved().twisted_by(&rnd_twist.gen_twists(100))),
-    );
+    let rnd_rotation = Vec::from_iter((0..ITERATIONS).map(|_| if rnd.random_bool(0.5) { Rotation::X } else { Rotation::Y }));
+    let rnd_corners = Vec::from_iter((0..ITERATIONS).map(|_| Corners::twists(&rnd_twist.gen_twists(100))));
+    let rnd_edges = Vec::from_iter((0..ITERATIONS).map(|_| Edges::twists(&rnd_twist.gen_twists(100))));
 
     let corners_from_indices: Vec<(usize, usize)> = (0..ITERATIONS)
-        .map(|_| {
+        .map(|_|
             (
                 rnd.random_range(0..Corners::PRM_SIZE),
                 rnd.random_range(0..Corners::ORI_SIZE),
-            )
-        })
+            ))
         .collect();
     let edges_from_indices: Vec<(usize, usize, usize, usize)> = (0..ITERATIONS)
-        .map(|_| {
+        .map(|_|
             (
                 rnd.random_range(0..Edges::SLICE_PRM_SIZE),
                 rnd.random_range(0..Edges::NON_SLICE_PRM_SIZE),
                 rnd.random_range(0..Edges::SLICE_LOC_SIZE),
                 rnd.random_range(0..Edges::ORI_SIZE),
-            )
-        })
+            ))
         .collect();
 
-    bench("Corners twisted", &rnd_twists, |&t| {
-        corners = corners.twisted(t)
-    });
-    bench("Corners rotated_colours", &rnd_rotation, |&r| {
-        corners = corners.rotated_colours(r)
-    });
-    bench(
-        "Corners from_indices",
-        &corners_from_indices,
-        |&(prm, ori)| corners = Corners::from_indices(prm, ori),
-    );
-    bench("Corners prm_index", &rnd_corners, |c| {
-        black_box(c.prm_index());
-    });
-    bench("Corners ori_index", &rnd_corners, |c| {
-        black_box(c.ori_index());
-    });
+    bench("Corners twisted", &rnd_twists, |&t| corners = Corners::twist(t) * corners );
+    bench("Corners conjugated_by", &rnd_rotation, |&r| corners = corners.conjugated_by(r) );
+    bench("Corners from_indices", &corners_from_indices, |&(prm, ori)| corners = Corners::from_indices(prm, ori) );
+    bench("Corners prm_index", &rnd_corners, |c| { black_box(c.prm_index()); });
+    bench("Corners ori_index", &rnd_corners, |c| { black_box(c.ori_index()); });
 
-    bench("Edges twisted", &rnd_twists, |&t| edges = edges.twisted(t));
-    bench("Edges rotated_colours", &rnd_rotation, |&r| {
-        edges = edges.rotated_colours(r)
-    });
+    bench("Edges twisted", &rnd_twists, |&t| edges = Edges::twist(t) * edges);
+    bench("Edges conjugated_by", &rnd_rotation, |&r| edges = edges.conjugated_by(r) );
     bench(
         "Edges from_indices",
         &edges_from_indices,

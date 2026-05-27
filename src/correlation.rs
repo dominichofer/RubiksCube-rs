@@ -4,15 +4,15 @@ use std::collections::HashMap;
 
 fn all_rotations(cube: CubeIndex) -> [CubeIndex; 24] {
     let u0 = cube;
-    let u1 = u0.rotated_colours(Rotation::U);
-    let u2 = u1.rotated_colours(Rotation::U);
-    let u3 = u2.rotated_colours(Rotation::U);
-    let l1 = [u0, u1, u2, u3].map(|u| u.rotated_colours(Rotation::L));
-    let l2 = l1.map(|l| l.rotated_colours(Rotation::L));
-    let l3 = l2.map(|l| l.rotated_colours(Rotation::L));
-    let f1 = [u0, u1, u2, u3].map(|u| u.rotated_colours(Rotation::F));
-    let f2 = f1.map(|f| f.rotated_colours(Rotation::F));
-    let f3 = f2.map(|f| f.rotated_colours(Rotation::F));
+    let u1 = u0.conjugated_by(Rotation::Z);
+    let u2 = u1.conjugated_by(Rotation::Z);
+    let u3 = u2.conjugated_by(Rotation::Z);
+    let l1 = [u0, u1, u2, u3].map(|u| u.conjugated_by(Rotation::Y));
+    let l2 = l1.map(|l| l.conjugated_by(Rotation::Y));
+    let l3 = l2.map(|l| l.conjugated_by(Rotation::Y));
+    let f1 = [u0, u1, u2, u3].map(|u| u.conjugated_by(Rotation::Y));
+    let f2 = f1.map(|f| f.conjugated_by(Rotation::Y));
+    let f3 = f2.map(|f| f.conjugated_by(Rotation::Y));
     [
         u0, u1, u2, u3,
         l1[0], l1[1], l1[2], l1[3],

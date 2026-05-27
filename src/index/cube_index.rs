@@ -44,7 +44,7 @@ impl CubeIndex {
             .fold(*self, |cube, &twist| cube.twisted(twister, twist))
     }
 
-    pub fn rotated_colours(&self, rot: Rotation) -> Self {
+    pub fn conjugated_by(&self, rot: Rotation) -> Self {
         let c_prm = self.subset.c_prm;
         let c_ori = self.coset.c_ori;
         let e_slice_prm = self.subset.e_slice_prm;
@@ -52,10 +52,8 @@ impl CubeIndex {
         let e_slice_loc = self.coset.e_slice_loc;
         let e_ori = self.coset.e_ori;
 
-        let corners = Corners::from_indices(c_prm, c_ori)
-            .rotated_colours(rot);
-        let edges = Edges::from_indices(e_slice_prm, e_non_slice_prm, e_slice_loc, e_ori)
-            .rotated_colours(rot);
+        let corners = Corners::from_indices(c_prm, c_ori).conjugated_by(rot);
+        let edges = Edges::from_indices(e_slice_prm, e_non_slice_prm, e_slice_loc, e_ori).conjugated_by(rot);
 
         Self {
             subset: SubsetIndex {
@@ -71,13 +69,7 @@ impl CubeIndex {
         }
     }
 
-    pub fn rotated_colours_by(&self, rotations: &[Rotation]) -> Self {
-        rotations
-            .iter()
-            .fold(*self, |cube, &rot| cube.rotated_colours(rot))
-    }
-
-    pub fn inverted(&self) -> Self {
+    pub fn inverse(&self) -> Self {
         let c_prm = self.subset.c_prm;
         let c_ori = self.coset.c_ori;
         let e_slice_prm = self.subset.e_slice_prm;
@@ -85,10 +77,8 @@ impl CubeIndex {
         let e_slice_loc = self.coset.e_slice_loc;
         let e_ori = self.coset.e_ori;
 
-        let corners = Corners::from_indices(c_prm, c_ori)
-            .inverted();
-        let edges = Edges::from_indices(e_slice_prm, e_non_slice_prm, e_slice_loc, e_ori)
-            .inverted();
+        let corners = Corners::from_indices(c_prm, c_ori).inverse();
+        let edges = Edges::from_indices(e_slice_prm, e_non_slice_prm, e_slice_loc, e_ori).inverse();
 
         Self {
             subset: SubsetIndex {
