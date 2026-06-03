@@ -67,12 +67,7 @@ fn corners_distance_table(twister: &Twister, path: &str) -> DistanceTable {
         counts[d as usize] += 1;
     }
     // According to https://oeis.org/A080629
-    assert_eq!(
-        counts,
-        vec![
-            1, 18, 243, 2874, 28000, 205416, 1168516, 5402628, 20776176, 45391616, 15139616, 64736
-        ]
-    );
+    assert_eq!(counts, vec![1, 18, 243, 2874, 28000, 205416, 1168516, 5402628, 20776176, 45391616, 15139616, 64736]);
 
     table
 }
@@ -142,13 +137,7 @@ fn coset_direction_table(twister: &Twister, path: &str) -> DirectionsTable {
         let d = table.distance(i);
         counts[d as usize] += 1;
     }
-    assert_eq!(
-        counts,
-        vec![
-            1, 4, 50, 592, 7156, 87236, 1043817, 12070278, 124946368, 821605960, 1199128738,
-            58202444, 476
-        ]
-    );
+    assert_eq!(counts, vec![1, 4, 50, 592, 7156, 87236, 1043817, 12070278, 124946368, 821605960, 1199128738, 58202444, 476]);
 
     table
 }

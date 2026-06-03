@@ -36,13 +36,23 @@ fn main() {
                 rnd.random_range(0..Corners::ORI_SIZE),
             ))
         .collect();
-    let edges_from_indices: Vec<(usize, usize, usize, usize)> = (0..ITERATIONS)
+    let edges_from_indices: Vec<(usize, usize, usize, usize, usize, usize, usize)> = (0..ITERATIONS)
         .map(|_|
             (
-                rnd.random_range(0..Edges::SLICE_PRM_SIZE),
-                rnd.random_range(0..Edges::NON_SLICE_PRM_SIZE),
-                rnd.random_range(0..Edges::SLICE_LOC_SIZE),
-                rnd.random_range(0..Edges::ORI_SIZE),
+                rnd.random_range(0..binomial(12, 4)),
+                rnd.random_range(0..binomial(12, 4)),
+                rnd.random_range(0..binomial(12, 4)),
+                rnd.random_range(0..factorial(4)),
+                rnd.random_range(0..factorial(4)),
+                rnd.random_range(0..factorial(4)),
+                rnd.random_range(0..factorial(4)),
+            ))
+        .collect();
+    let edges_from_subset_indices: Vec<(usize, usize)> = (0..ITERATIONS)
+        .map(|_|
+            (
+                rnd.random_range(0..factorial(8)),
+                rnd.random_range(0..factorial(4)),
             ))
         .collect();
 
@@ -57,18 +67,28 @@ fn main() {
     bench(
         "Edges from_indices",
         &edges_from_indices,
-        |&(sp, nsp, sl, ori)| {
-            black_box(Edges::from_indices(sp, nsp, sl, ori));
+        |&(x_loc, y_loc, z_loc, x_prm, y_prm, z_prm, ori)| {
+            black_box(Edges::from_indices(LocPrm::new(x_loc, x_prm), LocPrm::new(y_loc, y_prm), LocPrm::new(z_loc, z_prm), ori));
         },
     );
-    bench("Edges slice_prm_index", &rnd_edges, |e| {
-        black_box(e.slice_prm_index());
+    bench(
+        "Edges from_subset_indices",
+        &edges_from_subset_indices,
+        |&(loc, prm)| {
+            black_box(Edges::from_subset_indices(loc, prm));
+        },
+    );
+    bench("Edges x_loc_prm_index", &rnd_edges, |e| {
+        black_box(e.x_loc_prm_index());
     });
-    bench("Edges non_slice_prm_index", &rnd_edges, |e| {
-        black_box(e.non_slice_prm_index());
+    bench("Edges y_loc_prm_index", &rnd_edges, |e| {
+        black_box(e.y_loc_prm_index());
     });
-    bench("Edges slice_loc_index", &rnd_edges, |e| {
-        black_box(e.slice_loc_index());
+    bench("Edges z_loc_prm_index", &rnd_edges, |e| {
+        black_box(e.z_loc_prm_index());
+    });
+    bench("Edges xy_prm_index", &rnd_edges, |e| {
+        black_box(e.xy_prm_index());
     });
     bench("Edges ori_index", &rnd_edges, |e| {
         black_box(e.ori_index());

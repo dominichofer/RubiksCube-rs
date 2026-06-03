@@ -98,13 +98,7 @@ mod tests {
             counts[d as usize] += 1;
         }
         // According to https://oeis.org/A080629
-        assert_eq!(
-            counts,
-            vec![
-                1, 18, 243, 2874, 28000, 205416, 1168516, 5402628, 20776176, 45391616, 15139616,
-                64736
-            ]
-        );
+        assert_eq!(counts, vec![1, 18, 243, 2874, 28000, 205416, 1168516, 5402628, 20776176, 45391616, 15139616, 64736]);
 
         let mut rnd = RandomTwistGen::new(5989, &ALL_TWISTS);
         let mut cube = CornerIndex::solved();

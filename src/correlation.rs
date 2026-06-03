@@ -32,7 +32,7 @@ fn main() {
         let twists = rnd.gen_twists(100);
         let rnd_cube = CubeIndex::solved().twisted_by(&twister, &twists);
         let all_rotations = all_rotations(rnd_cube);
-        let subset_distances = all_rotations.map(|cube| tables.coset.distance(cube.coset.index()));
+        let subset_distances = all_rotations.map(|cube| tables.coset.distance(cube.coset_index()));
         for (i, dst_i) in subset_distances.into_iter().enumerate() {
             for (j, dst_j) in subset_distances.into_iter().enumerate() {
                 *correlation

@@ -1,40 +1,66 @@
-use super::{CosetIndex, SubsetIndex, Twister};
-use crate::{CornerIndex, cubies::*};
+use super::{Twister, SubsetIndex, CosetIndex};
+use crate::{CornerIndex, LocPrm, cubies::*};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CubeIndex {
-    pub subset: SubsetIndex,
-    pub coset: CosetIndex,
+    c_ori: usize, // 3^7 = 2'187 (defines coset index)
+    c_prm: usize, // 8! = 40'320 (defines subset index)
+    e_ori: usize, // 2^11 = 2'048 (defines coset index)
+    x_loc_prm: LocPrm, // (12 choose 4) * 4! = 11'880
+    y_loc_prm: LocPrm, // (12 choose 4) * 4! = 11'880
+    z_loc_prm: LocPrm, // (12 choose 4) * 4! == 11'880
 }
 
 impl CubeIndex {
     pub fn solved() -> Self {
+        const C: Corners = Corners::solved();
+        const E: Edges = Edges::solved();
         Self {
-            subset: SubsetIndex::solved(),
-            coset: CosetIndex::solved(),
+            c_ori: C.ori_index(),
+            c_prm: C.prm_index(),
+            e_ori: E.ori_index(),
+            x_loc_prm: E.x_loc_prm_index(),
+            y_loc_prm: E.y_loc_prm_index(),
+            z_loc_prm: E.z_loc_prm_index(),
         }
+    }
+
+    fn in_subset(&self) -> bool {
+        const C: Corners = Corners::solved();
+        const E: Edges = Edges::solved();
+
+        self.c_ori == C.ori_index() && self.e_ori == E.ori_index() && self.z_loc_prm.loc() == E.z_loc_prm_index().loc()
     }
 
     pub fn corner_index(&self) -> usize {
-        CornerIndex {
-            prm: self.subset.c_prm,
-            ori: self.coset.c_ori,
-        }
-        .index()
+        CornerIndex { prm: self.c_prm, ori: self.c_ori }.index()
     }
 
-    pub fn in_subset(&self) -> bool {
-        self.coset.in_subset()
+    pub fn subset_index(&self) -> SubsetIndex {
+        // assert!(self.in_subset(), "Cube is not in the subset: {:?}", self);
+        let edges = Edges::from_indices(self.x_loc_prm, self.y_loc_prm, self.z_loc_prm, self.e_ori);
+        SubsetIndex {
+            c_prm: self.c_prm,
+            xy_prm: edges.xy_prm_index(), // TODO: Make this faster!
+            z_prm: self.z_loc_prm.prm(),
+        }
+    }
+
+    pub fn coset_index(&self) -> usize {
+        CosetIndex { c_ori: self.c_ori, e_ori: self.e_ori, z_loc: self.z_loc_prm.loc() }.index()
     }
 
     pub fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
+        let x_loc_prm = twister.twisted_e_loc_prm(self.x_loc_prm, twist);
+        let y_loc_prm = twister.twisted_e_loc_prm(self.y_loc_prm, twist);
+        let z_loc_prm = twister.twisted_e_loc_prm(self.z_loc_prm, twist);
         CubeIndex {
-            subset: SubsetIndex {
-                e_slice_prm: twister.twisted_e_slice_prm(self.subset.e_slice_prm, self.coset.e_slice_loc, twist),
-                e_non_slice_prm: twister.twisted_e_non_slice_prm(self.subset.e_non_slice_prm, self.coset.e_slice_loc, twist),
-                c_prm: twister.twisted_c_prm(self.subset.c_prm, twist),
-            },
-            coset: self.coset.twisted(twister, twist),
+            c_ori: twister.twisted_c_ori(self.c_ori, twist),
+            c_prm: twister.twisted_c_prm(self.c_prm, twist),
+            e_ori: twister.twisted_e_ori(self.e_ori, twist),
+            x_loc_prm,
+            y_loc_prm,
+            z_loc_prm,
         }
     }
 
@@ -45,52 +71,29 @@ impl CubeIndex {
     }
 
     pub fn conjugated_by(&self, rot: Rotation) -> Self {
-        let c_prm = self.subset.c_prm;
-        let c_ori = self.coset.c_ori;
-        let e_slice_prm = self.subset.e_slice_prm;
-        let e_non_slice_prm = self.subset.e_non_slice_prm;
-        let e_slice_loc = self.coset.e_slice_loc;
-        let e_ori = self.coset.e_ori;
-
-        let corners = Corners::from_indices(c_prm, c_ori).conjugated_by(rot);
-        let edges = Edges::from_indices(e_slice_prm, e_non_slice_prm, e_slice_loc, e_ori).conjugated_by(rot);
+        let corners = Corners::from_indices(self.c_prm, self.c_ori).conjugated_by(rot);
+        let edges = Edges::from_indices(self.x_loc_prm, self.y_loc_prm, self.z_loc_prm, self.e_ori).conjugated_by(rot);
 
         Self {
-            subset: SubsetIndex {
-                c_prm: corners.prm_index(),
-                e_slice_prm: edges.slice_prm_index(),
-                e_non_slice_prm: edges.non_slice_prm_index(),
-            },
-            coset: CosetIndex {
-                c_ori: corners.ori_index(),
-                e_ori: edges.ori_index(),
-                e_slice_loc: edges.slice_loc_index(),
-            },
+            c_ori: corners.ori_index(),
+            c_prm: corners.prm_index(),
+            e_ori: edges.ori_index(),
+            x_loc_prm: edges.x_loc_prm_index(),
+            y_loc_prm: edges.y_loc_prm_index(),
+            z_loc_prm: edges.z_loc_prm_index(),
         }
     }
 
     pub fn inverse(&self) -> Self {
-        let c_prm = self.subset.c_prm;
-        let c_ori = self.coset.c_ori;
-        let e_slice_prm = self.subset.e_slice_prm;
-        let e_non_slice_prm = self.subset.e_non_slice_prm;
-        let e_slice_loc = self.coset.e_slice_loc;
-        let e_ori = self.coset.e_ori;
-
-        let corners = Corners::from_indices(c_prm, c_ori).inverse();
-        let edges = Edges::from_indices(e_slice_prm, e_non_slice_prm, e_slice_loc, e_ori).inverse();
-
+        let corners = Corners::from_indices(self.c_prm, self.c_ori).inverse();
+        let edges = Edges::from_indices(self.x_loc_prm, self.y_loc_prm, self.z_loc_prm, self.e_ori).inverse();
         Self {
-            subset: SubsetIndex {
-                c_prm: corners.prm_index(),
-                e_slice_prm: edges.slice_prm_index(),
-                e_non_slice_prm: edges.non_slice_prm_index(),
-            },
-            coset: CosetIndex {
-                c_ori: corners.ori_index(),
-                e_ori: edges.ori_index(),
-                e_slice_loc: edges.slice_loc_index(),
-            },
+            c_ori: corners.ori_index(),
+            c_prm: corners.prm_index(),
+            e_ori: edges.ori_index(),
+            x_loc_prm: edges.x_loc_prm_index(),
+            y_loc_prm: edges.y_loc_prm_index(),
+            z_loc_prm: edges.z_loc_prm_index(),
         }
     }
 }

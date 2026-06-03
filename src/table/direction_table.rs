@@ -129,19 +129,9 @@ mod tests {
                 let next = cube.twisted(&twister, twist);
                 let next_d = table.distance(next.index());
                 if next_d < d {
-                    assert!(
-                        less.contains(twist),
-                        "Less missing twist {:?} at index {}",
-                        twist,
-                        i
-                    );
+                    assert!(less.contains(twist), "Less missing twist {:?} at index {}", twist, i);
                 } else if next_d > d {
-                    assert!(
-                        more.contains(twist),
-                        "More missing twist {:?} at index {}",
-                        twist,
-                        i
-                    );
+                    assert!(more.contains(twist), "More missing twist {:?} at index {}", twist, i);
                 }
             }
         }

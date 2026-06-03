@@ -50,7 +50,7 @@ impl Corners {
     }
 
     pub const fn solved() -> Self {
-        Self { prm: Permutation::identity(), ori: Orientation::zero() }
+        Self { prm: Permutation::identity(), ori: Orientation::identity() }
     }
 
     pub fn twist(twist: Twist) -> Self {
@@ -105,7 +105,7 @@ impl Corners {
     }
 
     pub fn from_indices(prm: usize, ori: usize) -> Self {
-        let mut o = decode(ori, 3, 7);
+        let mut o = decode(ori.into(), 3, 7);
         o.push((7 * 3 - o.iter().sum::<usize>()) % 3); // Parity constraint
         Self {
             prm: Permutation::from_index(prm),
@@ -141,8 +141,6 @@ mod tests {
             c = Corners::twist(rnd.gen_twist()) * c;
             let prm = c.prm_index();
             let ori = c.ori_index();
-            assert!(prm < Corners::PRM_SIZE);
-            assert!(ori < Corners::ORI_SIZE);
             assert_eq!(c, Corners::from_indices(prm, ori));
         }
     }

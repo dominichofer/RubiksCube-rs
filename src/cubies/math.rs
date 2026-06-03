@@ -15,10 +15,6 @@ pub fn decode(mut value: usize, base: usize, length: usize) -> Vec<usize> {
     result
 }
 
-pub fn add_mod<const N: usize>(a: [usize; N], b: [usize; N], m: usize) -> [usize; N] {
-    std::array::from_fn(|i| (a[i] + b[i]) % m)
-}
-
 pub const fn factorial(n: usize) -> usize {
     const PRECOMPUTED: [usize; 21] = [
         1,
@@ -123,96 +119,9 @@ pub fn nth_combination(n: usize, k: usize, index: usize) -> Vec<usize> {
     combination
 }
 
-pub fn nth_combination_size_4(n: usize, index: usize) -> [usize; 4] {
-    let mut size = 0;
-    let mut index = index;
-    let mut combination = [0usize; 4];
-
-    for i in 0..n {
-        let count = binomial(n - 1 - i, 4 - size - 1);
-        if count > index {
-            combination[size] = i;
-            size += 1;
-            if size == 4 {
-                break;
-            }
-        } else {
-            index -= count;
-        }
-    }
-    combination
-}
-
-pub fn nth_permutation(index: usize, size: usize) -> Vec<usize> {
-    let mut unused = 0xFFFFFFFFFFFFFFFFusize;
-    let mut index = index;
-    let mut permutation = vec![0usize; size];
-
-    for i in (0..size).rev() {
-        let f = factorial(i);
-        let pos = index / f;
-        index %= f;
-
-        // Find the pos-th set bit in unused
-        let mut mask = unused;
-        for _ in 0..pos {
-            mask &= mask - 1; // Clear lowest set bit
-        }
-        let selected_bit = mask & (!mask + 1); // Get lowest set bit
-
-        permutation[size - 1 - i] = selected_bit.trailing_zeros() as usize;
-        unused ^= selected_bit;
-    }
-    permutation
-}
-
-pub fn nth_permutation_size_4(index: usize) -> [usize; 4] {
-    let mut unused = 0xFFFFFFFFFFFFFFFFusize;
-    let mut index = index;
-    let mut permutation = [0usize; 4];
-
-    for i in (0..4).rev() {
-        let f = factorial(i);
-        let pos = index / f;
-        index %= f;
-
-        // Find the pos-th set bit in unused
-        let mut mask = unused;
-        for _ in 0..pos {
-            mask &= mask - 1; // Clear lowest set bit
-        }
-        let selected_bit = mask & (!mask + 1); // Get lowest set bit
-
-        permutation[4 - 1 - i] = selected_bit.trailing_zeros() as usize;
-        unused ^= selected_bit;
-    }
-    permutation
-}
-
-pub fn permutation_index(permutation: &[usize]) -> usize {
-    let size = permutation.len();
-    let mut index = 0;
-    let mut bitboard = 0;
-
-    for i in 0..size {
-        let mask: usize = 1usize << permutation[i];
-
-        // Number of remaining elements smaller than the current element
-        let smaller = permutation[i] - (bitboard & (mask - 1)).count_ones() as usize;
-
-        // Total number of elements bigger than the current element
-        let bigger = size - i - 1;
-
-        index += smaller * factorial(bigger);
-        bitboard |= mask;
-    }
-    index
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use itertools::Itertools;
 
     #[test]
     fn test_factorial() {
@@ -266,10 +175,7 @@ mod tests {
         assert_eq!(combination_index(5, &[0usize, 1usize, 3usize, 4usize]), 2);
         assert_eq!(combination_index(5, &[0usize, 2usize, 3usize, 4usize]), 3);
         assert_eq!(combination_index(5, &[1usize, 2usize, 3usize, 4usize]), 4);
-        assert_eq!(
-            combination_index(5, &[0usize, 1usize, 2usize, 3usize, 4usize]),
-            0
-        );
+        assert_eq!(combination_index(5, &[0usize, 1usize, 2usize, 3usize, 4usize]), 0);
     }
 
     #[test]
@@ -281,20 +187,6 @@ mod tests {
                     let comb = nth_combination(n, k, index);
                     assert_eq!(combination_index(n, &comb), index);
                 }
-            }
-        }
-    }
-
-    #[test]
-    fn test_nth_permutation() {
-        // Test against itertools reference implementation
-        for size in 1..=8 {
-            let base: Vec<usize> = (0..size).collect();
-
-            for (index, expected_perm) in base.iter().permutations(size).enumerate() {
-                let computed_perm = nth_permutation(index, size);
-                let expected_perm: Vec<usize> = expected_perm.into_iter().copied().collect();
-                assert_eq!(computed_perm, expected_perm);
             }
         }
     }

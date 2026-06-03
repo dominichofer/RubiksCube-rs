@@ -154,29 +154,34 @@ cargo run --release --bin rubikscube test_pos_big.txt
 Here's an example output of `test_pos_big.txt` on an AMD Ryzen 9 9950X3D 16-Core Processor with HT and DDR5 RAM with 4x 32-bit channels at 3600 MT/s.
 If solved `test_cubes_big.txt` in 13.8s (720 cubes per second) with a single thread.
 ```
-Corners table loaded in: 19.3856ms
-Subset table loaded in: 3.4855558s
-Coset table loaded in: 5.6195334s
-Total time taken: 13.8777383s
-Average time per solve: 1.387773ms
+Corners table loaded in: 22.5914ms
+Subset table loaded in: 3.4555108s
+Coset table loaded in: 6.1924011s
+Total time taken: 5.108103s
+Average time per solve: 510.81µs
 Search depths:
   Depth 5: 1
-  Depth 6: 13
-  Depth 7: 180
-  Depth 8: 1’661
-  Depth 9: 10’801
-  Depth 10: 20’119
-  Depth 11: 11’225
-  Depth 12: 3’150
-  Depth 13: 244
-  Depth 14: 3
-Phase 1 probes: 106’069’810
-Phase 2 probes: 15’558’460
-Subset cuts: 1’048’070
-Corner probes: 4’584’027
-Corner cuts: 2’717’995 (59.29%)
-No twist cuts: 17’105’909
+  Depth 6: 31
+  Depth 7: 331
+  Depth 8: 3’004
+  Depth 9: 18’549
+  Depth 10: 28’799
+  Depth 11: 10’384
+  Depth 12: 1’304
+  Depth 13: 26
+Phase 1 probes: 41’926’051
+Phase 2 probes: 6’521’976
+Subset cuts: 0
+Corner probes: 3’204’916
+Corner cuts: 757’023 (23.62%)
+No twist cuts: 7’251’917
 ```
+
+41M x table[c_ori * X + e_ori * Y + z_loc] (table size: 16.5 GB)
+33M * (avg twists) x  cube.twisted (115 ns)
+6M x multiple subset.twisted (13.0 ns) & table[c_prm * X + xy_prm * Y + z_prm] (table size: 18.1 GB), 
+3.2M x table[c_prm * X + c_ori]  (table size: 84 MB)
+
 
 ### Running Benchmarks
 
@@ -187,21 +192,26 @@ cargo run --release --bin benchmark
 
 Here's an example output of an AMD Ryzen 9 9950X3D 16-Core Processor with DDR5 RAM at 3600 MT/s
 ```
-Corners twisted               26.7 ns
-Corners conjugated_by         62.3 ns
-Corners from_indices          86.6 ns
+Corners twisted               26.2 ns
+Corners conjugated_by         62.5 ns
+Corners from_indices         121.3 ns
 Corners prm_index              7.6 ns
-Corners ori_index              5.6 ns
-Edges twisted                 28.0 ns
-Edges conjugated_by           75.8 ns
-Edges from_indices           206.8 ns
-Edges slice_prm_index         21.2 ns
-Edges non_slice_prm_index     24.4 ns
-Edges slice_loc_index         30.2 ns
-Edges ori_index                4.5 ns
-SubsetIndex twisted           13.0 ns
-CosetIndex twisted             7.5 ns
-CubeIndex twisted            115.3 ns
+Corners ori_index              5.9 ns
+Edges twisted                 27.8 ns
+Edges conjugated_by           70.3 ns
+Edges from_indices           325.7 ns
+Edges from_subset_indices    106.5 ns
+Edges x_loc_index             27.4 ns
+Edges y_loc_index             28.0 ns
+Edges z_loc_index             28.4 ns
+Edges x_prm_index             20.4 ns
+Edges y_prm_index             21.3 ns
+Edges z_prm_index             20.7 ns
+Edges xy_prm_index            24.9 ns
+Edges ori_index                3.9 ns
+SubsetIndex twisted           15.6 ns
+CosetIndex twisted             7.2 ns
+CubeIndex twisted             14.1 ns
 ```
 
 ### Running the GUI

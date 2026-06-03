@@ -73,7 +73,7 @@ impl<'a> TwoPhaseSolver<'a> {
             |twists: &[Twist]| inverse(&conjugate_by_inv(twists, Rotation::X)),
             |twists: &[Twist]| inverse(&conjugate_by_inv(twists, Rotation::Y)),
         ];
-        let subset_distances = cubes.map(|c| self.phase_1.distance(c.coset.index()));
+        let subset_distances = cubes.map(|c| self.phase_1.distance(c.coset_index()));
         let min_distance = *subset_distances.iter().min().unwrap();
 
         for p1_depth in min_distance..=max_solution_length {
@@ -96,32 +96,33 @@ impl<'a> TwoPhaseSolver<'a> {
         Err("No solution found".into())
     }
 
-    pub fn search_phase_2(&mut self, subset: SubsetIndex, depth: u8) -> bool {
-        let mut subset = subset;
+    pub fn search_phase_2(&mut self, mut subset: SubsetIndex, depth: u8) -> bool {
         self.phase_2_probes += 1;
+
         let solution_distance = self.phase_2.distance(subset.index());
-        if solution_distance <= depth {
-            for d in (1..=solution_distance).rev() {
-                for twist in H0_TWISTS {
-                    let next = subset.twisted(self.twister, twist);
-                    let next_d = self.phase_2.distance(next.index());
-                    if next_d < d {
-                        self.twists.push(twist);
-                        subset = next;
-                        break;
-                    }
+        if solution_distance > depth {
+            return false;
+        }
+
+        for d in (1..=solution_distance).rev() {
+            for twist in H0_TWISTS {
+                let next = subset.twisted(self.twister, twist);
+                let next_d = self.phase_2.distance(next.index());
+                if next_d < d {
+                    self.twists.push(twist);
+                    subset = next;
+                    break;
                 }
             }
-            return true;
         }
-        return false;
+        return true;
     }
 
     fn search_phase_1(&mut self, cube: CubeIndex, p1_depth: u8, p2_depth: u8) -> bool {
         self.phase_1_probes += 1;
 
         if p1_depth == 0 {
-            return self.search_phase_2(cube.subset, p2_depth);
+            return self.search_phase_2(cube.subset_index(), p2_depth);
         }
 
         if p1_depth + p2_depth < 10 {
@@ -134,13 +135,13 @@ impl<'a> TwoPhaseSolver<'a> {
         }
 
         let mut twist_set;
-        if self.twists.is_empty() {
-            twist_set = TwistSet::FULL;
+        if let Some(previous_twist) = self.twists.last() {
+            twist_set = unique_twists_after(*previous_twist);
         } else {
-            twist_set = unique_twists_after(*self.twists.last().unwrap());
+            twist_set = TwistSet::FULL;
         }
 
-        let coset_index = cube.coset.index();
+        let coset_index = cube.coset_index();
         let phase_1_distance = self.phase_1.distance(coset_index);
         if p1_depth == phase_1_distance {
             twist_set.keep_only(self.phase_1.less_distance(coset_index));

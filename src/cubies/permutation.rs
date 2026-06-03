@@ -1,6 +1,64 @@
-use crate::math::factorial;
-use std::ops::Mul;
+use crate::math::*;
+use std::ops::{Mul, Index};
 use std::fmt;
+
+// Lexicographic index of the permutation (0 to N!-1)
+pub fn permutation_index(permutation: &[usize]) -> usize {
+    assert!(permutation.len() <= 64, "Permutation too long to encode in usize");
+    let size = permutation.len();
+    let mut index = 0;
+    let mut bitboard = 0;
+
+    for i in 0..size {
+        let mask: usize = 1usize << permutation[i];
+
+        // Number of remaining elements smaller than the current element
+        let smaller = permutation[i] - (bitboard & (mask - 1)).count_ones() as usize;
+
+        // Total number of elements bigger than the current element
+        let bigger = size - i - 1;
+
+        index += smaller * factorial(bigger);
+        bitboard |= mask;
+    }
+    index
+}
+
+pub fn nth_permutation(mut index: usize, size: usize) -> Vec<usize> {
+    assert!(size <= 64, "Permutation size too large to encode in usize");
+    let mut unused = 0xFFFFFFFFFFFFFFFFusize;
+    let mut permutation = vec![0usize; size];
+
+    for i in (0..size).rev() {
+        let f = factorial(i);
+        let pos = index / f;
+        index %= f;
+
+        // Find the pos-th set bit in unused
+        let mut mask = unused;
+        for _ in 0..pos {
+            mask &= mask - 1; // Clear lowest set bit
+        }
+        let selected_bit = mask & (!mask + 1); // Get lowest set bit
+
+        permutation[size - 1 - i] = selected_bit.trailing_zeros() as usize;
+        unused ^= selected_bit;
+    }
+    permutation
+}
+
+pub fn is_even_permutation(lexicographical_index: usize) -> bool {
+    // Convert the index to its factoradic representation and sum the digits.
+    let mut index = lexicographical_index;
+    let mut sum = 0;
+    let mut i = 2;
+    while index > 0 {
+        sum += index % i;
+        index /= i;
+        i += 1;
+    }
+    sum % 2 == 0
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Permutation<const LEN: usize> {
@@ -26,55 +84,25 @@ impl<const LEN: usize> Permutation<LEN> {
         self.map
     }
 
+    pub fn iter(&self) -> impl Iterator<Item = &usize> {
+        self.map.iter()
+    }
+
     pub fn inverse(&self) -> Self {
-        let mut inverse_map = [0usize; LEN];
+        let mut inv = [0usize; LEN];
         for i in 0..LEN {
-            inverse_map[self.map[i]] = i;
+            inv[self.map[i]] = i;
         }
-        Self { map: inverse_map }
+        Self { map: inv }
     }
 
-    // Lexicographic index of the permutation (0 to N!-1)
     pub fn index(&self) -> usize {
-        let size = self.map.len();
-        let mut index = 0;
-        let mut bitboard = 0;
-
-        for i in 0..size {
-            let mask: usize = 1usize << self.map[i];
-
-            // Number of remaining elements smaller than the current element
-            let smaller = self.map[i] - (bitboard & (mask - 1)).count_ones() as usize;
-
-            // Total number of elements bigger than the current element
-            let bigger = size - i - 1;
-
-            index += smaller * factorial(bigger);
-            bitboard |= mask;
-        }
-        index
+        permutation_index(&self.map)
     }
 
-    pub fn from_index(mut index: usize) -> Self {
-        let mut unused = 0xFFFFFFFFFFFFFFFFusize;
-        let mut permutation = [0usize; LEN];
-
-        for i in (0..LEN).rev() {
-            let f = factorial(i);
-            let pos = index / f;
-            index %= f;
-
-            // Find the pos-th set bit in unused
-            let mut mask = unused;
-            for _ in 0..pos {
-                mask &= mask - 1; // Clear lowest set bit
-            }
-            let selected_bit = mask & (!mask + 1); // Get lowest set bit
-
-            permutation[LEN - 1 - i] = selected_bit.trailing_zeros() as usize;
-            unused ^= selected_bit;
-        }
-        Self { map: permutation }
+    pub fn from_index(index: usize) -> Self {
+        assert!(index < factorial(LEN));
+        Self { map: nth_permutation(index, LEN).try_into().unwrap() }
     }
 }
 
@@ -100,17 +128,12 @@ impl<const LEN: usize> fmt::Display for Permutation<LEN> {
     }
 }
 
-pub fn is_even_permutation(lexicographical_index: usize) -> bool {
-    // Convert the index to its factoradic representation and sum the digits.
-    let mut index = lexicographical_index;
-    let mut sum = 0;
-    let mut i = 2;
-    while index > 0 {
-        sum += index % i;
-        index /= i;
-        i += 1;
+impl<const LEN: usize> Index<usize> for Permutation<LEN> {
+    type Output = usize;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.map[index]
     }
-    sum % 2 == 0
 }
 
 #[cfg(test)]
@@ -119,18 +142,32 @@ mod tests {
     use itertools::Itertools;
 
     #[test]
+    fn test_nth_permutation() {
+        // Test against itertools reference implementation
+        for size in 1..=8 {
+            let base: Vec<usize> = (0..size).collect();
+
+            for (index, expected_perm) in base.iter().permutations(size).enumerate() {
+                let computed_perm = nth_permutation(index, size);
+                let expected_perm: Vec<usize> = expected_perm.into_iter().copied().collect();
+                assert_eq!(computed_perm, expected_perm);
+            }
+        }
+    }
+
+    #[test]
     fn test_identity() {
         let prm = Permutation::new([1, 0, 2]); // Arbitrary
-        assert_eq!(prm, Permutation::identity() * prm);
-        assert_eq!(prm, prm * Permutation::identity());
+        assert_eq!(Permutation::identity() * prm, prm);
+        assert_eq!(prm * Permutation::identity(), prm);
     }
 
     #[test]
     fn test_inverse() {
         let prm = Permutation::new([2, 0, 1]); // Arbitrary
         let inv = prm.inverse();
-        assert_eq!(Permutation::identity(), prm * inv);
-        assert_eq!(Permutation::identity(), inv * prm);
+        assert_eq!(prm * inv, Permutation::identity());
+        assert_eq!(inv * prm, Permutation::identity());
     }
 
     #[test]

@@ -25,6 +25,7 @@ impl CornerIndex {
     }
 
     pub fn from_index(index: usize) -> Self {
+        assert!(index < Self::INDEX_SIZE);
         let prm = index / Corners::ORI_SIZE;
         let ori = index % Corners::ORI_SIZE;
         CornerIndex { prm, ori }

@@ -12,7 +12,7 @@ impl<const LEN: usize, const BASE: usize> Orientation<LEN, BASE> {
         Self { values }
     }
 
-    pub const fn zero() -> Self {
+    pub const fn identity() -> Self {
         Self { values: [0; LEN] }
     }
 

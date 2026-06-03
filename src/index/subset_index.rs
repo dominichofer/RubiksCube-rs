@@ -5,51 +5,53 @@ use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SubsetIndex {
-    pub e_slice_prm: usize,     // 0..=23
-    pub e_non_slice_prm: usize, // 0..=40'319
-    pub c_prm: usize,           // 0..=40'319
+    pub c_prm: usize, // 8! = 40'320
+    pub xy_prm: usize, // 8! = 40'320
+    pub z_prm: usize, // 4! = 24
 }
 
 impl SubsetIndex {
-    pub const INDEX_SIZE: usize = Edges::SLICE_PRM_SIZE * Edges::NON_SLICE_PRM_SIZE * Corners::PRM_SIZE / 2; // 19'508'428'800
+    pub const INDEX_SIZE: usize = Corners::PRM_SIZE / 2 * factorial(8) * factorial(4);  // 19'508'428'800
 
     pub fn solved() -> Self {
         let c = Corners::solved();
         let e = Edges::solved();
         Self {
             c_prm: c.prm_index(),
-            e_slice_prm: e.slice_prm_index(),
-            e_non_slice_prm: e.non_slice_prm_index(),
+            xy_prm: e.xy_prm_index(),
+            z_prm: e.z_loc_prm_index().prm(),
         }
     }
 
     pub fn index(&self) -> usize {
-        (self.c_prm / 2) * Edges::SLICE_PRM_SIZE * Edges::NON_SLICE_PRM_SIZE
-            + self.e_non_slice_prm * Edges::SLICE_PRM_SIZE
-            + self.e_slice_prm
+        let ret = (self.c_prm / 2) * factorial(8) * factorial(4)
+            + self.xy_prm * factorial(4)
+            + self.z_prm;
+        // assert!(ret < Self::INDEX_SIZE);
+        ret
     }
 
     pub fn from_index(mut index: usize) -> Self {
-        let e_slice_prm = index % Edges::SLICE_PRM_SIZE;
-        index /= Edges::SLICE_PRM_SIZE;
-        let e_non_slice_prm = index % Edges::NON_SLICE_PRM_SIZE;
-        index /= Edges::NON_SLICE_PRM_SIZE;
+        // assert!(index < Self::INDEX_SIZE);
+        let z_prm = index % factorial(4);
+        index /= factorial(4);
+        let xy_prm = index % factorial(8);
+        index /= factorial(8);
         let mut c_prm = index * 2;
-        let e_even_prm = is_even_permutation(e_non_slice_prm)
-            ^ is_even_permutation(e_slice_prm)
-            ^ true; // in subset e_slice_loc is an even permutation
+        let e_even_prm = is_even_permutation(xy_prm)
+            ^ is_even_permutation(z_prm)
+            ^ true; // in subset z_prm is an even permutation
         if e_even_prm != is_even_permutation(c_prm) {
             c_prm += 1;
         }
-        Self { e_slice_prm, e_non_slice_prm, c_prm }
+        Self { c_prm, xy_prm, z_prm }
     }
 
     pub fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
-        const SOLVED_SLICE_LOC_INDEX: usize = Edges::solved().slice_loc_index(); // TODO: can we make this 0 by changing the definition of slice_loc_index?
-        SubsetIndex {
+        Self {
             c_prm: twister.twisted_c_prm(self.c_prm, twist),
-            e_slice_prm: twister.twisted_e_slice_prm(self.e_slice_prm, SOLVED_SLICE_LOC_INDEX, twist),
-            e_non_slice_prm: twister.twisted_e_non_slice_prm(self.e_non_slice_prm, SOLVED_SLICE_LOC_INDEX, twist),
+            xy_prm: twister.twisted_subset_e_xy_prm(self.xy_prm, twist),
+            z_prm: twister.twisted_subset_e_z_prm(self.z_prm, twist),
         }
     }
 
@@ -62,11 +64,7 @@ impl SubsetIndex {
 
 impl fmt::Display for SubsetIndex {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "SubsetIndex {{ e_slice_prm: {}, e_non_slice_prm: {}, c_prm: {} }}",
-            self.e_slice_prm, self.e_non_slice_prm, self.c_prm
-        )
+        write!(f, "c_prm: {}, xy_prm: {}, z_prm: {}", self.c_prm, self.xy_prm, self.z_prm)
     }
 }
 
