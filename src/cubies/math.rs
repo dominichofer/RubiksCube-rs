@@ -81,9 +81,9 @@ pub const fn binomial(n: usize, k: usize) -> usize {
 // combinations of n elements taken k at a time.
 pub const fn combination_index(n: usize, combination: &[usize]) -> usize {
     let mut index = 0;
+    let mut i = 0;
     let mut j = 0;
     let k = combination.len();
-    let mut i = 0;
     while i < k {
         j += 1;
         while j < combination[i] + 1 {
@@ -95,13 +95,12 @@ pub const fn combination_index(n: usize, combination: &[usize]) -> usize {
     index
 }
 
-pub fn nth_combination(n: usize, k: usize, index: usize) -> Vec<usize> {
+pub fn nth_combination(n: usize, k: usize, mut index: usize) -> Vec<usize> {
     if k < 1 || k > n {
         return vec![];
     }
 
     let mut size = 0;
-    let mut index = index;
     let mut combination = vec![0usize; k as usize];
 
     for i in 0..n {
@@ -117,6 +116,27 @@ pub fn nth_combination(n: usize, k: usize, index: usize) -> Vec<usize> {
         }
     }
     combination
+}
+
+pub fn nth_combination2(n: usize, mut index: usize, out: &mut [usize]) {
+    let k = out.len();
+     if k < 1 || k > n {
+        return;
+    }
+
+    let mut size = 0;
+    for i in 0..n {
+        let count = binomial(n - 1 - i, k - size - 1);
+        if count > index {
+            out[size] = i;
+            size += 1;
+            if size == k {
+                break;
+            }
+        } else {
+            index -= count;
+        }
+    }
 }
 
 #[cfg(test)]

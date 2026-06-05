@@ -1,4 +1,4 @@
-use super::{Twister, SubsetIndex, CosetIndex};
+use super::{TWISTER, Twister, SubsetIndex, CosetIndex};
 use crate::{CornerIndex, LocPrm, cubies::*};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -38,16 +38,39 @@ impl CubeIndex {
 
     pub fn subset_index(&self) -> SubsetIndex {
         // assert!(self.in_subset(), "Cube is not in the subset: {:?}", self);
-        let edges = Edges::from_indices(self.x_loc_prm, self.y_loc_prm, self.z_loc_prm, self.e_ori);
+        let mut x_loc = [0usize; 4];
+        let mut y_loc = [0usize; 4];
+        nth_combination2(12, self.x_loc_prm.loc(), &mut x_loc);
+        nth_combination2(12, self.y_loc_prm.loc(), &mut y_loc);
+        let x_prm = Permutation::<4>::from_index(self.x_loc_prm.prm());
+        let y_prm = Permutation::<4>::from_index(self.y_loc_prm.prm());
+        let mut prm = [12; 12];
+        for i in 0..4 {
+            prm[x_loc[i]] = x_prm[i];
+            prm[y_loc[i]] = y_prm[i] + 4;
+        }
+        let mut prm2 = [0; 8];
+        let mut j = 0;
+        for &p in prm.iter() {
+            if p < 8 {
+                prm2[j] = p;
+                j += 1;
+            }
+        }
+        
         SubsetIndex {
             c_prm: self.c_prm,
-            xy_prm: edges.xy_prm_index(), // TODO: Make this faster!
+            xy_prm: permutation_index(&prm2),
             z_prm: self.z_loc_prm.prm(),
         }
     }
 
     pub fn coset_index(&self) -> usize {
-        CosetIndex { c_ori: self.c_ori, e_ori: self.e_ori, z_loc: self.z_loc_prm.loc() }.index()
+        CosetIndex { 
+            c_ori: self.c_ori,
+            e_ori: self.e_ori,
+            z_loc: self.z_loc_prm.loc()
+         }.index()
     }
 
     pub fn twisted(&self, twister: &Twister, twist: Twist) -> Self {

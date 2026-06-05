@@ -2,6 +2,7 @@ use crate::*;
 use num_format::ToFormattedString;
 use std::collections::HashMap;
 
+#[derive(Clone)]
 pub struct TwoPhaseSolver<'a> {
     twister: &'a Twister,
     phase_1: &'a DirectionsTable,
@@ -134,29 +135,30 @@ impl<'a> TwoPhaseSolver<'a> {
             }
         }
 
-        let mut twist_set;
+        let mut twists;
         if let Some(previous_twist) = self.twists.last() {
-            twist_set = unique_twists_after(*previous_twist);
+            twists = unique_twists_after(*previous_twist);
         } else {
-            twist_set = TwistSet::FULL;
+            twists = TwistSet::FULL;
         }
 
         let coset_index = cube.coset_index();
         let phase_1_distance = self.phase_1.distance(coset_index);
         if p1_depth == phase_1_distance {
-            twist_set.keep_only(self.phase_1.less_distance(coset_index));
-        } else if p1_depth == phase_1_distance + 1 {
-            twist_set.unset_twists(self.phase_1.more_distance(coset_index));
+            twists.keep_only(self.phase_1.less_distance(coset_index));
+        }
+        if p1_depth == phase_1_distance + 1 {
+            twists.unset_twists(self.phase_1.more_distance(coset_index));
         }
         if p1_depth == 1 {
-            twist_set.unset_twists(TwistSet::H0);
+            twists.unset_twists(TwistSet::H0);
         }
-        if twist_set.is_empty() {
+        if twists.is_empty() {
             self.no_twist_cut += 1;
             return false;
         }
         
-        for twist in twist_set.iter() {
+        for twist in twists.iter() {
             let next_cube = cube.twisted(self.twister, twist);
             self.twists.push(twist);
             let found_solution = self.search_phase_1(next_cube, p1_depth - 1, p2_depth);

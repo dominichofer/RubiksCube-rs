@@ -13,16 +13,49 @@ fn bench<T, F: FnMut(&T)>(name: &str, items: &[T], mut f: F) {
 }
 
 fn main() {
-    let twister = Twister::new();
+    init_twister();
+    
     const ITERATIONS: usize = 1_000_000;
+    let mut rnd = StdRng::seed_from_u64(42);
+
+    // nth_permutation
+    let rnd_factorial_4: Vec<usize> = (0..ITERATIONS).map(|_| rnd.random_range(0..factorial(4))).collect();
+    let rnd_factorial_8: Vec<usize> = (0..ITERATIONS).map(|_| rnd.random_range(0..factorial(8))).collect();
+    bench("nth_permutation (len 4)", &rnd_factorial_4, |&i| { black_box(Permutation::<4>::from_index(i)); });
+    bench("nth_permutation (len 8)", &rnd_factorial_8, |&i| { black_box(Permutation::<8>::from_index(i)); });
+
+    // permutation_index
+    let rnd_permutation_4: Vec<Permutation<4>> = (0..ITERATIONS).map(|_| Permutation::<4>::from_index(rnd.random_range(0..factorial(4)))).collect();
+    let rnd_permutation_8: Vec<Permutation<8>> = (0..ITERATIONS).map(|_| Permutation::<8>::from_index(rnd.random_range(0..factorial(8)))).collect();
+    bench("permutation_index (len 4)", &rnd_permutation_4, |p| { black_box(p.index()); });
+    bench("permutation_index (len 8)", &rnd_permutation_8, |p| { black_box(p.index()); });
+
+    // nth_combination
+    let rnd_binomial_12_4: Vec<usize> = (0..ITERATIONS).map(|_| rnd.random_range(0..binomial(12, 4))).collect();
+    bench("nth_combination (12, 4)", &rnd_binomial_12_4, |&i| { black_box(nth_combination(12, 4, i)); });
+    let mut out = [0usize; 4];
+    bench("nth_combination2 (12, 4)", &rnd_binomial_12_4, |&i| { black_box(nth_combination2(12, i, &mut out)); });
+
+    // encode
+    let rnd_binary: Vec<Vec<usize>> = (0..ITERATIONS).map(|_| (0..11).map(|_| rnd.random_range(0..2)).collect()).collect();
+    let rnd_base3: Vec<Vec<usize>> = (0..ITERATIONS).map(|_| (0..8).map(|_| rnd.random_range(0..3)).collect()).collect();
+    bench("encode (base 2)", &rnd_binary, |v| { black_box(encode(&v, 2)); });
+    bench("encode (base 3)", &rnd_base3, |v| { black_box(encode(&v, 3)); });
+
+    // decode
+    let rnd_encoded_binary: Vec<usize> = (0..ITERATIONS).map(|_| rnd.random_range(0..(1 << 11))).collect();
+    let rnd_encoded_base3: Vec<usize> = (0..ITERATIONS).map(|_| rnd.random_range(0..(3usize.pow(8)))).collect();
+    bench("decode (base 2)", &rnd_encoded_binary, |&n| { black_box(decode(n, 2, 11)); });
+    bench("decode (base 3)", &rnd_encoded_base3, |&n| { black_box(decode(n, 3, 8)); });
+
     let mut corners = Corners::solved();
     let mut edges = Edges::solved();
     let mut subset_index = SubsetIndex::solved();
     let mut coset_index = CosetIndex::solved();
     let mut cube_index = CubeIndex::solved();
+
     let mut rnd_twist = RandomTwistGen::new(42, &ALL_TWISTS);
     let mut rnd_subset_twist = RandomTwistGen::new(42, &H0_TWISTS);
-    let mut rnd = StdRng::seed_from_u64(42);
     let rnd_twists = rnd_twist.gen_twists(ITERATIONS);
     let rnd_subset_twists = rnd_subset_twist.gen_twists(ITERATIONS);
     let rnd_rotation = Vec::from_iter((0..ITERATIONS).map(|_| if rnd.random_bool(0.5) { Rotation::X } else { Rotation::Y }));
@@ -56,6 +89,7 @@ fn main() {
             ))
         .collect();
 
+
     bench("Corners twisted", &rnd_twists, |&t| corners = Corners::twist(t) * corners );
     bench("Corners conjugated_by", &rnd_rotation, |&r| corners = corners.conjugated_by(r) );
     bench("Corners from_indices", &corners_from_indices, |&(prm, ori)| corners = Corners::from_indices(prm, ori) );
@@ -78,31 +112,20 @@ fn main() {
             black_box(Edges::from_subset_indices(loc, prm));
         },
     );
-    bench("Edges x_loc_prm_index", &rnd_edges, |e| {
-        black_box(e.x_loc_prm_index());
-    });
-    bench("Edges y_loc_prm_index", &rnd_edges, |e| {
-        black_box(e.y_loc_prm_index());
-    });
-    bench("Edges z_loc_prm_index", &rnd_edges, |e| {
-        black_box(e.z_loc_prm_index());
-    });
-    bench("Edges xy_prm_index", &rnd_edges, |e| {
-        black_box(e.xy_prm_index());
-    });
-    bench("Edges ori_index", &rnd_edges, |e| {
-        black_box(e.ori_index());
-    });
+    bench("Edges x_loc_prm_index", &rnd_edges, |e| { black_box(e.x_loc_prm_index()); });
+    bench("Edges y_loc_prm_index", &rnd_edges, |e| { black_box(e.y_loc_prm_index()); });
+    bench("Edges z_loc_prm_index", &rnd_edges, |e| { black_box(e.z_loc_prm_index()); });
+    bench("Edges xy_prm_index", &rnd_edges, |e| { black_box(e.xy_prm_index()); });
+    bench("Edges ori_index", &rnd_edges, |e| { black_box(e.ori_index()); });
 
-    bench("SubsetIndex twisted", &rnd_subset_twists, |&t| {
-        subset_index = subset_index.twisted(&twister, t)
-    });
-    bench("CosetIndex twisted", &rnd_twists, |&t| {
-        coset_index = coset_index.twisted(&twister, t)
-    });
-    bench("CubeIndex twisted", &rnd_twists, |&t| {
-        cube_index = cube_index.twisted(&twister, t)
-    });
+    let twister = Twister::new();
+    bench("SubsetIndex twisted", &rnd_subset_twists, |&t| { subset_index = subset_index.twisted(&twister, t) });
+    bench("CosetIndex twisted", &rnd_twists, |&t| { coset_index = coset_index.twisted(&twister, t) });
+    bench("CubeIndex twisted", &rnd_twists, |&t| { cube_index = cube_index.twisted(&twister, t) });
+
+    let rnd_cubes= Vec::from_iter((0..ITERATIONS).map(|_| CubeIndex::solved().twisted_by(&twister, &rnd_twist.gen_twists(100))));
+    bench("CubeIndex subset_index", &rnd_cubes, |c| { black_box(c.subset_index()); });
+    bench("CubeIndex coset_index", &rnd_cubes, |c| { black_box(c.coset_index()); });
 
     black_box(corners);
     black_box(edges);

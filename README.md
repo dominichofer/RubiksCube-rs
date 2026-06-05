@@ -143,16 +143,16 @@ This project comes with two files:
   - all 18*18 2-twist sequences
   - the [superflip](https://en.wikipedia.org/wiki/Superflip) sequence
   - the rest are randomly generated sequences
-- `test_pos_big.txt` contains 10'000 randomly generated sequences
+- `test_pos_10k.txt` contains 10'000 randomly generated sequences
 
 To run them, run
 ```bash
 cargo run --release --bin rubikscube test_pos_small.txt
-cargo run --release --bin rubikscube test_pos_big.txt
+cargo run --release --bin rubikscube test_pos_10k.txt
 ```
 
-Here's an example output of `test_pos_big.txt` on an AMD Ryzen 9 9950X3D 16-Core Processor with HT and DDR5 RAM with 4x 32-bit channels at 3600 MT/s.
-If solved `test_cubes_big.txt` in 13.8s (720 cubes per second) with a single thread.
+Here's an example output of `test_pos_10k.txt` on an AMD Ryzen 9 9950X3D 16-Core Processor with HT and DDR5 RAM with 4x 32-bit channels at 3600 MT/s.
+If solved `test_pos_10k.txt` in 5.1.8s (1’960 cubes per second) with a single thread.
 ```
 Corners table loaded in: 22.5914ms
 Subset table loaded in: 3.4555108s
@@ -175,6 +175,33 @@ Subset cuts: 0
 Corner probes: 3’204’916
 Corner cuts: 757’023 (23.62%)
 No twist cuts: 7’251’917
+```
+
+Here's an example output of `test_pos_1000k.txt`
+```
+Corners table loaded in: 24.3981ms
+Subset table loaded in: 3.4369206s
+Coset table loaded in: 5.8811926s
+Total time taken: 537.1291727s
+Average time per solve: 537.129µs
+Search depths:
+  Depth 4: 19
+  Depth 5: 226
+  Depth 6: 2’858
+  Depth 7: 31’083
+  Depth 8: 309’626
+  Depth 9: 1’854’509
+  Depth 10: 2’853’725
+  Depth 11: 1’055’209
+  Depth 12: 138’029
+  Depth 13: 3’289
+  Depth 14: 4
+Phase 1 probes: 4’462’756’553
+Phase 2 probes: 682’582’666
+Subset cuts: 0
+Corner probes: 370’546’203
+Corner cuts: 91’704’115 (24.75%)
+No twist cuts: 770’409’921
 ```
 
 41M x table[c_ori * X + e_ori * Y + z_loc] (table size: 16.5 GB)

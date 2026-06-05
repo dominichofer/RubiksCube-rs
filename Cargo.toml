@@ -24,3 +24,8 @@ path = "src/correlation.rs"
 [[bin]]
 name = "gui"
 path = "src/gui.rs"
+
+[[bin]]
+name = "create"
+path = "src/create_test_pos.rs"
+

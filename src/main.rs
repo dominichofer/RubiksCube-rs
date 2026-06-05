@@ -36,7 +36,7 @@ fn main() {
 
     let twist_sequences = read_twist_file(pos_file_path);
     assert!(twist_sequences.len() > 0, "No twist sequences found in the file!");
-    let positions = twist_sequences.iter().map(|twists| CubeIndex::solved().twisted_by(&stored_tables.twister, twists)).collect::<Vec<_>>();
+    let positions = Vec::from_iter(twist_sequences.iter().map(|twists| CubeIndex::solved().twisted_by(&stored_tables.twister, twists)));
     
     let mut total_time = std::time::Duration::ZERO;
     for (i, cube) in positions.iter().enumerate() {
