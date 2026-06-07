@@ -33,7 +33,6 @@ pub struct DirectionsTable {
 
 impl DirectionsTable {
     pub fn create<Obj: Twistable + Send>(
-        twister: &Twister,
         twists: &[Twist],
         origin: Obj,
         index: impl Fn(Obj) -> usize + Sync,
@@ -41,7 +40,7 @@ impl DirectionsTable {
         index_size: usize,
     ) -> Self {
         let distance_table =
-            DistanceTable::create(twister, twists, origin, &index, &from_index, index_size);
+            DistanceTable::create(twists, origin, &index, &from_index, index_size);
         let table: Vec<DirectionsAndDistance> = (0..index_size)
             .into_par_iter()
             .map(|i| {
@@ -51,7 +50,7 @@ impl DirectionsTable {
                 let mut more = TwistSet::EMPTY;
 
                 for twist in twists {
-                    let next = obj.twisted(twister, *twist);
+                    let next = obj.twisted(*twist);
                     let next_d = distance_table.distance(index(next));
                     if next_d < d {
                         less.set_twist(*twist);
@@ -86,14 +85,17 @@ impl DirectionsTable {
         std::fs::write(path, data)
     }
 
+    #[inline(always)]
     pub fn distance(&self, index: usize) -> u8 {
         self.table[index].distance()
     }
 
+    #[inline(always)]
     pub fn less_distance(&self, index: usize) -> TwistSet {
         self.table[index].less_distance()
     }
 
+    #[inline(always)]
     pub fn more_distance(&self, index: usize) -> TwistSet {
         self.table[index].more_distance()
     }

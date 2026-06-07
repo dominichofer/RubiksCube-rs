@@ -18,6 +18,8 @@ fn read_twist_file(path: &str) -> Vec<Vec<Twist>> {
 }
 
 fn main() {
+    init_twister();
+
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
         eprintln!("Usage: {} <path_to_pos_file>", args[0]);
@@ -28,7 +30,6 @@ fn main() {
     let stored_tables = StoredTables::load("config.txt");
 
     let mut solver = TwoPhaseSolver::new(
-        &stored_tables.twister,
         &stored_tables.coset,
         &stored_tables.subset,
         &stored_tables.corners,
@@ -36,7 +37,7 @@ fn main() {
 
     let twist_sequences = read_twist_file(pos_file_path);
     assert!(twist_sequences.len() > 0, "No twist sequences found in the file!");
-    let positions = Vec::from_iter(twist_sequences.iter().map(|twists| CubeIndex::solved().twisted_by(&stored_tables.twister, twists)));
+    let positions = Vec::from_iter(twist_sequences.iter().map(|twists| Cube::solved().twisted_by(twists)));
     
     let mut total_time = std::time::Duration::ZERO;
     for (i, cube) in positions.iter().enumerate() {
@@ -46,7 +47,7 @@ fn main() {
         total_time += elapsed;
 
         // Verify solution
-        assert!(cube.twisted_by(&stored_tables.twister, &solution) == CubeIndex::solved(), "Incorrect solution found on line {}! Solution: {:?}", i + 1, solution);
+        assert!(cube.twisted_by(&solution) == Cube::solved(), "Incorrect solution found on line {}! Solution: {:?}", i + 1, solution);
     }
 
     println!("Total time taken: {:?}", total_time);

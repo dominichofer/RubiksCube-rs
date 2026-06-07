@@ -1,5 +1,6 @@
 use super::Twistable;
 use super::Twister;
+use crate::TWISTER;
 use crate::cubies::*;
 use std::fmt;
 
@@ -47,18 +48,18 @@ impl SubsetIndex {
         Self { c_prm, xy_prm, z_prm }
     }
 
-    pub fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
+    pub fn twisted(&self, twist: Twist) -> Self {
         Self {
-            c_prm: twister.twisted_c_prm(self.c_prm, twist),
-            xy_prm: twister.twisted_subset_e_xy_prm(self.xy_prm, twist),
-            z_prm: twister.twisted_subset_e_z_prm(self.z_prm, twist),
+            c_prm: TWISTER.twisted_c_prm(self.c_prm, twist),
+            xy_prm: TWISTER.twisted_subset_e_xy_prm(self.xy_prm, twist),
+            z_prm: TWISTER.twisted_subset_e_z_prm(self.z_prm, twist),
         }
     }
 
-    pub fn twisted_by(&self, twister: &Twister, twists: &[Twist]) -> Self {
+    pub fn twisted_by(&self, twists: &[Twist]) -> Self {
         twists
             .iter()
-            .fold(*self, |index, &twist| index.twisted(twister, twist))
+            .fold(*self, |index, &twist| index.twisted(twist))
     }
 }
 
@@ -69,11 +70,11 @@ impl fmt::Display for SubsetIndex {
 }
 
 impl Twistable for SubsetIndex {
-    fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
-        self.twisted(twister, twist)
+    fn twisted(&self, twist: Twist) -> Self {
+        self.twisted(twist)
     }
-    fn twisted_by(&self, twister: &Twister, twists: &[Twist]) -> Self {
-        self.twisted_by(twister, twists)
+    fn twisted_by(&self, twists: &[Twist]) -> Self {
+        self.twisted_by(twists)
     }
 }
 

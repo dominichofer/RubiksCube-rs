@@ -112,7 +112,7 @@ impl Twister {
         Self { c_ori, c_prm, e_ori, e_loc_prm, subset_e_xy_prm, subset_e_z_prm, e_xy_prm }
     }
 
-    pub fn twisted_c_ori(&self, c_ori: usize, twist: Twist) -> usize {
+        pub fn twisted_c_ori(&self, c_ori: usize, twist: Twist) -> usize {
         self.c_ori[c_ori * COUNT + twist as usize] as usize
     }
     pub fn twisted_c_prm(&self, c_prm: usize, twist: Twist) -> usize {
@@ -142,8 +142,8 @@ pub fn init_twister() {
 }
 
 pub trait Twistable: Sized + Copy {
-    fn twisted(&self, twister: &Twister, twist: Twist) -> Self;
-    fn twisted_by(&self, twister: &Twister, twists: &[Twist]) -> Self;
+    fn twisted(&self, twist: Twist) -> Self;
+    fn twisted_by(&self, twists: &[Twist]) -> Self;
 }
 
 #[cfg(test)]

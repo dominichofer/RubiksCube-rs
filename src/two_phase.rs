@@ -4,7 +4,6 @@ use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct TwoPhaseSolver<'a> {
-    twister: &'a Twister,
     phase_1: &'a DirectionsTable,
     phase_2: &'a DistanceTable,
     corners: &'a DistanceTable,
@@ -20,13 +19,11 @@ pub struct TwoPhaseSolver<'a> {
 
 impl<'a> TwoPhaseSolver<'a> {
     pub fn new(
-        twister: &'a Twister,
         phase_1: &'a DirectionsTable,
         phase_2: &'a DistanceTable,
         corners: &'a DistanceTable,
     ) -> Self {
         Self {
-            twister,
             phase_1,
             phase_2,
             corners,
@@ -57,7 +54,7 @@ impl<'a> TwoPhaseSolver<'a> {
         println!("No twist cuts: {}", self.no_twist_cut.to_formatted_string(locale));
     }
 
-    pub fn solve(&mut self, cube: CubeIndex, max_solution_length: u8) -> Result<Vec<Twist>, String> {
+    pub fn solve(&mut self, cube: Cube, max_solution_length: u8) -> Result<Vec<Twist>, String> {
         let cubes = [
             cube,
             cube.conjugated_by(Rotation::X),
@@ -107,7 +104,7 @@ impl<'a> TwoPhaseSolver<'a> {
 
         for d in (1..=solution_distance).rev() {
             for twist in H0_TWISTS {
-                let next = subset.twisted(self.twister, twist);
+                let next = subset.twisted(twist);
                 let next_d = self.phase_2.distance(next.index());
                 if next_d < d {
                     self.twists.push(twist);
@@ -119,7 +116,7 @@ impl<'a> TwoPhaseSolver<'a> {
         return true;
     }
 
-    fn search_phase_1(&mut self, cube: CubeIndex, p1_depth: u8, p2_depth: u8) -> bool {
+    fn search_phase_1(&mut self, cube: Cube, p1_depth: u8, p2_depth: u8) -> bool {
         self.phase_1_probes += 1;
 
         if p1_depth == 0 {
@@ -159,7 +156,7 @@ impl<'a> TwoPhaseSolver<'a> {
         }
         
         for twist in twists.iter() {
-            let next_cube = cube.twisted(self.twister, twist);
+            let next_cube = cube.twisted(twist);
             self.twists.push(twist);
             let found_solution = self.search_phase_1(next_cube, p1_depth - 1, p2_depth);
             if found_solution {

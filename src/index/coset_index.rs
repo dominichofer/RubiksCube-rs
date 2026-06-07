@@ -1,5 +1,5 @@
 use super::Twistable;
-use super::Twister;
+use super::TWISTER;
 use crate::math::binomial;
 use crate::cubies::*;
 // use std::fmt;
@@ -47,18 +47,18 @@ impl CosetIndex {
         Self { c_ori, e_ori, z_loc }
     }
 
-    pub fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
+    pub fn twisted(&self, twist: Twist) -> Self {
         Self {
-            c_ori: twister.twisted_c_ori(self.c_ori, twist),
-            e_ori: twister.twisted_e_ori(self.e_ori, twist),
-            z_loc: twister.twisted_e_loc_prm(LocPrm::new(self.z_loc, 0), twist).loc(),
+            c_ori: TWISTER.twisted_c_ori(self.c_ori, twist),
+            e_ori: TWISTER.twisted_e_ori(self.e_ori, twist),
+            z_loc: TWISTER.twisted_e_loc_prm(LocPrm::new(self.z_loc, 0), twist).loc(),
         }
     }
 
-    pub fn twisted_by(&self, twister: &Twister, twists: &[Twist]) -> Self {
+    pub fn twisted_by(&self, twists: &[Twist]) -> Self {
         twists
             .iter()
-            .fold(*self, |index, &twist| index.twisted(twister, twist))
+            .fold(*self, |index, &twist| index.twisted(twist))
     }
 }
 
@@ -69,12 +69,12 @@ impl CosetIndex {
 // }
 
 impl Twistable for CosetIndex {
-    fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
-        self.twisted(twister, twist)
+    fn twisted(&self, twist: Twist) -> Self {
+        self.twisted(twist)
     }
 
-    fn twisted_by(&self, twister: &Twister, twists: &[Twist]) -> Self {
-        self.twisted_by(twister, twists)
+    fn twisted_by(&self, twists: &[Twist]) -> Self {
+        self.twisted_by(twists)
     }
 }
 

@@ -1,8 +1,8 @@
-use super::{TWISTER, Twister, SubsetIndex, CosetIndex};
+use super::{TWISTER, SubsetIndex, CosetIndex};
 use crate::{CornerIndex, LocPrm, cubies::*};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct CubeIndex {
+pub struct Cube {
     c_ori: usize, // 3^7 = 2'187 (defines coset index)
     c_prm: usize, // 8! = 40'320 (defines subset index)
     e_ori: usize, // 2^11 = 2'048 (defines coset index)
@@ -11,7 +11,7 @@ pub struct CubeIndex {
     z_loc_prm: LocPrm, // (12 choose 4) * 4! == 11'880
 }
 
-impl CubeIndex {
+impl Cube {
     pub fn solved() -> Self {
         const C: Corners = Corners::solved();
         const E: Edges = Edges::solved();
@@ -32,39 +32,21 @@ impl CubeIndex {
         self.c_ori == C.ori_index() && self.e_ori == E.ori_index() && self.z_loc_prm.loc() == E.z_loc_prm_index().loc()
     }
 
+    #[inline(always)]
     pub fn corner_index(&self) -> usize {
         CornerIndex { prm: self.c_prm, ori: self.c_ori }.index()
     }
 
+    #[inline(always)]
     pub fn subset_index(&self) -> SubsetIndex {
-        // assert!(self.in_subset(), "Cube is not in the subset: {:?}", self);
-        let mut x_loc = [0usize; 4];
-        let mut y_loc = [0usize; 4];
-        nth_combination2(12, self.x_loc_prm.loc(), &mut x_loc);
-        nth_combination2(12, self.y_loc_prm.loc(), &mut y_loc);
-        let x_prm = Permutation::<4>::from_index(self.x_loc_prm.prm());
-        let y_prm = Permutation::<4>::from_index(self.y_loc_prm.prm());
-        let mut prm = [12; 12];
-        for i in 0..4 {
-            prm[x_loc[i]] = x_prm[i];
-            prm[y_loc[i]] = y_prm[i] + 4;
-        }
-        let mut prm2 = [0; 8];
-        let mut j = 0;
-        for &p in prm.iter() {
-            if p < 8 {
-                prm2[j] = p;
-                j += 1;
-            }
-        }
-        
         SubsetIndex {
             c_prm: self.c_prm,
-            xy_prm: permutation_index(&prm2),
+            xy_prm: TWISTER.e_xy_prm(self.x_loc_prm, self.y_loc_prm),
             z_prm: self.z_loc_prm.prm(),
         }
     }
 
+    #[inline(always)]
     pub fn coset_index(&self) -> usize {
         CosetIndex { 
             c_ori: self.c_ori,
@@ -73,24 +55,22 @@ impl CubeIndex {
          }.index()
     }
 
-    pub fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
-        let x_loc_prm = twister.twisted_e_loc_prm(self.x_loc_prm, twist);
-        let y_loc_prm = twister.twisted_e_loc_prm(self.y_loc_prm, twist);
-        let z_loc_prm = twister.twisted_e_loc_prm(self.z_loc_prm, twist);
-        CubeIndex {
-            c_ori: twister.twisted_c_ori(self.c_ori, twist),
-            c_prm: twister.twisted_c_prm(self.c_prm, twist),
-            e_ori: twister.twisted_e_ori(self.e_ori, twist),
-            x_loc_prm,
-            y_loc_prm,
-            z_loc_prm,
+    #[inline(always)]
+    pub fn twisted(&self, twist: Twist) -> Self {
+        Cube {
+            c_ori: TWISTER.twisted_c_ori(self.c_ori, twist),
+            c_prm: TWISTER.twisted_c_prm(self.c_prm, twist),
+            e_ori: TWISTER.twisted_e_ori(self.e_ori, twist),
+            x_loc_prm: TWISTER.twisted_e_loc_prm(self.x_loc_prm, twist),
+            y_loc_prm: TWISTER.twisted_e_loc_prm(self.y_loc_prm, twist),
+            z_loc_prm: TWISTER.twisted_e_loc_prm(self.z_loc_prm, twist),
         }
     }
 
-    pub fn twisted_by(&self, twister: &Twister, twists: &[Twist]) -> Self {
+    pub fn twisted_by(&self, twists: &[Twist]) -> Self {
         twists
             .iter()
-            .fold(*self, |cube, &twist| cube.twisted(twister, twist))
+            .fold(*self, |cube, &twist| cube.twisted(twist))
     }
 
     pub fn conjugated_by(&self, rot: Rotation) -> Self {

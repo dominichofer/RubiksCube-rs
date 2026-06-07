@@ -17,7 +17,6 @@ fn read_config(path: &str) -> HashMap<String, String> {
 }
 
 pub struct StoredTables {
-    pub twister: Twister,
     pub corners: DistanceTable,
     pub subset: DistanceTable,
     pub coset: DirectionsTable,
@@ -26,12 +25,10 @@ pub struct StoredTables {
 impl StoredTables {
     pub fn load(config_path: &str) -> Self {
         let config = read_config(config_path);
-        let twister = Twister::new();
-        let corners_table = corners_distance_table(&twister, &config["corners_table"]);
-        let subset_table = subset_distance_table(&twister, &config["subset_table"]);
-        let coset_table = coset_direction_table(&twister, &config["coset_table"]);
+        let corners_table = corners_distance_table(&config["corners_table"]);
+        let subset_table = subset_distance_table(&config["subset_table"]);
+        let coset_table = coset_direction_table(&config["coset_table"]);
         Self {
-            twister,
             corners: corners_table,
             subset: subset_table,
             coset: coset_table,
@@ -39,7 +36,7 @@ impl StoredTables {
     }
 }
 
-fn corners_distance_table(twister: &Twister, path: &str) -> DistanceTable {
+fn corners_distance_table(path: &str) -> DistanceTable {
     let time = std::time::Instant::now();
     let result = DistanceTable::from_file(path);
     let table: DistanceTable;
@@ -48,7 +45,6 @@ fn corners_distance_table(twister: &Twister, path: &str) -> DistanceTable {
         table = result.unwrap();
     } else {
         table = DistanceTable::create(
-            twister,
             &ALL_TWISTS,
             CornerIndex::solved(),
             |c: CornerIndex| c.index(),
@@ -72,7 +68,7 @@ fn corners_distance_table(twister: &Twister, path: &str) -> DistanceTable {
     table
 }
 
-fn subset_distance_table(twister: &Twister, path: &str) -> DistanceTable {
+fn subset_distance_table(path: &str) -> DistanceTable {
     let time = std::time::Instant::now();
     let result = DistanceTable::from_file(path);
     let table: DistanceTable;
@@ -81,7 +77,6 @@ fn subset_distance_table(twister: &Twister, path: &str) -> DistanceTable {
         table = result.unwrap();
     } else {
         table = DistanceTable::create(
-            twister,
             &H0_TWISTS,
             SubsetIndex::solved(),
             |s: SubsetIndex| s.index(),
@@ -110,7 +105,7 @@ fn subset_distance_table(twister: &Twister, path: &str) -> DistanceTable {
     table
 }
 
-fn coset_direction_table(twister: &Twister, path: &str) -> DirectionsTable {
+fn coset_direction_table(path: &str) -> DirectionsTable {
     let time = std::time::Instant::now();
     let result = DirectionsTable::from_file(path);
     let table: DirectionsTable;
@@ -119,7 +114,6 @@ fn coset_direction_table(twister: &Twister, path: &str) -> DirectionsTable {
         table = result.unwrap();
     } else {
         table = DirectionsTable::create(
-            twister,
             &ALL_TWISTS,
             CosetIndex::solved(),
             |c: CosetIndex| c.index(),

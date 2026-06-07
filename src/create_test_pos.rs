@@ -17,7 +17,7 @@ fn main() {
 
     let mut rnd_twist = RandomTwistGen::new(42, &ALL_TWISTS);
     let cubes = Vec::from_iter((0..twist_sequences)
-        .map(|_| CubeIndex::solved().twisted_by(&stored_tables.twister, &rnd_twist.gen_twists(100))));
+        .map(|_| Cube::solved().twisted_by(&stored_tables.twister, &rnd_twist.gen_twists(100))));
 
     let out = OpenOptions::new()
         .create(true)
@@ -35,7 +35,7 @@ fn main() {
             &stored_tables.corners,
         );
         let solution = solver.solve(cube, 20).unwrap();
-        assert!(cube.twisted_by(&stored_tables.twister, &solution) == CubeIndex::solved(), "Incorrect solution found! Solution: {:?}", solution);
+        assert!(cube.twisted_by(&stored_tables.twister, &solution) == Cube::solved(), "Incorrect solution found! Solution: {:?}", solution);
         let line = solution.iter().map(|t| format!("{:?}", t)).collect::<Vec<_>>().join(" ");
         let mut out = out.lock().unwrap();
         writeln!(out, "{}", line).expect("Failed to write solution");

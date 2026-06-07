@@ -1,5 +1,5 @@
 use super::Twistable;
-use super::Twister;
+use crate::TWISTER;
 use crate::cubies::*;
 use std::fmt;
 
@@ -31,17 +31,17 @@ impl CornerIndex {
         CornerIndex { prm, ori }
     }
 
-    pub fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
+    pub fn twisted(&self, twist: Twist) -> Self {
         Self {
-            prm: twister.twisted_c_prm(self.prm, twist),
-            ori: twister.twisted_c_ori(self.ori, twist),
+            prm: TWISTER.twisted_c_prm(self.prm, twist),
+            ori: TWISTER.twisted_c_ori(self.ori, twist),
         }
     }
 
-    pub fn twisted_by(&self, twister: &Twister, twists: &[Twist]) -> Self {
+    pub fn twisted_by(&self, twists: &[Twist]) -> Self {
         twists
             .iter()
-            .fold(*self, |index, &twist| index.twisted(twister, twist))
+            .fold(*self, |index, &twist| index.twisted(twist))
     }
 }
 
@@ -52,12 +52,12 @@ impl fmt::Display for CornerIndex {
 }
 
 impl Twistable for CornerIndex {
-    fn twisted(&self, twister: &Twister, twist: Twist) -> Self {
-        self.twisted(twister, twist)
+    fn twisted(&self, twist: Twist) -> Self {
+        self.twisted(twist)
     }
 
-    fn twisted_by(&self, twister: &Twister, twists: &[Twist]) -> Self {
-        self.twisted_by(twister, twists)
+    fn twisted_by(&self, twists: &[Twist]) -> Self {
+        self.twisted_by(twists)
     }
 }
 

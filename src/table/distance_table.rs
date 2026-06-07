@@ -9,7 +9,6 @@ pub struct DistanceTable {
 
 impl DistanceTable {
     pub fn create<Obj>(
-        twister: &Twister,
         twists: &[Twist],
         origin: Obj,
         index: impl Fn(Obj) -> usize + Sync,
@@ -34,7 +33,7 @@ impl DistanceTable {
                 if table[i].load(Ordering::Relaxed) == d {
                     let obj = from_index(i);
                     for twist in twists.iter() {
-                        let next_index = index(obj.twisted(twister, *twist));
+                        let next_index = index(obj.twisted(*twist));
                         if table[next_index]
                             .compare_exchange(SENTINEL, d + 1, Ordering::Relaxed, Ordering::Relaxed)
                             .is_ok()
@@ -82,9 +81,7 @@ mod tests {
 
     #[test]
     fn test_distance_table() {
-        let twister = Twister::new();
         let table = DistanceTable::create(
-            &twister,
             &ALL_TWISTS,
             CornerIndex::solved(),
             |c: CornerIndex| c.index(),
@@ -103,12 +100,12 @@ mod tests {
         let mut rnd = RandomTwistGen::new(5989, &ALL_TWISTS);
         let mut cube = CornerIndex::solved();
         for _ in 0..100_000 {
-            cube = cube.twisted(&twister, rnd.gen_twist());
+            cube = cube.twisted(rnd.gen_twist());
             let d = table.distance(cube.index());
 
             // Check neighbours
             for twist in ALL_TWISTS {
-                let neighbour_d = table.distance(cube.twisted(&twister, twist).index());
+                let neighbour_d = table.distance(cube.twisted(twist).index());
                 assert!(
                     (neighbour_d as i32 - d as i32).abs() <= 1,
                     "Neighbour distance differs by more than 1 for cube at index {}",
@@ -120,7 +117,7 @@ mod tests {
                 // Check at least one neighbour has lower distance
                 let mut found = false;
                 for twist in ALL_TWISTS {
-                    let neighbour_d = table.distance(cube.twisted(&twister, twist).index());
+                    let neighbour_d = table.distance(cube.twisted(twist).index());
                     if neighbour_d < d {
                         found = true;
                         break;

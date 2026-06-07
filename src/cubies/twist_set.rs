@@ -3,6 +3,24 @@ use crate::twist::*;
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct TwistSet(u32);
 
+pub struct TwistBitsIter {
+    bits: u32,
+}
+
+impl Iterator for TwistBitsIter {
+    type Item = Twist;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.bits == 0 {
+            return None;
+        }
+
+        let index = self.bits.trailing_zeros() as i32;
+        self.bits &= self.bits - 1;
+        Some(Twist::from(index))
+    }
+}
+
 impl TwistSet {
     pub const EMPTY: Self = Self(0b000_000_000_000_000_000);
     pub const FULL: Self = Self(0b111_111_111_111_111_111);
@@ -44,14 +62,8 @@ impl TwistSet {
         self.0 == 0
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = Twist> {
-        (0..18).filter_map(|i| {
-            if self.0 & (1 << i) != 0 {
-                Some(Twist::from(i))
-            } else {
-                None
-            }
-        })
+    pub fn iter(&self) -> TwistBitsIter {
+        TwistBitsIter { bits: self.0 }
     }
 }
 

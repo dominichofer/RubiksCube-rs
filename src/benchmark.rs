@@ -52,7 +52,7 @@ fn main() {
     let mut edges = Edges::solved();
     let mut subset_index = SubsetIndex::solved();
     let mut coset_index = CosetIndex::solved();
-    let mut cube_index = CubeIndex::solved();
+    let mut cube_index = Cube::solved();
 
     let mut rnd_twist = RandomTwistGen::new(42, &ALL_TWISTS);
     let mut rnd_subset_twist = RandomTwistGen::new(42, &H0_TWISTS);
@@ -123,7 +123,7 @@ fn main() {
     bench("CosetIndex twisted", &rnd_twists, |&t| { coset_index = coset_index.twisted(&twister, t) });
     bench("CubeIndex twisted", &rnd_twists, |&t| { cube_index = cube_index.twisted(&twister, t) });
 
-    let rnd_cubes= Vec::from_iter((0..ITERATIONS).map(|_| CubeIndex::solved().twisted_by(&twister, &rnd_twist.gen_twists(100))));
+    let rnd_cubes= Vec::from_iter((0..ITERATIONS).map(|_| Cube::solved().twisted_by(&twister, &rnd_twist.gen_twists(100))));
     bench("CubeIndex subset_index", &rnd_cubes, |c| { black_box(c.subset_index()); });
     bench("CubeIndex coset_index", &rnd_cubes, |c| { black_box(c.coset_index()); });
 

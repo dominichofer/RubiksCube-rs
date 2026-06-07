@@ -2,7 +2,7 @@ use plotters::prelude::*;
 use rubikscube::*;
 use std::collections::HashMap;
 
-fn all_rotations(cube: CubeIndex) -> [CubeIndex; 24] {
+fn all_rotations(cube: Cube) -> [Cube; 24] {
     let u0 = cube;
     let u1 = u0.conjugated_by(Rotation::Z);
     let u2 = u1.conjugated_by(Rotation::Z);
@@ -30,7 +30,7 @@ fn main() {
     let mut correlation: HashMap<(usize, usize), HashMap<(u8, u8), usize>> = HashMap::new();
     for _ in 0..1_000_000 {
         let twists = rnd.gen_twists(100);
-        let rnd_cube = CubeIndex::solved().twisted_by(&twister, &twists);
+        let rnd_cube = Cube::solved().twisted_by(&twister, &twists);
         let all_rotations = all_rotations(rnd_cube);
         let subset_distances = all_rotations.map(|cube| tables.coset.distance(cube.coset_index()));
         for (i, dst_i) in subset_distances.into_iter().enumerate() {
