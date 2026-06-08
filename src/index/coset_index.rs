@@ -20,7 +20,7 @@ impl CosetIndex {
         Self {
             c_ori: c.ori_index(),
             e_ori: e.ori_index(),
-            z_loc: e.z_loc_prm_index().loc(),
+            z_loc: e.loc_prm(Axis::Z).loc(),
         }
     }
 

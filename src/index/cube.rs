@@ -1,5 +1,5 @@
 use super::{TWISTER, SubsetIndex, CosetIndex};
-use crate::{CornerIndex, LocPrm, cubies::*};
+use crate::{LocPrm, cubies::*};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Cube {
@@ -19,22 +19,28 @@ impl Cube {
             c_ori: C.ori_index(),
             c_prm: C.prm_index(),
             e_ori: E.ori_index(),
-            x_loc_prm: E.x_loc_prm_index(),
-            y_loc_prm: E.y_loc_prm_index(),
-            z_loc_prm: E.z_loc_prm_index(),
+            x_loc_prm: E.loc_prm(Axis::X),
+            y_loc_prm: E.loc_prm(Axis::Y),
+            z_loc_prm: E.loc_prm(Axis::Z),
         }
     }
 
-    fn in_subset(&self) -> bool {
-        const C: Corners = Corners::solved();
+    pub fn from_corner_index(index: usize) -> Self {
+        assert!(index < Corners::PRM_SIZE * Corners::ORI_SIZE);
         const E: Edges = Edges::solved();
-
-        self.c_ori == C.ori_index() && self.e_ori == E.ori_index() && self.z_loc_prm.loc() == E.z_loc_prm_index().loc()
+        Self {
+            c_prm: index / Corners::ORI_SIZE,
+            c_ori: index % Corners::ORI_SIZE,
+            e_ori: E.ori_index(),
+            x_loc_prm: E.loc_prm(Axis::X),
+            y_loc_prm: E.loc_prm(Axis::Y),
+            z_loc_prm: E.loc_prm(Axis::Z),
+        }
     }
 
     #[inline(always)]
     pub fn corner_index(&self) -> usize {
-        CornerIndex { prm: self.c_prm, ori: self.c_ori }.index()
+        self.c_prm * Corners::ORI_SIZE + self.c_ori
     }
 
     #[inline(always)]
@@ -73,7 +79,7 @@ impl Cube {
             .fold(*self, |cube, &twist| cube.twisted(twist))
     }
 
-    pub fn conjugated_by(&self, rot: Rotation) -> Self {
+    pub fn conjugated_by(&self, rot: Axis) -> Self {
         let corners = Corners::from_indices(self.c_prm, self.c_ori).conjugated_by(rot);
         let edges = Edges::from_indices(self.x_loc_prm, self.y_loc_prm, self.z_loc_prm, self.e_ori).conjugated_by(rot);
 
@@ -81,9 +87,9 @@ impl Cube {
             c_ori: corners.ori_index(),
             c_prm: corners.prm_index(),
             e_ori: edges.ori_index(),
-            x_loc_prm: edges.x_loc_prm_index(),
-            y_loc_prm: edges.y_loc_prm_index(),
-            z_loc_prm: edges.z_loc_prm_index(),
+            x_loc_prm: edges.loc_prm(Axis::X),
+            y_loc_prm: edges.loc_prm(Axis::Y),
+            z_loc_prm: edges.loc_prm(Axis::Z),
         }
     }
 
@@ -94,9 +100,9 @@ impl Cube {
             c_ori: corners.ori_index(),
             c_prm: corners.prm_index(),
             e_ori: edges.ori_index(),
-            x_loc_prm: edges.x_loc_prm_index(),
-            y_loc_prm: edges.y_loc_prm_index(),
-            z_loc_prm: edges.z_loc_prm_index(),
+            x_loc_prm: edges.loc_prm(Axis::X),
+            y_loc_prm: edges.loc_prm(Axis::Y),
+            z_loc_prm: edges.loc_prm(Axis::Z),
         }
     }
 }

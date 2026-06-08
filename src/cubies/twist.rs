@@ -18,7 +18,7 @@ pub enum Twist {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Rotation {
+pub enum Axis {
     X, Y, Z,
 }
 
@@ -65,10 +65,6 @@ impl Twist {
         }
     }
 
-    pub fn to_index(&self) -> usize {
-        *self as usize
-    }
-
     pub fn inverse(&self) -> Self {
         match self {
             Twist::L2 | Twist::R2 | Twist::U2 | Twist::D2 | Twist::F2 | Twist::B2 => *self,
@@ -87,9 +83,9 @@ impl Twist {
         }
     }
 
-    pub fn conjugate_by_inv(&self, rot: Rotation) -> Self {
+    pub fn conjugate_by_inv(&self, rot: Axis) -> Self {
         match rot {
-            Rotation::X => match self {
+            Axis::X => match self {
                 Twist::L1 | Twist::L2 | Twist::L3 | Twist::R1 | Twist::R2 | Twist::R3 => *self,
                 Twist::U1 => Twist::B1,
                 Twist::U2 => Twist::B2,
@@ -104,7 +100,7 @@ impl Twist {
                 Twist::B2 => Twist::D2,
                 Twist::B3 => Twist::D3,
             },
-            Rotation::Y => match self {
+            Axis::Y => match self {
                 Twist::F1 | Twist::F2 | Twist::F3 | Twist::B1 | Twist::B2 | Twist::B3 => *self,
                 Twist::L1 => Twist::D1,
                 Twist::L2 => Twist::D2,
@@ -119,7 +115,7 @@ impl Twist {
                 Twist::D2 => Twist::R2,
                 Twist::D3 => Twist::R3,
             },
-            Rotation::Z => match self {
+            Axis::Z => match self {
                 Twist::U1 | Twist::U2 | Twist::U3 | Twist::D1 | Twist::D2 | Twist::D3 => *self,
                 Twist::L1 => Twist::B1,
                 Twist::L2 => Twist::B2,
@@ -156,7 +152,7 @@ pub fn inverse(twists: &[Twist]) -> Vec<Twist> {
     twists.iter().rev().map(|t| t.inverse()).collect()
 }
 
-pub fn conjugate_by_inv(twists: &[Twist], rot: Rotation) -> Vec<Twist> {
+pub fn conjugate_by_inv(twists: &[Twist], rot: Axis) -> Vec<Twist> {
     twists.iter().map(|t| t.conjugate_by_inv(rot)).collect()
 }
 
@@ -183,7 +179,7 @@ mod tests {
     #[test]
     fn test_conjugation() {
         for twist in ALL_TWISTS {
-            for rot in [Rotation::X, Rotation::Y, Rotation::Z] {
+            for rot in [Axis::X, Axis::Y, Axis::Z] {
                 let conjugated_twist = twist.conjugate_by_inv(rot).conjugate_by_inv(rot).conjugate_by_inv(rot).conjugate_by_inv(rot);
                 assert_eq!(conjugated_twist, twist, "Failed for twist {:?} and rotation {:?}", twist, rot);
             }

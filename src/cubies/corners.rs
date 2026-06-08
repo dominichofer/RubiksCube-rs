@@ -2,7 +2,6 @@ use super::math::*;
 use super::permutation::*;
 use super::orientation::*;
 use super::twist::*;
-use std::fmt;
 use std::ops::Mul;
 
 /// Represents the corner pieces of a Rubik's cube.
@@ -29,20 +28,9 @@ pub struct Corners {
     ori: Orientation<8, 3>,
 }
 
-impl Mul for Corners {
-    type Output = Corners;
-
-    fn mul(self, r: Corners) -> Corners {
-        Corners {
-            prm: self.prm * r.prm,
-            ori: self.prm * r.ori + self.ori,
-        }
-    }
-}
-
 impl Corners {
     pub const PRM_SIZE: usize = factorial(8); // 40'320
-    pub const ORI_SIZE: usize = 3usize.pow(7); // 2'187s
+    pub const ORI_SIZE: usize = 3_usize.pow(7); // 2'187
     pub const INDEX_SIZE: usize = Self::PRM_SIZE * Self::ORI_SIZE; // 88'179'840
 
     const fn new(prm: [usize; 8], ori: [usize; 8]) -> Self {
@@ -87,11 +75,11 @@ impl Corners {
         }
     }
 
-    pub fn conjugated_by(&self, rot: Rotation) -> Self {
+    pub fn conjugated_by(&self, rot: Axis) -> Self {
         let rot = match rot {
-            Rotation::X => Self::twist(Twist::L1) * Self::twist(Twist::R3),
-            Rotation::Y => Self::twist(Twist::F1) * Self::twist(Twist::B3),
-            Rotation::Z => Self::twist(Twist::D1) * Self::twist(Twist::U3),
+            Axis::X => Self::twist(Twist::L1) * Self::twist(Twist::R3),
+            Axis::Y => Self::twist(Twist::F1) * Self::twist(Twist::B3),
+            Axis::Z => Self::twist(Twist::D1) * Self::twist(Twist::U3),
         };
         rot * (*self) * rot.inverse()
     }
@@ -122,9 +110,30 @@ impl Corners {
     }
 }
 
-impl fmt::Display for Corners {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} | {}", self.prm, self.ori)
+impl Mul for Corners {
+    type Output = Corners;
+
+    fn mul(self, r: Corners) -> Corners {
+        Corners {
+            prm: self.prm * r.prm,
+            ori: self.prm * r.ori + self.ori,
+        }
+    }
+}
+
+impl Mul<Corners> for Twist {
+    type Output = Corners;
+
+    fn mul(self, r: Corners) -> Corners {
+        Corners::twist(self) * r
+    }
+}
+
+impl Mul<Twist> for Corners {
+    type Output = Corners;
+
+    fn mul(self, twist: Twist) -> Corners {
+        self * Corners::twist(twist)
     }
 }
 
@@ -138,7 +147,7 @@ mod tests {
         let mut rnd = RandomTwistGen::new(181086, &ALL_TWISTS);
         let mut c = Corners::solved();
         for _ in 0..100_000 {
-            c = Corners::twist(rnd.gen_twist()) * c;
+            c = rnd.gen_twist() * c;
             let prm = c.prm_index();
             let ori = c.ori_index();
             assert_eq!(c, Corners::from_indices(prm, ori));

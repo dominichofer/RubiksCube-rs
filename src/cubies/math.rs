@@ -101,7 +101,7 @@ pub fn nth_combination(n: usize, k: usize, mut index: usize) -> Vec<usize> {
     }
 
     let mut size = 0;
-    let mut combination = vec![0usize; k as usize];
+    let mut combination = vec![0_usize; k as usize];
 
     for i in 0..n {
         let count = binomial(n - 1 - i, k - size - 1);
@@ -164,38 +164,38 @@ mod tests {
 
     #[test]
     fn test_combination_index() {
-        assert_eq!(combination_index(1, &[0usize]), 0);
+        assert_eq!(combination_index(1, &[0_usize]), 0);
 
-        assert_eq!(combination_index(2, &[0usize]), 0);
-        assert_eq!(combination_index(2, &[1usize]), 1);
-        assert_eq!(combination_index(2, &[0usize, 1usize]), 0);
+        assert_eq!(combination_index(2, &[0_usize]), 0);
+        assert_eq!(combination_index(2, &[1_usize]), 1);
+        assert_eq!(combination_index(2, &[0_usize, 1_usize]), 0);
 
-        assert_eq!(combination_index(5, &[0usize, 1usize]), 0);
-        assert_eq!(combination_index(5, &[0usize, 2usize]), 1);
-        assert_eq!(combination_index(5, &[0usize, 3usize]), 2);
-        assert_eq!(combination_index(5, &[0usize, 4usize]), 3);
-        assert_eq!(combination_index(5, &[1usize, 2usize]), 4);
-        assert_eq!(combination_index(5, &[1usize, 3usize]), 5);
-        assert_eq!(combination_index(5, &[1usize, 4usize]), 6);
-        assert_eq!(combination_index(5, &[2usize, 3usize]), 7);
-        assert_eq!(combination_index(5, &[2usize, 4usize]), 8);
-        assert_eq!(combination_index(5, &[3usize, 4usize]), 9);
-        assert_eq!(combination_index(5, &[0usize, 1usize, 2usize]), 0);
-        assert_eq!(combination_index(5, &[0usize, 1usize, 3usize]), 1);
-        assert_eq!(combination_index(5, &[0usize, 1usize, 4usize]), 2);
-        assert_eq!(combination_index(5, &[0usize, 2usize, 3usize]), 3);
-        assert_eq!(combination_index(5, &[0usize, 2usize, 4usize]), 4);
-        assert_eq!(combination_index(5, &[0usize, 3usize, 4usize]), 5);
-        assert_eq!(combination_index(5, &[1usize, 2usize, 3usize]), 6);
-        assert_eq!(combination_index(5, &[1usize, 2usize, 4usize]), 7);
-        assert_eq!(combination_index(5, &[1usize, 3usize, 4usize]), 8);
-        assert_eq!(combination_index(5, &[2usize, 3usize, 4usize]), 9);
-        assert_eq!(combination_index(5, &[0usize, 1usize, 2usize, 3usize]), 0);
-        assert_eq!(combination_index(5, &[0usize, 1usize, 2usize, 4usize]), 1);
-        assert_eq!(combination_index(5, &[0usize, 1usize, 3usize, 4usize]), 2);
-        assert_eq!(combination_index(5, &[0usize, 2usize, 3usize, 4usize]), 3);
-        assert_eq!(combination_index(5, &[1usize, 2usize, 3usize, 4usize]), 4);
-        assert_eq!(combination_index(5, &[0usize, 1usize, 2usize, 3usize, 4usize]), 0);
+        assert_eq!(combination_index(5, &[0_usize, 1_usize]), 0);
+        assert_eq!(combination_index(5, &[0_usize, 2_usize]), 1);
+        assert_eq!(combination_index(5, &[0_usize, 3_usize]), 2);
+        assert_eq!(combination_index(5, &[0_usize, 4_usize]), 3);
+        assert_eq!(combination_index(5, &[1_usize, 2_usize]), 4);
+        assert_eq!(combination_index(5, &[1_usize, 3_usize]), 5);
+        assert_eq!(combination_index(5, &[1_usize, 4_usize]), 6);
+        assert_eq!(combination_index(5, &[2_usize, 3_usize]), 7);
+        assert_eq!(combination_index(5, &[2_usize, 4_usize]), 8);
+        assert_eq!(combination_index(5, &[3_usize, 4_usize]), 9);
+        assert_eq!(combination_index(5, &[0_usize, 1_usize, 2_usize]), 0);
+        assert_eq!(combination_index(5, &[0_usize, 1_usize, 3_usize]), 1);
+        assert_eq!(combination_index(5, &[0_usize, 1_usize, 4_usize]), 2);
+        assert_eq!(combination_index(5, &[0_usize, 2_usize, 3_usize]), 3);
+        assert_eq!(combination_index(5, &[0_usize, 2_usize, 4_usize]), 4);
+        assert_eq!(combination_index(5, &[0_usize, 3_usize, 4_usize]), 5);
+        assert_eq!(combination_index(5, &[1_usize, 2_usize, 3_usize]), 6);
+        assert_eq!(combination_index(5, &[1_usize, 2_usize, 4_usize]), 7);
+        assert_eq!(combination_index(5, &[1_usize, 3_usize, 4_usize]), 8);
+        assert_eq!(combination_index(5, &[2_usize, 3_usize, 4_usize]), 9);
+        assert_eq!(combination_index(5, &[0_usize, 1_usize, 2_usize, 3_usize]), 0);
+        assert_eq!(combination_index(5, &[0_usize, 1_usize, 2_usize, 4_usize]), 1);
+        assert_eq!(combination_index(5, &[0_usize, 1_usize, 3_usize, 4_usize]), 2);
+        assert_eq!(combination_index(5, &[0_usize, 2_usize, 3_usize, 4_usize]), 3);
+        assert_eq!(combination_index(5, &[1_usize, 2_usize, 3_usize, 4_usize]), 4);
+        assert_eq!(combination_index(5, &[0_usize, 1_usize, 2_usize, 3_usize, 4_usize]), 0);
     }
 
     #[test]

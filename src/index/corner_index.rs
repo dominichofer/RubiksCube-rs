@@ -2,6 +2,7 @@ use super::Twistable;
 use crate::TWISTER;
 use crate::cubies::*;
 use std::fmt;
+use std::ops::Mul;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CornerIndex {
@@ -20,6 +21,7 @@ impl CornerIndex {
         }
     }
 
+    #[inline(always)]
     pub fn index(&self) -> usize {
         self.prm * Corners::ORI_SIZE + self.ori
     }
@@ -42,6 +44,17 @@ impl CornerIndex {
         twists
             .iter()
             .fold(*self, |index, &twist| index.twisted(twist))
+    }
+}
+
+impl Mul<CornerIndex> for Twist {
+    type Output = CornerIndex;
+
+    fn mul(self, r: CornerIndex) -> CornerIndex {
+        CornerIndex {
+            prm: TWISTER.twisted_c_prm(r.prm, self),
+            ori: TWISTER.twisted_c_ori(r.ori, self),
+        }
     }
 }
 

@@ -12,6 +12,18 @@ mod tests {
         pub edges: Edges,
     }
 
+    impl Cubies {
+        pub fn solved() -> Self { Self { corners: Corners::solved(), edges: Edges::solved() } }
+
+        pub fn twist(twist: Twist) -> Self { Self { corners: Corners::twist(twist), edges: Edges::twist(twist) } }
+
+        pub fn twists(twists: &[Twist]) -> Self { Self { corners: Corners::twists(twists), edges: Edges::twists(twists) } }
+        
+        pub fn inverse(&self) -> Self { Self { corners: self.corners.inverse(), edges: self.edges.inverse() } }
+
+        pub fn conjugated_by(&self, rot: Axis) -> Self { Self { corners: self.corners.conjugated_by(rot), edges: self.edges.conjugated_by(rot) } }
+    }
+
     impl Mul for Cubies {
         type Output = Cubies;
 
@@ -20,16 +32,12 @@ mod tests {
         }
     }
 
-    impl Cubies {
-        pub fn solved() -> Self { Self { corners: Corners::solved(), edges: Edges::solved() } }
+    impl Mul<Cubies> for Twist {
+        type Output = Cubies;
 
-        pub fn twist(twist: Twist) -> Self { Self { corners: Corners::twist(twist), edges: Edges::twist(twist) } }
-
-        pub fn twists(twists: &[Twist]) -> Self { Self { corners: Corners::twists(twists), edges: Edges::twists(twists) } }
-
-        pub fn inverse(&self) -> Self { Self { corners: self.corners.inverse(), edges: self.edges.inverse() } }
-
-        pub fn conjugated_by(&self, rot: Rotation) -> Self { Self { corners: self.corners.conjugated_by(rot), edges: self.edges.conjugated_by(rot) } }
+        fn mul(self, rhs: Cubies) -> Cubies {
+            Cubies { corners: self * rhs.corners, edges: self * rhs.edges }
+        }
     }
 
     fn cycle_length(twists: &[Twist]) -> usize {
@@ -88,22 +96,22 @@ mod tests {
 
     #[test]
     fn test_conjugation() {
-        // Trivial cases
-        for rot in [Rotation::X, Rotation::Y, Rotation::Z] {
-            assert_eq!(Cubies::solved().conjugated_by(rot), Cubies::solved(), "Conjugating the solved state by {:?} should yield the solved state", rot);
-        }
+        // Trivial cases (conjugating the solved state should yield the solved state)
+        assert_eq!(Cubies::solved().conjugated_by(Axis::X), Cubies::solved());
+        assert_eq!(Cubies::solved().conjugated_by(Axis::Y), Cubies::solved());
+        assert_eq!(Cubies::solved().conjugated_by(Axis::Z), Cubies::solved());
 
         // Some simple cases
-        assert_eq!(Cubies::twist(Twist::F1).conjugated_by(Rotation::X), Cubies::twist(Twist::D1));
-        assert_eq!(Cubies::twist(Twist::L1).conjugated_by(Rotation::Y), Cubies::twist(Twist::U1));
-        assert_eq!(Cubies::twist(Twist::F1).conjugated_by(Rotation::Z), Cubies::twist(Twist::R1));
+        assert_eq!(Cubies::twist(Twist::F1).conjugated_by(Axis::X), Cubies::twist(Twist::D1));
+        assert_eq!(Cubies::twist(Twist::L1).conjugated_by(Axis::Y), Cubies::twist(Twist::U1));
+        assert_eq!(Cubies::twist(Twist::F1).conjugated_by(Axis::Z), Cubies::twist(Twist::R1));
 
         // Fuzzing
         let mut rnd = RandomTwistGen::new(12345678, &ALL_TWISTS);
         for _ in 0..100_000 {
             let rnd_twists = rnd.gen_twists(100);
             let rnd_cube = Cubies::twists(&rnd_twists);
-            for rot in [Rotation::X, Rotation::Y, Rotation::Z] {
+            for rot in [Axis::X, Axis::Y, Axis::Z] {
                 let conj_cube = rnd_cube.conjugated_by(rot);
                 let conj_twists = conjugate_by_inv(&conjugate_by_inv(&conjugate_by_inv(&rnd_twists, rot), rot), rot);
                 assert_eq!(Cubies::twists(&conj_twists), conj_cube, "Failed for cube {:?} and rotation {:?}", rnd_cube, rot);

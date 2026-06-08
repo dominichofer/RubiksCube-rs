@@ -1,8 +1,5 @@
 use crate::twist::*;
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
-pub struct TwistSet(u32);
-
 pub struct TwistBitsIter {
     bits: u32,
 }
@@ -16,81 +13,97 @@ impl Iterator for TwistBitsIter {
         }
 
         let index = self.bits.trailing_zeros() as i32;
-        self.bits &= self.bits - 1;
+        self.bits &= self.bits - 1;  // Clear the least significant set bit
         Some(Twist::from(index))
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub struct TwistSet {
+    bits: u32, // Each bit represents whether a twist is included in the set
+}
+
 impl TwistSet {
-    pub const EMPTY: Self = Self(0b000_000_000_000_000_000);
-    pub const FULL: Self = Self(0b111_111_111_111_111_111);
-    pub const H0: Self = Self(0b010_010_111_111_010_010); // H0 = { L2, R2, U, D, F2, B2 }
+    pub const EMPTY: Self = Self{ bits: 0 };
+    pub const FULL: Self = Self::from_twists(&ALL_TWISTS);
+    pub const H0: Self = Self::from_twists(&H0_TWISTS);
 
-    pub fn bits(&self) -> u32 {
-        self.0
+    pub const fn new(bits: u32) -> Self {
+        Self { bits: bits & Self::FULL.bits } // Ensure we only keep valid bits
     }
 
-    pub fn set_twist(&mut self, t: Twist) {
-        self.0 |= 1 << t.to_index();
+    pub const fn from_twists(twists: &[Twist]) -> Self {
+        let mut ret = Self::EMPTY;
+        let mut i = 0;
+        while i < twists.len() {
+            ret.bits |= 1 << twists[i] as u32;
+            i += 1;
+        }
+        ret
     }
 
-    pub fn set_twists(&mut self, t: TwistSet) {
-        self.0 |= t.0;
-    }
-
-    pub fn unset_twist(&mut self, t: Twist) {
-        self.0 &= !(1 << t.to_index());
-    }
-
-    pub fn unset_twists(&mut self, t: TwistSet) {
-        self.0 &= !t.0;
-    }
-
-    pub fn keep_only(&mut self, t: TwistSet) {
-        self.0 &= t.0;
+    pub fn as_u64(&self) -> u64 {
+        self.bits as u64
     }
 
     pub fn contains(&self, t: Twist) -> bool {
-        self.0 & (1 << t.to_index()) != 0
+        self.bits & (1 << t as u32) != 0
     }
 
     pub fn count(&self) -> usize {
-        self.0.count_ones() as usize
+        self.bits.count_ones() as usize
     }
 
     pub fn is_empty(&self) -> bool {
-        self.0 == 0
+        self.bits == 0
     }
 
     pub fn iter(&self) -> TwistBitsIter {
-        TwistBitsIter { bits: self.0 }
+        TwistBitsIter { bits: self.bits }
     }
 }
 
-impl From<u32> for TwistSet {
-    fn from(bits: u32) -> Self {
-        TwistSet(bits)
+impl std::ops::Not for TwistSet {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        Self::new(!self.bits & Self::FULL.bits) // Invert bits and mask with FULL to keep only valid bits
     }
 }
 
-impl From<&[Twist]> for TwistSet {
-    fn from(twists: &[Twist]) -> Self {
-        let mut set = TwistSet::EMPTY;
-        for &twist in twists {
-            set.set_twist(twist);
-        }
-        set
+impl std::ops::BitOrAssign for TwistSet {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.bits |= rhs.bits;
     }
 }
 
+impl std::ops::BitAndAssign for TwistSet {
+    fn bitand_assign(&mut self, rhs: Self) {
+        self.bits &= rhs.bits;
+    }
+}
+
+impl std::ops::BitOrAssign<Twist> for TwistSet {
+    fn bitor_assign(&mut self, rhs: Twist) {
+        self.bits |= rhs as u32;
+    }
+}
+
+impl std::ops::BitAndAssign<Twist> for TwistSet {
+    fn bitand_assign(&mut self, rhs: Twist) {
+        self.bits &= !(1 << rhs as u32);
+    }
+}
+
+#[inline(always)]
 pub fn unique_twists_after(twist: Twist) -> TwistSet {
     match twist {
-        Twist::L1 | Twist::L2 | Twist::L3 => TwistSet::from(0b111_111_111_111_111_000),
-        Twist::R1 | Twist::R2 | Twist::R3 => TwistSet::from(0b111_111_111_111_000_000),
-        Twist::U1 | Twist::U2 | Twist::U3 => TwistSet::from(0b111_111_111_000_111_111),
-        Twist::D1 | Twist::D2 | Twist::D3 => TwistSet::from(0b111_111_000_000_111_111),
-        Twist::F1 | Twist::F2 | Twist::F3 => TwistSet::from(0b111_000_111_111_111_111),
-        Twist::B1 | Twist::B2 | Twist::B3 => TwistSet::from(0b000_000_111_111_111_111),
+        Twist::L1 | Twist::L2 | Twist::L3 => TwistSet::new(0b111_111_111_111_111_000),
+        Twist::R1 | Twist::R2 | Twist::R3 => TwistSet::new(0b111_111_111_111_000_000),
+        Twist::U1 | Twist::U2 | Twist::U3 => TwistSet::new(0b111_111_111_000_111_111),
+        Twist::D1 | Twist::D2 | Twist::D3 => TwistSet::new(0b111_111_000_000_111_111),
+        Twist::F1 | Twist::F2 | Twist::F3 => TwistSet::new(0b111_000_111_111_111_111),
+        Twist::B1 | Twist::B2 | Twist::B3 => TwistSet::new(0b000_000_111_111_111_111),
     }
 }
 
@@ -105,19 +118,16 @@ mod tests {
 
         let twist = Twist::L3; // Arbitrary
 
-        twists.set_twist(twist);
+        twists |= twist;
         assert!(twists.count() == 1);
         assert!(twists.contains(twist));
 
-        twists.unset_twist(twist);
-        assert!(twists.count() == 0);
-        assert!(!twists.contains(twist));
 
-        let multiple = TwistSet::from(0b1010101); // Arbitrary
-        twists.set_twists(multiple);
+        let multiple = TwistSet::new(0b1010101); // Arbitrary
+        twists |= multiple;
         assert!(twists.count() == 4);
 
-        twists.unset_twists(multiple);
+        twists &= !multiple;
         assert!(twists.count() == 0);
     }
 

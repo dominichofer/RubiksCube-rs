@@ -7,7 +7,7 @@ pub struct DirectionsAndDistance(u64);
 
 impl DirectionsAndDistance {
     pub fn new(less: TwistSet, more: TwistSet, distance: u8) -> Self {
-        Self(((less.bits() as u64) << 32) | ((more.bits() as u64) << 8) | (distance as u64))
+        Self((less.as_u64() << 32) | (more.as_u64() << 8) | (distance as u64))
     }
 
     pub fn from_u64(value: u64) -> Self {
@@ -15,11 +15,11 @@ impl DirectionsAndDistance {
     }
 
     pub fn less_distance(&self) -> TwistSet {
-        TwistSet::from((self.0 >> 32) as u32)
+        TwistSet::new((self.0 >> 32) as u32)
     }
 
     pub fn more_distance(&self) -> TwistSet {
-        TwistSet::from(((self.0 >> 8) & 0xFF_FF_FF) as u32)
+        TwistSet::new(((self.0 >> 8) & 0xFF_FF_FF) as u32)
     }
 
     pub fn distance(&self) -> u8 {
@@ -49,13 +49,13 @@ impl DirectionsTable {
                 let mut less = TwistSet::EMPTY;
                 let mut more = TwistSet::EMPTY;
 
-                for twist in twists {
-                    let next = obj.twisted(*twist);
+                for &twist in twists {
+                    let next = obj.twisted(twist);
                     let next_d = distance_table.distance(index(next));
                     if next_d < d {
-                        less.set_twist(*twist);
+                        less |= twist;
                     } else if next_d > d {
-                        more.set_twist(*twist);
+                        more |= twist;
                     }
                 }
 
@@ -110,9 +110,7 @@ mod tests {
     #[test]
     fn test_directions_table() {
         let mut rnd = StdRng::seed_from_u64(42);
-        let twister = Twister::new();
         let table = DirectionsTable::create(
-            &twister,
             &ALL_TWISTS,
             CornerIndex::solved(),
             |c: CornerIndex| c.index(),
@@ -128,7 +126,7 @@ mod tests {
 
             let cube = CornerIndex::from_index(i);
             for twist in ALL_TWISTS {
-                let next = cube.twisted(&twister, twist);
+                let next = cube.twisted(twist);
                 let next_d = table.distance(next.index());
                 if next_d < d {
                     assert!(less.contains(twist), "Less missing twist {:?} at index {}", twist, i);

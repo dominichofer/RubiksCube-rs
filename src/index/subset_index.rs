@@ -1,5 +1,4 @@
 use super::Twistable;
-use super::Twister;
 use crate::TWISTER;
 use crate::cubies::*;
 use std::fmt;
@@ -20,7 +19,7 @@ impl SubsetIndex {
         Self {
             c_prm: c.prm_index(),
             xy_prm: e.xy_prm_index(),
-            z_prm: e.z_loc_prm_index().prm(),
+            z_prm: e.loc_prm(Axis::Z).prm(),
         }
     }
 

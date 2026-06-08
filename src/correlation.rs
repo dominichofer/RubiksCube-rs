@@ -4,15 +4,15 @@ use std::collections::HashMap;
 
 fn all_rotations(cube: Cube) -> [Cube; 24] {
     let u0 = cube;
-    let u1 = u0.conjugated_by(Rotation::Z);
-    let u2 = u1.conjugated_by(Rotation::Z);
-    let u3 = u2.conjugated_by(Rotation::Z);
-    let l1 = [u0, u1, u2, u3].map(|u| u.conjugated_by(Rotation::Y));
-    let l2 = l1.map(|l| l.conjugated_by(Rotation::Y));
-    let l3 = l2.map(|l| l.conjugated_by(Rotation::Y));
-    let f1 = [u0, u1, u2, u3].map(|u| u.conjugated_by(Rotation::Y));
-    let f2 = f1.map(|f| f.conjugated_by(Rotation::Y));
-    let f3 = f2.map(|f| f.conjugated_by(Rotation::Y));
+    let u1 = u0.conjugated_by(Axis::Z);
+    let u2 = u1.conjugated_by(Axis::Z);
+    let u3 = u2.conjugated_by(Axis::Z);
+    let l1 = [u0, u1, u2, u3].map(|u| u.conjugated_by(Axis::Y));
+    let l2 = l1.map(|l| l.conjugated_by(Axis::Y));
+    let l3 = l2.map(|l| l.conjugated_by(Axis::Y));
+    let f1 = [u0, u1, u2, u3].map(|u| u.conjugated_by(Axis::Y));
+    let f2 = f1.map(|f| f.conjugated_by(Axis::Y));
+    let f3 = f2.map(|f| f.conjugated_by(Axis::Y));
     [
         u0, u1, u2, u3,
         l1[0], l1[1], l1[2], l1[3],
@@ -24,13 +24,12 @@ fn all_rotations(cube: Cube) -> [Cube; 24] {
 }
 
 fn main() {
-    let twister = Twister::new();
     let tables = StoredTables::load("config.txt");
     let mut rnd = RandomTwistGen::new(42, &ALL_TWISTS);
     let mut correlation: HashMap<(usize, usize), HashMap<(u8, u8), usize>> = HashMap::new();
     for _ in 0..1_000_000 {
         let twists = rnd.gen_twists(100);
-        let rnd_cube = Cube::solved().twisted_by(&twister, &twists);
+        let rnd_cube = Cube::solved().twisted_by(&twists);
         let all_rotations = all_rotations(rnd_cube);
         let subset_distances = all_rotations.map(|cube| tables.coset.distance(cube.coset_index()));
         for (i, dst_i) in subset_distances.into_iter().enumerate() {

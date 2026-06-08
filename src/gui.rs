@@ -41,11 +41,11 @@ fn twist_from_char(c: char) -> Twist {
     }
 }
 
-fn axis_from_rotation(rot: Rotation) -> Vec3 {
+fn axis_from_rotation(rot: Axis) -> Vec3 {
     match rot {
-        Rotation::X => Vec3::new(-1.0, 0.0, 0.0),
-        Rotation::Y => Vec3::new(0.0, 1.0, 0.0),
-        Rotation::Z => Vec3::new(0.0, 0.0, 1.0),
+        Axis::X => Vec3::new(-1.0, 0.0, 0.0),
+        Axis::Y => Vec3::new(0.0, 1.0, 0.0),
+        Axis::Z => Vec3::new(0.0, 0.0, 1.0),
     }
 }
 
@@ -134,7 +134,7 @@ impl RubiksCube {
     }
 
     /// Rotate the entire cube by the given angle around the rotation axis
-    pub fn rotate_whole(&mut self, rotation: Rotation, angle: f32) {
+    pub fn rotate_whole(&mut self, rotation: Axis, angle: f32) {
         let axis = axis_from_rotation(rotation);
         let rot = Quat::from_axis_angle(axis, angle);
         for cubie in &mut self.cubies {
@@ -150,7 +150,7 @@ enum Animation {
     /// Face twist animation (L, R, U, D, F, B keys)
     FaceTwist { face: char, remaining: f32 },
     /// Whole cube rotation animation (Q, W, E keys)
-    CubeRotation { rotation: Rotation, remaining: f32 },
+    CubeRotation { rotation: Axis, remaining: f32 },
 }
 
 impl Animation {
@@ -161,7 +161,7 @@ impl Animation {
         }
     }
 
-    fn new_cube_rotation(rotation: Rotation) -> Self {
+    fn new_cube_rotation(rotation: Axis) -> Self {
         Animation::CubeRotation {
             rotation,
             remaining: std::f32::consts::FRAC_PI_2,
@@ -204,11 +204,11 @@ impl CubeState {
     }
 
     fn apply_twist(&mut self, twist: Twist) {
-        self.corners = Corners::twist(twist) * self.corners;
-        self.edges = Edges::twist(twist) * self.edges;
+        self.corners = twist * self.corners;
+        self.edges = twist * self.edges;
     }
 
-    fn apply_rotation(&mut self, rotation: Rotation) {
+    fn apply_rotation(&mut self, rotation: Axis) {
         self.corners = self.corners.conjugated_by(rotation);
         self.edges = self.edges.conjugated_by(rotation);
     }
@@ -284,10 +284,10 @@ fn handle_input(
     }
 
     // Cube rotation keys
-    const ROTATION_KEYS: [(Key, Rotation); 3] = [
-        (Key::X, Rotation::X),
-        (Key::Y, Rotation::Y),
-        (Key::Z, Rotation::Z),
+    const ROTATION_KEYS: [(Key, Axis); 3] = [
+        (Key::X, Axis::X),
+        (Key::Y, Axis::Y),
+        (Key::Z, Axis::Z),
     ];
 
     for (key, rotation) in ROTATION_KEYS {

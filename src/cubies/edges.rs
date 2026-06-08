@@ -2,7 +2,6 @@ use super::math::*;
 use super::permutation::*;
 use super::orientation::*;
 use super::twist::*;
-use std::fmt;
 use std::ops::Mul;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -58,20 +57,9 @@ pub struct Edges {
     ori: Orientation<12, 2>,
 }
 
-impl Mul for Edges {
-    type Output = Edges;
-
-    fn mul(self, r: Edges) -> Edges {
-        Edges {
-            prm: self.prm * r.prm,
-            ori: self.prm * r.ori + self.ori,
-        }
-    }
-}
-
 impl Edges {
     pub const LOC_PRM_SIZE: usize = LocPrm::INDEX_SIZE; // 11'880
-    pub const ORI_SIZE: usize = 2usize.pow(11); // 2'048
+    pub const ORI_SIZE: usize = 2_usize.pow(11); // 2'048
 
     const fn new(prm: [usize; 12], ori: [usize; 12]) -> Self {
         Self { prm: Permutation::new(prm), ori: Orientation::new(ori) }
@@ -115,11 +103,11 @@ impl Edges {
         }
     }
 
-    pub fn conjugated_by(&self, rot: Rotation) -> Self {
+    pub fn conjugated_by(&self, rot: Axis) -> Self {
         let rot = match rot {
-            Rotation::X => Self::twist(Twist::L1) * Self::twist(Twist::R3) * Self::new([1, 2, 3, 0, 4, 5, 6, 7, 8, 9, 10, 11], [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
-            Rotation::Y => Self::twist(Twist::F1) * Self::twist(Twist::B3) * Self::new([0, 1, 2, 3, 7, 4, 5, 6, 8, 9, 10, 11], [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0]),
-            Rotation::Z => Self::twist(Twist::D1) * Self::twist(Twist::U3) * Self::new([0, 1, 2, 3, 4, 5, 6, 7, 11, 8, 9, 10], [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]),
+            Axis::X => Twist::L1 * Self::new([1, 2, 3, 0, 4, 5, 6, 7, 8, 9, 10, 11], [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]) * Twist::R3,
+            Axis::Y => Twist::F1 * Self::new([0, 1, 2, 3, 7, 4, 5, 6, 8, 9, 10, 11], [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0]) * Twist::B3,
+            Axis::Z => Twist::D1 * Self::new([0, 1, 2, 3, 4, 5, 6, 7, 11, 8, 9, 10], [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]) * Twist::U3,
         };
         rot * (*self) * rot.inverse()
     }
@@ -132,14 +120,14 @@ impl Edges {
         self.ori.data()
     }
 
-    pub fn from_indices(x_loc_prm_index: LocPrm, y_loc_prm_index: LocPrm, z_loc_prm_index: LocPrm, ori_index: usize) -> Self {
+    pub fn from_indices(x: LocPrm, y: LocPrm, z: LocPrm, ori_index: usize) -> Self {
         assert!(ori_index < Self::ORI_SIZE);
-        let x_loc = nth_combination(12, 4, x_loc_prm_index.loc());
-        let y_loc = nth_combination(12, 4, y_loc_prm_index.loc());
-        let z_loc = nth_combination(12, 4, z_loc_prm_index.loc());
-        let x_prm = Permutation::<4>::from_index(x_loc_prm_index.prm());
-        let y_prm = Permutation::<4>::from_index(y_loc_prm_index.prm());
-        let z_prm = Permutation::<4>::from_index(z_loc_prm_index.prm());
+        let x_loc = nth_combination(12, 4, x.loc());
+        let y_loc = nth_combination(12, 4, y.loc());
+        let z_loc = nth_combination(12, 4, z.loc());
+        let x_prm = Permutation::<4>::from_index(x.prm());
+        let y_prm = Permutation::<4>::from_index(y.prm());
+        let z_prm = Permutation::<4>::from_index(z.prm());
 
         let mut prm = [0; 12];
         for i in 0..4 {
@@ -171,42 +159,20 @@ impl Edges {
         Self::new(prm, [0; 12])
     }
     
-    pub fn x_loc_prm_index(&self) -> LocPrm {
+    pub fn loc_prm(&self, slice: Axis) -> LocPrm {
+        let min_val = match slice {
+            Axis::X => 0,
+            Axis::Y => 4,
+            Axis::Z => 8,
+        };
+        let max_val = min_val + 4;
         let mut loc = [0; 4];
         let mut prm = [0; 4];
         let mut j = 0;
         for (i, &p) in self.prm.iter().enumerate() {
-            if p < 4 {
+            if p >= min_val && p < max_val {
                 loc[j] = i;
-                prm[j] = p;
-                j += 1;
-            }
-        }
-        LocPrm::new(combination_index(12, &loc), permutation_index(&prm))
-    }
-    
-    pub fn y_loc_prm_index(&self) -> LocPrm {
-        let mut loc = [0; 4];
-        let mut prm = [0; 4];
-        let mut j = 0;
-        for (i, &p) in self.prm.iter().enumerate() {
-            if p >= 4 && p < 8 {
-                loc[j] = i;
-                prm[j] = p - 4;
-                j += 1;
-            }
-        }
-        LocPrm::new(combination_index(12, &loc), permutation_index(&prm))
-    }
-    
-    pub fn z_loc_prm_index(&self) -> LocPrm {
-        let mut loc = [0; 4];
-        let mut prm = [0; 4];
-        let mut j = 0;
-        for (i, &p) in self.prm.iter().enumerate() {
-            if p >= 8 {
-                loc[j] = i;
-                prm[j] = p - 8;
+                prm[j] = p - min_val;
                 j += 1;
             }
         }
@@ -230,9 +196,30 @@ impl Edges {
     }
 }
 
-impl fmt::Display for Edges {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f,"{} | {}", self.prm, self.ori)
+impl Mul for Edges {
+    type Output = Edges;
+
+    fn mul(self, r: Edges) -> Edges {
+        Edges {
+            prm: self.prm * r.prm,
+            ori: self.prm * r.ori + self.ori,
+        }
+    }
+}
+
+impl Mul<Edges> for Twist {
+    type Output = Edges;
+
+    fn mul(self, r: Edges) -> Edges {
+        Edges::twist(self) * r
+    }
+}
+
+impl Mul<Twist> for Edges {
+    type Output = Edges;
+
+    fn mul(self, twist: Twist) -> Edges {
+        self * Edges::twist(twist)
     }
 }
 

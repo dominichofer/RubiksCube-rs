@@ -57,19 +57,19 @@ impl<'a> TwoPhaseSolver<'a> {
     pub fn solve(&mut self, cube: Cube, max_solution_length: u8) -> Result<Vec<Twist>, String> {
         let cubes = [
             cube,
-            cube.conjugated_by(Rotation::X),
-            cube.conjugated_by(Rotation::Y),
+            cube.conjugated_by(Axis::X),
+            cube.conjugated_by(Axis::Y),
             cube.inverse(),
-            cube.inverse().conjugated_by(Rotation::X),
-            cube.inverse().conjugated_by(Rotation::Y),
+            cube.inverse().conjugated_by(Axis::X),
+            cube.inverse().conjugated_by(Axis::Y),
         ];
         let solution_transforms = [
             |twists: &[Twist]| twists.to_vec(),
-            |twists: &[Twist]| conjugate_by_inv(twists, Rotation::X),
-            |twists: &[Twist]| conjugate_by_inv(twists, Rotation::Y),
+            |twists: &[Twist]| conjugate_by_inv(twists, Axis::X),
+            |twists: &[Twist]| conjugate_by_inv(twists, Axis::Y),
             |twists: &[Twist]| inverse(twists),
-            |twists: &[Twist]| inverse(&conjugate_by_inv(twists, Rotation::X)),
-            |twists: &[Twist]| inverse(&conjugate_by_inv(twists, Rotation::Y)),
+            |twists: &[Twist]| inverse(&conjugate_by_inv(twists, Axis::X)),
+            |twists: &[Twist]| inverse(&conjugate_by_inv(twists, Axis::Y)),
         ];
         let subset_distances = cubes.map(|c| self.phase_1.distance(c.coset_index()));
         let min_distance = *subset_distances.iter().min().unwrap();
@@ -140,15 +140,15 @@ impl<'a> TwoPhaseSolver<'a> {
         }
 
         let coset_index = cube.coset_index();
-        let phase_1_distance = self.phase_1.distance(coset_index);
-        if p1_depth == phase_1_distance {
-            twists.keep_only(self.phase_1.less_distance(coset_index));
+        let subset_distance = self.phase_1.distance(coset_index);
+        if p1_depth == subset_distance {
+            twists &= self.phase_1.less_distance(coset_index);
         }
-        if p1_depth == phase_1_distance + 1 {
-            twists.unset_twists(self.phase_1.more_distance(coset_index));
+        if p1_depth == subset_distance + 1 {
+            twists &= !self.phase_1.more_distance(coset_index);
         }
         if p1_depth == 1 {
-            twists.unset_twists(TwistSet::H0);
+            twists &= !TwistSet::H0;
         }
         if twists.is_empty() {
             self.no_twist_cut += 1;
