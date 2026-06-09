@@ -85,17 +85,14 @@ impl DirectionsTable {
         std::fs::write(path, data)
     }
 
-    #[inline(always)]
     pub fn distance(&self, index: usize) -> u8 {
         self.table[index].distance()
     }
 
-    #[inline(always)]
     pub fn less_distance(&self, index: usize) -> TwistSet {
         self.table[index].less_distance()
     }
 
-    #[inline(always)]
     pub fn more_distance(&self, index: usize) -> TwistSet {
         self.table[index].more_distance()
     }
@@ -104,7 +101,6 @@ impl DirectionsTable {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::CornerIndex;
     use rand::{rngs::StdRng, RngExt, SeedableRng};
 
     #[test]
@@ -112,22 +108,22 @@ mod tests {
         let mut rnd = StdRng::seed_from_u64(42);
         let table = DirectionsTable::create(
             &ALL_TWISTS,
-            CornerIndex::solved(),
-            |c: CornerIndex| c.index(),
-            |i: usize| CornerIndex::from_index(i),
-            CornerIndex::INDEX_SIZE,
+            Cube::solved(),
+            |c: Cube| c.corner_index(),
+            |i: usize| Cube::from_corner_index(i),
+            Cube::CORNER_INDEX_SIZE,
         );
 
         for _ in 0..100_000 {
-            let i = rnd.random_range(0..CornerIndex::INDEX_SIZE);
+            let i = rnd.random_range(0..Cube::CORNER_INDEX_SIZE);
             let d = table.distance(i);
             let less = table.less_distance(i);
             let more = table.more_distance(i);
 
-            let cube = CornerIndex::from_index(i);
+            let cube = Cube::from_corner_index(i);
             for twist in ALL_TWISTS {
                 let next = cube.twisted(twist);
-                let next_d = table.distance(next.index());
+                let next_d = table.distance(next.corner_index());
                 if next_d < d {
                     assert!(less.contains(twist), "Less missing twist {:?} at index {}", twist, i);
                 } else if next_d > d {

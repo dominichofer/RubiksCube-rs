@@ -46,10 +46,10 @@ fn corners_distance_table(path: &str) -> DistanceTable {
     } else {
         table = DistanceTable::create(
             &ALL_TWISTS,
-            CornerIndex::solved(),
-            |c: CornerIndex| c.index(),
-            |i: usize| CornerIndex::from_index(i),
-            CornerIndex::INDEX_SIZE,
+            Cube::solved(),
+            |c: Cube| c.corner_index(),
+            |i: usize| Cube::from_corner_index(i),
+            Cube::CORNER_INDEX_SIZE,
         );
         println!("Corners table created in: {:?}", time.elapsed());
 
@@ -58,9 +58,8 @@ fn corners_distance_table(path: &str) -> DistanceTable {
 
     // Verify data integrity
     let mut counts = vec![0; 12];
-    for i in 0..CornerIndex::INDEX_SIZE {
-        let d = table.distance(i);
-        counts[d as usize] += 1;
+    for i in 0..Cube::CORNER_INDEX_SIZE {
+        counts[table.distance(i) as usize] += 1;
     }
     // According to https://oeis.org/A080629
     assert_eq!(counts, vec![1, 18, 243, 2874, 28000, 205416, 1168516, 5402628, 20776176, 45391616, 15139616, 64736]);

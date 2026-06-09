@@ -120,11 +120,12 @@ fn main() {
 
     bench("SubsetIndex twisted", &rnd_subset_twists, |&t| { subset_index = subset_index.twisted(t) });
     bench("CosetIndex twisted", &rnd_twists, |&t| { coset_index = coset_index.twisted(t) });
-    bench("CubeIndex twisted", &rnd_twists, |&t| { cube_index = cube_index.twisted(t) });
+    bench("Cube twisted", &rnd_twists, |&t| { cube_index = cube_index.twisted(t) });
 
     let rnd_cubes= Vec::from_iter((0..ITERATIONS).map(|_| Cube::solved().twisted_by(&rnd_twist.gen_twists(100))));
-    bench("CubeIndex subset_index", &rnd_cubes, |c| { black_box(c.subset_index()); });
-    bench("CubeIndex coset_index", &rnd_cubes, |c| { black_box(c.coset_index()); });
+    bench("Cube corner_index", &rnd_cubes, |c| { black_box(c.corner_index()); });
+    bench("Cube subset_index", &rnd_cubes, |c| { black_box(c.subset_index()); });
+    bench("Cube coset_index", &rnd_cubes, |c| { black_box(c.coset_index()); });
 
     black_box(corners);
     black_box(edges);

@@ -77,20 +77,19 @@ impl DistanceTable {
 mod tests {
     use super::*;
     use crate::twist_generator::RandomTwistGen;
-    use crate::CornerIndex;
 
     #[test]
     fn test_distance_table() {
         let table = DistanceTable::create(
             &ALL_TWISTS,
-            CornerIndex::solved(),
-            |c: CornerIndex| c.index(),
-            |i: usize| CornerIndex::from_index(i),
-            CornerIndex::INDEX_SIZE,
+            Cube::solved(),
+            |c: Cube| c.corner_index(),
+            |i: usize| Cube::from_corner_index(i),
+            Cube::CORNER_INDEX_SIZE,
         );
 
         let mut counts = vec![0; 12];
-        for i in 0..CornerIndex::INDEX_SIZE {
+        for i in 0..Cube::CORNER_INDEX_SIZE {
             let d = table.distance(i);
             counts[d as usize] += 1;
         }
@@ -98,27 +97,27 @@ mod tests {
         assert_eq!(counts, vec![1, 18, 243, 2874, 28000, 205416, 1168516, 5402628, 20776176, 45391616, 15139616, 64736]);
 
         let mut rnd = RandomTwistGen::new(5989, &ALL_TWISTS);
-        let mut cube = CornerIndex::solved();
+        let mut cube = Cube::solved();
         for _ in 0..100_000 {
             cube = cube.twisted(rnd.gen_twist());
-            let d = table.distance(cube.index());
+            let d = table.distance(cube.corner_index());
 
             // Check neighbours
             for twist in ALL_TWISTS {
-                let neighbour_d = table.distance(cube.twisted(twist).index());
+                let neighbour_d = table.distance(cube.twisted(twist).corner_index());
                 assert!(
                     (neighbour_d as i32 - d as i32).abs() <= 1,
                     "Neighbour distance differs by more than 1 for cube at index {}",
-                    cube.index()
+                    cube.corner_index()
                 );
             }
 
             if d > 0 {
-                // Check at least one neighbour has lower distance
+                // Check that at least one neighbour has a lower distance
                 let mut found = false;
                 for twist in ALL_TWISTS {
-                    let neighbour_d = table.distance(cube.twisted(twist).index());
-                    if neighbour_d < d {
+                    let neighbour_d = table.distance(cube.twisted(twist).corner_index());
+                    if neighbour_d == d - 1 {
                         found = true;
                         break;
                     }
@@ -126,7 +125,7 @@ mod tests {
                 assert!(
                     found,
                     "No neighbour with lower distance found for cube at index {}",
-                    cube.index()
+                    cube.corner_index()
                 );
             }
         }

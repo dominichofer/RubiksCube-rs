@@ -29,9 +29,9 @@ path = "src/gui.rs"
 name = "create"
 path = "src/create_test_pos.rs"
 
-[profile.release]
-codegen-units = 1
-lto = "fat"
-panic = "abort"
-strip = "symbols"
-incremental = false
+# [profile.release]
+# codegen-units = 1
+# lto = "fat"
+# panic = "abort"
+# strip = "symbols"
+# incremental = false

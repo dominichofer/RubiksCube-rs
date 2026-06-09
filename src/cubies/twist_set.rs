@@ -67,7 +67,7 @@ impl std::ops::Not for TwistSet {
     type Output = Self;
 
     fn not(self) -> Self::Output {
-        Self::new(!self.bits & Self::FULL.bits) // Invert bits and mask with FULL to keep only valid bits
+        Self::new(!self.bits)
     }
 }
 
@@ -85,13 +85,13 @@ impl std::ops::BitAndAssign for TwistSet {
 
 impl std::ops::BitOrAssign<Twist> for TwistSet {
     fn bitor_assign(&mut self, rhs: Twist) {
-        self.bits |= rhs as u32;
+        self.bits |= 1 << (rhs as u32);
     }
 }
 
 impl std::ops::BitAndAssign<Twist> for TwistSet {
     fn bitand_assign(&mut self, rhs: Twist) {
-        self.bits &= !(1 << rhs as u32);
+        self.bits &= 1 << (rhs as u32);
     }
 }
 
@@ -112,28 +112,74 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_state() {
-        let mut twists = TwistSet::EMPTY;
-        assert!(twists.count() == 0);
+    fn test_new() {
+        let all_bits_set = TwistSet::new(u32::MAX);
+        assert_eq!(all_bits_set, TwistSet::FULL);
+    }
 
-        let twist = Twist::L3; // Arbitrary
+    #[test]
+    fn test_from_twists() {
+        let set = TwistSet::from_twists(&[Twist::L1, Twist::R2, Twist::F3]);
+        assert!(set.contains(Twist::L1));
+        assert!(set.contains(Twist::R2));
+        assert!(set.contains(Twist::F3));
+        assert!(!set.contains(Twist::U1));
+        assert_eq!(set.count(), 3);
+        assert!(!set.is_empty());
+    }
 
-        twists |= twist;
-        assert!(twists.count() == 1);
-        assert!(twists.contains(twist));
-
-
-        let multiple = TwistSet::new(0b1010101); // Arbitrary
-        twists |= multiple;
-        assert!(twists.count() == 4);
-
-        twists &= !multiple;
-        assert!(twists.count() == 0);
+    #[test]
+    fn test_as_u64() {
+        let set = TwistSet::from_twists(&[Twist::D1, Twist::B2]);
+        let bits = set.as_u64() as u32;
+        assert_eq!(TwistSet::new(bits), set);
     }
 
     #[test]
     fn test_iter() {
+        let set = TwistSet::from_twists(&[Twist::D1, Twist::B2]);
+        assert_eq!(set.iter().collect::<Vec<_>>(), vec![Twist::D1, Twist::B2]);
         assert_eq!(TwistSet::EMPTY.iter().count(), 0);
         assert_eq!(TwistSet::FULL.iter().collect::<Vec<_>>(), ALL_TWISTS);
+        assert_eq!(TwistSet::H0.iter().collect::<Vec<_>>(), H0_TWISTS);
+    }
+
+    #[test]
+    fn test_not_operator() {
+        let set = TwistSet::from_twists(&[Twist::L1, Twist::R1]);
+        let inv = !set;
+        assert!(!inv.contains(Twist::L1));
+        assert!(!inv.contains(Twist::R1));
+        assert_eq!(inv.count() + set.count(), TwistSet::FULL.count());
+    }
+
+    #[test]
+    fn test_bitor_assign_twistset() {
+        let mut a = TwistSet::from_twists(&[Twist::L1]);
+        let b = TwistSet::from_twists(&[Twist::R1, Twist::U2]);
+        a |= b;
+        assert_eq!(a, TwistSet::from_twists(&[Twist::L1, Twist::R1, Twist::U2]));
+    }
+
+    #[test]
+    fn test_bitand_assign_twistset() {
+        let mut a = TwistSet::from_twists(&[Twist::L1, Twist::R1]);
+        let b = TwistSet::from_twists(&[Twist::R1, Twist::F3]);
+        a &= b;
+        assert_eq!(a, TwistSet::from_twists(&[Twist::R1]));
+    }
+
+    #[test]
+    fn test_bitor_assign_twist() {
+        let mut set = TwistSet::EMPTY;
+        set |= Twist::B3;
+        assert_eq!(set, TwistSet::from_twists(&[Twist::B3]));
+    }
+
+    #[test]
+    fn test_bitand_assign_twist() {
+        let mut set = TwistSet::from_twists(&[Twist::L2, Twist::D3]);
+        set &= Twist::D3;
+        assert_eq!(set, TwistSet::from_twists(&[Twist::D3]));
     }
 }

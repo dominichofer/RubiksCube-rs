@@ -8,10 +8,9 @@ High-performance Rubik's Cube solver using **Kociemba's two-phase algorithm**. S
 ### Core Cube Representations
 The solver uses **three complementary cube representations** (see [architecture.mmd](../architecture.mmd)):
 
-1. **`CornerIndex`** - Corner permutation + orientation indices
-2. **`SubsetIndex`** - H0 subgroup state (slice edges + all corners in home position)
-3. **`CosetIndex`** - Coset representative (orientations + slice locations)
-4. **`Cube`** - Full state combining `SubsetIndex` + `CosetIndex`
+1. **`SubsetIndex`** - H0 subgroup state (slice edges + all corners in home position)
+2. **`CosetIndex`** - Coset representative (orientations + slice locations)
+3. **`Cube`** - Full state combining `SubsetIndex` + `CosetIndex`
 
 **Critical:** Each representation uses **index-based encoding** (e.g., `c_prm: usize`, `e_ori: usize`). These are NOT raw cubie arrays but compressed indices for table lookups.
 
@@ -25,7 +24,7 @@ The solver uses **three complementary cube representations** (see [architecture.
 - Uses `DistanceTable` for greedy best-first search
 - Much smaller state space
 
-### Precomputed Tables ([stored_tables.rs](../src/stored_tables.rs))
+### Precomputed Tables ([stored_tables.rs](../src/table/stored_tables.rs))
 Three massive lookup tables (loaded via `config.txt` paths):
 - **Corners table** (~88M entries) - Distance to solved for corner states
 - **Subset table** (~19.5B entries) - Distance in H0 subgroup  
@@ -33,7 +32,7 @@ Three massive lookup tables (loaded via `config.txt` paths):
 
 Tables are created on first run (slow) then memory-mapped from disk. **Data integrity verified** against OEIS sequences.
 
-### Twister System ([twister.rs](../src/twister.rs))
+### Twister System ([twister.rs](../src/index/twister.rs))
 The `Twister` struct holds **precomputed transition tables** for all 18 twist types on indices:
 ```rust
 twisted_c_prm(c_prm: usize, twist: Twist) -> usize
@@ -44,7 +43,7 @@ Enables O(1) state transitions without reconstructing cubie arrays. `Twistable` 
 ## Key Conventions
 
 ### Index Encoding
-All cube state uses **indices, not arrays**. Example from [cube.rs](../src/cube.rs#L78-L86):
+All cube state uses **indices, not arrays**. Example from [cube.rs](../src/index/cube.rs):
 ```rust
 SubsetIndex::index() -> (c_prm/2) * E_SLICE * E_NON_SLICE + e_non_slice_prm * E_SLICE + e_slice_prm
 ```
@@ -57,12 +56,6 @@ TwistSet::full()  // 0b111_111_111_111_111_111 (all 18 moves)
 TwistSet::h0()    // 0b010_010_111_111_010_010 (H0 moves only)
 ```
 Used extensively for pruning in Phase 1 search.
-
-### Parallel Table Generation
-Tables use Rayon `into_par_iter()` with atomic operations for breadth-first distance filling ([tables.rs](../src/tables.rs#L23-L43)). Pattern:
-```rust
-let table: Vec<AtomicU8> = (0..size).into_par_iter().map(|_| AtomicU8::new(SENTINEL)).collect();
-```
 
 ## Development Workflows
 
@@ -105,9 +98,3 @@ Tables use `memmap2` crate (see dependencies). To add new tables:
 - **Index arithmetic is tricky** - Off-by-one errors break parity constraints (causes panics in `from_index`)
 - **Parallel iteration order** - Use `AtomicU8` with `compare_exchange` for race-free table fills
 - **TwistSet filtering** - `relevant_twists` array prevents move reordering (F followed by B is illegal)
-
-## File Navigation
-- Cube state: [cube.rs](../src/cube.rs), [corners.rs](../src/corners.rs), [edges.rs](../src/edges.rs)
-- Solver logic: [two_phase.rs](../src/two_phase.rs), [coset_solver.rs](../src/coset_solver.rs)
-- Tables: [tables.rs](../src/tables.rs), [stored_tables.rs](../src/stored_tables.rs)
-- Performance: [benches/twist_bench.rs](../benches/twist_bench.rs)

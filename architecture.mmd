@@ -22,13 +22,6 @@ classDiagram
         }
     }
     namespace Indices {
-        class CornerIndex {
-            - c_prm
-            - c_ori
-            + from_index(idx)
-            + index()
-            + combine_indices(prm, ori)
-        }
         class SubsetIndex {
             - c_prm
             - e_slice_prm
@@ -61,7 +54,6 @@ classDiagram
     class DistanceTable {
         + distance(idx)
     }
-    DistanceTable ..> CornerIndex
     DistanceTable ..> SubsetIndex
     DistanceTable ..> CosetIndex
     DistanceTable ..> Twister
