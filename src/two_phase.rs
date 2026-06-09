@@ -94,21 +94,21 @@ impl<'a> TwoPhaseSolver<'a> {
         Err("No solution found".into())
     }
 
-    pub fn search_phase_2(&mut self, mut subset: SubsetIndex, depth: u8) -> bool {
+    pub fn search_phase_2(&mut self, mut subset_cube: SubsetCube, depth: u8) -> bool {
         self.phase_2_probes += 1;
 
-        let solution_distance = self.phase_2.distance(subset.index());
+        let solution_distance = self.phase_2.distance(subset_cube.index());
         if solution_distance > depth {
             return false;
         }
 
         for d in (1..=solution_distance).rev() {
             for twist in H0_TWISTS {
-                let next = subset.twisted(twist);
+                let next = subset_cube.twisted(twist);
                 let next_d = self.phase_2.distance(next.index());
                 if next_d < d {
                     self.twists.push(twist);
-                    subset = next;
+                    subset_cube = next;
                     break;
                 }
             }
@@ -120,7 +120,7 @@ impl<'a> TwoPhaseSolver<'a> {
         self.phase_1_probes += 1;
 
         if p1_depth == 0 {
-            return self.search_phase_2(cube.subset_index(), p2_depth);
+            return self.search_phase_2(cube.subset_cube(), p2_depth);
         }
 
         if p1_depth + p2_depth < 10 {

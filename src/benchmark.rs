@@ -50,8 +50,8 @@ fn main() {
 
     let mut corners = Corners::solved();
     let mut edges = Edges::solved();
-    let mut subset_index = SubsetIndex::solved();
-    let mut cube_index = Cube::solved();
+    let mut subset_cube = SubsetCube::solved();
+    let mut cube = Cube::solved();
 
     let mut rnd_twist = RandomTwistGen::new(42, &ALL_TWISTS);
     let mut rnd_subset_twist = RandomTwistGen::new(42, &H0_TWISTS);
@@ -88,7 +88,6 @@ fn main() {
             ))
         .collect();
 
-
     bench("Corners twist", &rnd_twists, |&t| corners = t * corners );
     bench("Corners conjugated_by", &rnd_rotation, |&r| corners = corners.conjugated_by(r) );
     bench("Corners from_indices", &corners_from_indices, |&(prm, ori)| corners = Corners::from_indices(prm, ori) );
@@ -117,16 +116,31 @@ fn main() {
     bench("Edges xy_prm_index", &rnd_edges, |e| { black_box(e.xy_prm_index()); });
     bench("Edges ori_index", &rnd_edges, |e| { black_box(e.ori_index()); });
 
-    bench("SubsetIndex twisted", &rnd_subset_twists, |&t| { subset_index = subset_index.twisted(t) });
-    bench("Cube twisted", &rnd_twists, |&t| { cube_index = cube_index.twisted(t) });
+    let subset_cube_index: Vec<usize> = (0..ITERATIONS)
+        .map(|_| rnd.random_range(0..SubsetCube::INDEX_SIZE))
+        .collect();
+    let rnd_subset_cubes= Vec::from_iter((0..ITERATIONS).map(|_| SubsetCube::solved().twisted_by(&rnd_subset_twist.gen_twists(100))));
+    bench("SubsetCube twisted", &rnd_subset_twists, |&t| { subset_cube = subset_cube.twisted(t) });
+    bench("SubsetCube from_index", &subset_cube_index, |&i| { black_box(SubsetCube::from_index(i)); });
+    bench("SubsetCube index", &rnd_subset_cubes, |c| { black_box(c.index()); });
+
+    bench("Cube twisted", &rnd_twists, |&t| { cube = cube.twisted(t) });
+
+    let cube_corner_index: Vec<usize> = (0..ITERATIONS)
+        .map(|_| rnd.random_range(0..Cube::CORNER_INDEX_SIZE))
+        .collect();
+    let cube_coset_index: Vec<usize> = (0..ITERATIONS)
+        .map(|_| rnd.random_range(0..Cube::COSETS_INDEX_SIZE))
+        .collect();
+    bench("Cube from_corner_index", &cube_corner_index, |&i| { black_box(Cube::from_corner_index(i)); });
+    bench("Cube from_coset_index", &cube_coset_index, |&i| { black_box(Cube::from_coset_index(i)); });
 
     let rnd_cubes= Vec::from_iter((0..ITERATIONS).map(|_| Cube::solved().twisted_by(&rnd_twist.gen_twists(100))));
     bench("Cube corner_index", &rnd_cubes, |c| { black_box(c.corner_index()); });
-    bench("Cube subset_index", &rnd_cubes, |c| { black_box(c.subset_index()); });
+    bench("Cube subset_cube", &rnd_cubes, |c| { black_box(c.subset_cube()); });
     bench("Cube coset_index", &rnd_cubes, |c| { black_box(c.coset_index()); });
 
     black_box(corners);
     black_box(edges);
-    black_box(subset_index);
-    black_box(cube_index);
+    black_box(cube);
 }

@@ -77,10 +77,10 @@ fn subset_distance_table(path: &str) -> DistanceTable {
     } else {
         table = DistanceTable::create(
             &H0_TWISTS,
-            SubsetIndex::solved(),
-            |s: SubsetIndex| s.index(),
-            |i: usize| SubsetIndex::from_index(i),
-            SubsetIndex::INDEX_SIZE,
+            SubsetCube::solved(),
+            |s: SubsetCube| s.index(),
+            |i: usize| SubsetCube::from_index(i),
+            SubsetCube::INDEX_SIZE,
         );
         println!("Subset table created in: {:?}", time.elapsed());
 
@@ -89,7 +89,7 @@ fn subset_distance_table(path: &str) -> DistanceTable {
 
     // Verify data integrity
     let mut counts = vec![0u64; 19];
-    for i in 0..SubsetIndex::INDEX_SIZE {
+    for i in 0..SubsetCube::INDEX_SIZE {
         counts[table.distance(i) as usize] += 1;
     }
     assert_eq!(

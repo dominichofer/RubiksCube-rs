@@ -1,4 +1,4 @@
-use super::{TWISTER, Twistable, SubsetIndex};
+use super::{TWISTER, Twistable, SubsetCube};
 use crate::{LocPrm, cubies::*};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -46,8 +46,8 @@ impl Cube {
         }
     }
 
-    pub fn subset_index(&self) -> SubsetIndex {
-        SubsetIndex {
+    pub fn subset_cube(&self) -> SubsetCube {
+        SubsetCube {
             c_prm: self.c_prm,
             xy_prm: TWISTER.e_xy_prm(self.x_loc_prm, self.y_loc_prm),
             z_prm: self.z_loc_prm.prm(),
@@ -148,16 +148,6 @@ mod tests {
             assert_eq!(Cube::from_corner_index(rnd_index).corner_index(), rnd_index);
         }
     }
-
-    // Tests 'subset_index' and 'from_subset_index'
-    // #[test]
-    // fn test_subset_index() {
-    //     let mut rnd = StdRng::seed_from_u64(42);
-    //     for _ in 0..100_000 {
-    //         let rnd_index = rnd.random_range(0..Cube::SUBSET_INDEX_SIZE);
-    //         assert_eq!(Cube::from_subset_index(rnd_index).subset_index(), rnd_index);
-    //     }
-    // }
 
     // Tests 'coset_index' and 'from_coset_index'
     #[test]

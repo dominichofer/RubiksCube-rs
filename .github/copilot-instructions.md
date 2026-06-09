@@ -5,14 +5,6 @@ High-performance Rubik's Cube solver using **Kociemba's two-phase algorithm**. S
 
 ## Architecture
 
-### Core Cube Representations
-The solver uses **three complementary cube representations** (see [architecture.mmd](../architecture.mmd)):
-
-1. **`SubsetIndex`** - H0 subgroup state (slice edges + all corners in home position)
-3. **`Cube`** - Full state
-
-**Critical:** Each representation uses **index-based encoding** (e.g., `c_prm: usize`, `e_ori: usize`). These are NOT raw cubie arrays but compressed indices for table lookups.
-
 ### Two-Phase Solver ([two_phase.rs](../src/two_phase.rs))
 **Phase 1:** Find moves to reach H0 subgroup (subset cube)
 - Uses `DirectionsTable` for pruning with twists that decrease/increase distance
@@ -40,13 +32,6 @@ twisted_e_ori(e_ori: usize, twist: Twist) -> usize
 Enables O(1) state transitions without reconstructing cubie arrays. `Twistable` trait provides `.twisted()` method.
 
 ## Key Conventions
-
-### Index Encoding
-All cube state uses **indices, not arrays**. Example from [cube.rs](../src/index/cube.rs):
-```rust
-SubsetIndex::index() -> (c_prm/2) * E_SLICE * E_NON_SLICE + e_non_slice_prm * E_SLICE + e_slice_prm
-```
-Division by 2 exploits parity constraints (corner/edge permutations must have matching parity).
 
 ### TwistSet Bitmask Pattern
 `TwistSet` uses bit positions 0-17 for twists + bit 18 for `Twist::None`:

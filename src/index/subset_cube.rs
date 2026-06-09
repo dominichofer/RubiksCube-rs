@@ -1,16 +1,15 @@
 use super::Twistable;
 use crate::TWISTER;
 use crate::cubies::*;
-use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct SubsetIndex {
+pub struct SubsetCube {
     pub c_prm: usize, // 8! = 40'320
     pub xy_prm: usize, // 8! = 40'320
     pub z_prm: usize, // 4! = 24
 }
 
-impl SubsetIndex {
+impl SubsetCube {
     pub const INDEX_SIZE: usize = Corners::PRM_SIZE / 2 * factorial(8) * factorial(4);  // 19'508'428'800
 
     pub fn solved() -> Self {
@@ -24,19 +23,15 @@ impl SubsetIndex {
     }
 
     pub fn index(&self) -> usize {
-        let ret = (self.c_prm / 2) * factorial(8) * factorial(4)
+        (self.c_prm / 2) * factorial(8) * factorial(4)
             + self.xy_prm * factorial(4)
-            + self.z_prm;
-        // assert!(ret < Self::INDEX_SIZE);
-        ret
+            + self.z_prm
     }
 
     pub fn from_index(mut index: usize) -> Self {
-        // assert!(index < Self::INDEX_SIZE);
-        let z_prm = index % factorial(4);
-        index /= factorial(4);
-        let xy_prm = index % factorial(8);
-        index /= factorial(8);
+        assert!(index < Self::INDEX_SIZE);
+        let z_prm = index % factorial(4); index /= factorial(4);
+        let xy_prm = index % factorial(8); index /= factorial(8);
         let mut c_prm = index * 2;
         let e_even_prm = is_even_permutation(xy_prm)
             ^ is_even_permutation(z_prm)
@@ -62,13 +57,7 @@ impl SubsetIndex {
     }
 }
 
-impl fmt::Display for SubsetIndex {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "c_prm: {}, xy_prm: {}, z_prm: {}", self.c_prm, self.xy_prm, self.z_prm)
-    }
-}
-
-impl Twistable for SubsetIndex {
+impl Twistable for SubsetCube {
     fn twisted(&self, twist: Twist) -> Self {
         self.twisted(twist)
     }
@@ -87,8 +76,8 @@ mod tests {
     fn test_subset_index() {
         let mut rnd = StdRng::seed_from_u64(42);
         for _ in 0..100_000 {
-            let rnd_index = rnd.random_range(0..SubsetIndex::INDEX_SIZE);
-            assert_eq!(SubsetIndex::from_index(rnd_index).index(), rnd_index);
+            let rnd_index = rnd.random_range(0..SubsetCube::INDEX_SIZE);
+            assert_eq!(SubsetCube::from_index(rnd_index).index(), rnd_index);
         }
     }
 }
