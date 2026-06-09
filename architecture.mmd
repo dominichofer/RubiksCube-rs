@@ -30,14 +30,6 @@ classDiagram
             + index()
             + is_solved()
         }
-        class CosetIndex {
-            - c_ori
-            - e_ori
-            - e_slice_loc
-            + from_index(idx)
-            + index()
-            + in_subset()
-        }
     }
 
     class Twister {
@@ -55,7 +47,6 @@ classDiagram
         + distance(idx)
     }
     DistanceTable ..> SubsetIndex
-    DistanceTable ..> CosetIndex
     DistanceTable ..> Twister
 
     class DirectionTable {
@@ -64,7 +55,6 @@ classDiagram
         + more_distance(idx) TwistSet
     }
     DirectionTable ..> DistanceTable
-    DirectionTable ..> CosetIndex
 
     class TwoPhaseSolver {
         + solve(cube) Twists

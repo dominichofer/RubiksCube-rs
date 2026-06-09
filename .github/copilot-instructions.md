@@ -9,8 +9,7 @@ High-performance Rubik's Cube solver using **Kociemba's two-phase algorithm**. S
 The solver uses **three complementary cube representations** (see [architecture.mmd](../architecture.mmd)):
 
 1. **`SubsetIndex`** - H0 subgroup state (slice edges + all corners in home position)
-2. **`CosetIndex`** - Coset representative (orientations + slice locations)
-3. **`Cube`** - Full state combining `SubsetIndex` + `CosetIndex`
+3. **`Cube`** - Full state
 
 **Critical:** Each representation uses **index-based encoding** (e.g., `c_prm: usize`, `e_ori: usize`). These are NOT raw cubie arrays but compressed indices for table lookups.
 

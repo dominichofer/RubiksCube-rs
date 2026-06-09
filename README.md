@@ -237,7 +237,6 @@ Edges z_prm_index             20.7 ns
 Edges xy_prm_index            24.9 ns
 Edges ori_index                3.9 ns
 SubsetIndex twisted           15.6 ns
-CosetIndex twisted             7.2 ns
 CubeIndex twisted             14.1 ns
 ```
 

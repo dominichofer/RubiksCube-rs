@@ -90,8 +90,7 @@ fn subset_distance_table(path: &str) -> DistanceTable {
     // Verify data integrity
     let mut counts = vec![0u64; 19];
     for i in 0..SubsetIndex::INDEX_SIZE {
-        let d = table.distance(i);
-        counts[d as usize] += 1;
+        counts[table.distance(i) as usize] += 1;
     }
     assert_eq!(
         counts,
@@ -114,10 +113,10 @@ fn coset_direction_table(path: &str) -> DirectionsTable {
     } else {
         table = DirectionsTable::create(
             &ALL_TWISTS,
-            CosetIndex::solved(),
-            |c: CosetIndex| c.index(),
-            |i: usize| CosetIndex::from_index(i),
-            CosetIndex::INDEX_SIZE,
+            Cube::solved(),
+            |c: Cube| c.coset_index(),
+            |i: usize| Cube::from_coset_index(i),
+            Cube::COSETS_INDEX_SIZE,
         );
         println!("Coset table created in: {:?}", time.elapsed());
 
@@ -126,9 +125,8 @@ fn coset_direction_table(path: &str) -> DirectionsTable {
 
     // Verify data integrity
     let mut counts = vec![0u64; 13];
-    for i in 0..CosetIndex::INDEX_SIZE {
-        let d = table.distance(i);
-        counts[d as usize] += 1;
+    for i in 0..Cube::COSETS_INDEX_SIZE {
+        counts[table.distance(i) as usize] += 1;
     }
     assert_eq!(counts, vec![1, 4, 50, 592, 7156, 87236, 1043817, 12070278, 124946368, 821605960, 1199128738, 58202444, 476]);
 

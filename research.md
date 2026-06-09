@@ -73,4 +73,4 @@ Task 2: Randomly pick configurations from the subset table and check if the brut
 Task 3: If it does, use this information to improve the subset table.
 
 ## Q3: What is rokicki doing?
-His kocsymm is my CosetIndex
+His kocsymm is my coset_index
