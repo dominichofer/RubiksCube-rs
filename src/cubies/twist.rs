@@ -40,31 +40,35 @@ pub const H0_TWISTS: [Twist; 10] = [
     Twist::B2,
 ];
 
-impl Twist {
-    pub fn from(value: i32) -> Self {
+impl TryFrom<u32> for Twist {
+    type Error = ();
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
-            0 => Twist::L1,
-            1 => Twist::L2,
-            2 => Twist::L3,
-            3 => Twist::R1,
-            4 => Twist::R2,
-            5 => Twist::R3,
-            6 => Twist::U1,
-            7 => Twist::U2,
-            8 => Twist::U3,
-            9 => Twist::D1,
-            10 => Twist::D2,
-            11 => Twist::D3,
-            12 => Twist::F1,
-            13 => Twist::F2,
-            14 => Twist::F3,
-            15 => Twist::B1,
-            16 => Twist::B2,
-            17 => Twist::B3,
-            _ => panic!("Invalid twist value: {}", value),
+            0 => Ok(Twist::L1),
+            1 => Ok(Twist::L2),
+            2 => Ok(Twist::L3),
+            3 => Ok(Twist::R1),
+            4 => Ok(Twist::R2),
+            5 => Ok(Twist::R3),
+            6 => Ok(Twist::U1),
+            7 => Ok(Twist::U2),
+            8 => Ok(Twist::U3),
+            9 => Ok(Twist::D1),
+            10 => Ok(Twist::D2),
+            11 => Ok(Twist::D3),
+            12 => Ok(Twist::F1),
+            13 => Ok(Twist::F2),
+            14 => Ok(Twist::F3),
+            15 => Ok(Twist::B1),
+            16 => Ok(Twist::B2),
+            17 => Ok(Twist::B3),
+            _ => Err(()),
         }
     }
+}
 
+impl Twist {
     pub fn inverse(&self) -> Self {
         match self {
             Twist::L2 | Twist::R2 | Twist::U2 | Twist::D2 | Twist::F2 | Twist::B2 => *self,

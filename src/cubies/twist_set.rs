@@ -12,9 +12,9 @@ impl Iterator for TwistBitsIter {
             return None;
         }
 
-        let index = self.bits.trailing_zeros() as i32;
+        let index = self.bits.trailing_zeros();
         self.bits &= self.bits - 1;  // Clear the least significant set bit
-        Some(Twist::from(index))
+        Some(Twist::try_from(index).unwrap())
     }
 }
 
