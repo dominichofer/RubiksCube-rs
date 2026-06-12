@@ -46,6 +46,14 @@ impl TwistSet {
         self.bits as u64
     }
 
+    pub fn remove(&mut self, t: TwistSet) {
+        self.bits &= !t.bits;
+    }
+
+    pub fn keep_only(&mut self, t: TwistSet) {
+        self.bits &= t.bits;
+    }
+
     pub fn contains(&self, t: Twist) -> bool {
         self.bits & (1 << t as u32) != 0
     }

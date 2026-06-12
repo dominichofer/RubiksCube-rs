@@ -11,10 +11,8 @@ pub struct TwoPhaseSolver<'a> {
     search_depths: HashMap<u8, usize>,
     phase_1_probes: usize,
     phase_2_probes: usize,
-    subset_cuts: usize,
     corner_probes: usize,
     corner_cuts: usize,
-    no_twist_cut: usize,
 }
 
 impl<'a> TwoPhaseSolver<'a> {
@@ -31,10 +29,8 @@ impl<'a> TwoPhaseSolver<'a> {
             twists: Vec::new(),
             phase_1_probes: 0,
             phase_2_probes: 0,
-            subset_cuts: 0,
             corner_probes: 0,
             corner_cuts: 0,
-            no_twist_cut: 0,
         }
     }
 
@@ -48,10 +44,8 @@ impl<'a> TwoPhaseSolver<'a> {
         }
         println!("Phase 1 probes: {}", self.phase_1_probes.to_formatted_string(locale));
         println!("Phase 2 probes: {}", self.phase_2_probes.to_formatted_string(locale));
-        println!("Subset cuts: {}", self.subset_cuts.to_formatted_string(locale));
         println!("Corner probes: {}", self.corner_probes.to_formatted_string(locale));
         println!("Corner cuts: {} ({:.2}%)", self.corner_cuts.to_formatted_string(locale), (self.corner_cuts as f64 / self.corner_probes as f64) * 100.0);
-        println!("No twist cuts: {}", self.no_twist_cut.to_formatted_string(locale));
     }
 
     pub fn solve(&mut self, cube: Cube, max_solution_length: u8) -> Result<Vec<Twist>, String> {
@@ -133,26 +127,29 @@ impl<'a> TwoPhaseSolver<'a> {
         }
 
         let mut twists;
-        if let Some(previous_twist) = self.twists.last() {
-            twists = unique_twists_after(*previous_twist);
+        if let Some(&previous_twist) = self.twists.last() {
+            twists = unique_twists_after(previous_twist);
         } else {
             twists = TwistSet::FULL;
+        }
+        if p1_depth == 1 {
+            twists.remove(TwistSet::H0);
         }
 
         let coset_index = cube.coset_index();
         let subset_distance = self.phase_1.distance(coset_index);
-        if p1_depth == subset_distance {
-            twists &= self.phase_1.less_distance(coset_index);
+        let slack = p1_depth - subset_distance;
+        if slack == 0 {
+            // Without slack, we need to take the shortest path.
+            twists.keep_only(self.phase_1.less_distance(coset_index));
         }
-        if p1_depth == subset_distance + 1 {
-            twists &= !self.phase_1.more_distance(coset_index);
+        else if slack == 1 {
+            // With 1 move of slack, we cannot take any moves that increase the distance.
+            twists.remove(self.phase_1.more_distance(coset_index));
         }
-        if p1_depth == 1 {
-            twists &= !TwistSet::H0;
-        }
-        if twists.is_empty() {
-            self.no_twist_cut += 1;
-            return false;
+        if subset_distance == 1 && p1_depth > 1 {
+            // If we're 1 move away from the subset, but have more than 1 move to get there, we must not take the move that gets us there immediately.
+            twists.remove(self.phase_1.less_distance(coset_index));
         }
         
         for twist in twists.iter() {
