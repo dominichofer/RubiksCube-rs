@@ -45,7 +45,7 @@ impl Cube {
             z_loc_prm: E.loc_prm(Axis::Z),
         }
     }
-
+    
     pub fn subset_cube(&self) -> SubsetCube {
         SubsetCube {
             c_prm: self.c_prm,
@@ -79,23 +79,6 @@ impl Cube {
         }
     }
 
-    pub fn twisted(&self, twist: Twist) -> Self {
-        Cube {
-            c_ori: TWISTER.twisted_c_ori(self.c_ori, twist),
-            c_prm: TWISTER.twisted_c_prm(self.c_prm, twist),
-            e_ori: TWISTER.twisted_e_ori(self.e_ori, twist),
-            x_loc_prm: TWISTER.twisted_e_loc_prm(self.x_loc_prm, twist),
-            y_loc_prm: TWISTER.twisted_e_loc_prm(self.y_loc_prm, twist),
-            z_loc_prm: TWISTER.twisted_e_loc_prm(self.z_loc_prm, twist),
-        }
-    }
-
-    pub fn twisted_by(&self, twists: &[Twist]) -> Self {
-        twists
-            .iter()
-            .fold(*self, |cube, &twist| cube.twisted(twist))
-    }
-
     pub fn conjugated_by(&self, rot: Axis) -> Self {
         let corners = Corners::from_indices(self.c_prm, self.c_ori).conjugated_by(rot);
         let edges = Edges::from_indices(self.x_loc_prm, self.y_loc_prm, self.z_loc_prm, self.e_ori).conjugated_by(rot);
@@ -125,12 +108,22 @@ impl Cube {
 }
 
 impl Twistable for Cube {
+    #[inline(always)]
     fn twisted(&self, twist: Twist) -> Self {
-        self.twisted(twist)
+        Cube {
+            c_ori: TWISTER.twisted_c_ori(self.c_ori, twist),
+            c_prm: TWISTER.twisted_c_prm(self.c_prm, twist),
+            e_ori: TWISTER.twisted_e_ori(self.e_ori, twist),
+            x_loc_prm: TWISTER.twisted_e_loc_prm(self.x_loc_prm, twist),
+            y_loc_prm: TWISTER.twisted_e_loc_prm(self.y_loc_prm, twist),
+            z_loc_prm: TWISTER.twisted_e_loc_prm(self.z_loc_prm, twist),
+        }
     }
 
     fn twisted_by(&self, twists: &[Twist]) -> Self {
-        self.twisted_by(twists)
+        twists
+            .iter()
+            .fold(*self, |cube, &twist| cube.twisted(twist))
     }
 }
 
