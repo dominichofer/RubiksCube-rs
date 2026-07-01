@@ -112,31 +112,24 @@ impl Twister {
         Self { c_ori, c_prm, e_ori, e_loc_prm, subset_e_xy_prm, subset_e_z_prm, e_xy_prm }
     }
 
-    #[inline(always)]
     pub fn twisted_c_ori(&self, c_ori: usize, twist: Twist) -> usize {
         self.c_ori[c_ori * COUNT + twist as usize] as usize
     }
-    #[inline(always)]
     pub fn twisted_c_prm(&self, c_prm: usize, twist: Twist) -> usize {
         self.c_prm[c_prm * COUNT + twist as usize] as usize
     }
-    #[inline(always)]
     pub fn twisted_e_ori(&self, e_ori: usize, twist: Twist) -> usize {
         self.e_ori[e_ori * COUNT + twist as usize] as usize
     }
-    #[inline(always)]
     pub fn twisted_e_loc_prm(&self, e_loc_prm: LocPrm, twist: Twist) -> LocPrm {
         self.e_loc_prm[e_loc_prm.index() * COUNT + twist as usize]
     }
-    #[inline(always)]
     pub fn twisted_subset_e_xy_prm(&self, e_xy_prm: usize, twist: Twist) -> usize {
         self.subset_e_xy_prm[e_xy_prm * COUNT + twist as usize] as usize
     }
-    #[inline(always)]
     pub fn twisted_subset_e_z_prm(&self, e_z_prm: usize, twist: Twist) -> usize {
         self.subset_e_z_prm[e_z_prm * COUNT + twist as usize] as usize
     }
-    #[inline(always)]
     pub fn e_xy_prm(&self, x_loc_prm: LocPrm, y_loc_prm: LocPrm) -> usize {
         self.e_xy_prm[x_loc_prm.index() * Edges::LOC_PRM_SIZE + y_loc_prm.index()] as usize
     }

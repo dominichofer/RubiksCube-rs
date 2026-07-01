@@ -18,7 +18,7 @@ impl Iterator for TwistBitsIter {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TwistSet {
     bits: u32, // Each bit represents whether a twist is included in the set
 }

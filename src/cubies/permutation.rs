@@ -60,7 +60,7 @@ pub fn is_even_permutation(lexicographical_index: usize) -> bool {
     sum % 2 == 0
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Permutation<const LEN: usize> {
     map: [usize; LEN],
 }

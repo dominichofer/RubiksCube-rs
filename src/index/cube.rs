@@ -1,14 +1,14 @@
 use super::{TWISTER, Twistable, SubsetCube};
 use crate::{LocPrm, cubies::*};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Cube {
     c_ori: usize, // 3^7 = 2'187 (defines coset index)
     c_prm: usize, // 8! = 40'320 (defines subset index)
     e_ori: usize, // 2^11 = 2'048 (defines coset index)
-    x_loc_prm: LocPrm, // (12 choose 4) * 4! = 11'880
-    y_loc_prm: LocPrm, // (12 choose 4) * 4! = 11'880
-    z_loc_prm: LocPrm, // (12 choose 4) * 4! == 11'880
+    x_loc_prm: LocPrm, // (12 choose 4) * 4! = 11'880 (defines subset index)
+    y_loc_prm: LocPrm, // (12 choose 4) * 4! = 11'880 (defines subset index)
+    z_loc_prm: LocPrm, // (12 choose 4) * 4! == 11'880 (loc defines coset index, prm defines subset index)
 }
 
 impl Cube {

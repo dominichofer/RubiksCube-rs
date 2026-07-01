@@ -2,7 +2,7 @@ use super::permutation::*;
 use std::ops::{Add, Mul};
 use std::fmt;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Orientation<const LEN: usize, const BASE: usize> {
     values: [usize; LEN],
 }

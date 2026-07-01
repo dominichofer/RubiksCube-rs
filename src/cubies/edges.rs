@@ -4,7 +4,7 @@ use super::orientation::*;
 use super::twist::*;
 use std::ops::Mul;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct LocPrm {
     value: u16,
 }
@@ -51,7 +51,7 @@ impl LocPrm {
 ///  8 /       9 /
 ///  |7        |6
 ///  +----3----+
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Edges {
     prm: Permutation<12>,
     ori: Orientation<12, 2>,

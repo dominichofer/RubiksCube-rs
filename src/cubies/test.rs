@@ -6,7 +6,7 @@ mod tests {
     use crate::twist::*;
     use std::ops::Mul;
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     struct Cubies {
         pub corners: Corners,
         pub edges: Edges,

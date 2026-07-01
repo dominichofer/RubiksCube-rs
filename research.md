@@ -46,8 +46,6 @@ Cube 3x3 from https://oeis.org/A080601
 | Sum |                          | 88'179'840 | 19'508'428'800 | 2'217'093'120 |
 
 
-With "wsl ./twophase -s 20 -q < test_pos_big.txt", cube20src can solve test_pos_big.txt in 3.75 seconds. That's 375 us per pos on average.
-
 # Answered research questions
 
 ## Q1: With "unique_twists_after", what's the shortest distance of a subset config to an other subset config?
@@ -60,6 +58,12 @@ Yes.
 {cube, cube.rotated_colours(Rotation::L), cube.rotated_colours(Rotation::F)} are uncorrelated.
 All other colour rotations are correlated with one of the former three.
 See "cargo run --release --bin correlation"
+
+## Q4: cube20src can do:
+With "wsl ./twophase -s 20 -q < test_pos_....txt"
+Solved 10'000 sequences in 7.21284 seconds with 7'308'506 probes.
+Solved 100'000 sequences in 41.0652 seconds with 80'213'112 probes.
+Solved 1'000'000 sequences in 371.121 seconds with 790'457'803 probes.
 
 # Open research questions
 
@@ -74,3 +78,11 @@ Task 3: If it does, use this information to improve the subset table.
 
 ## Q3: What is rokicki doing?
 His kocsymm is my coset_index
+
+
+
+
+41M x table[c_ori * X + e_ori * Y + z_loc] (table size: 16.5 GB)
+33M * (avg twists) x  cube.twisted (115 ns)
+6M x multiple subset.twisted (13.0 ns) & table[c_prm * X + xy_prm * Y + z_prm] (table size: 18.1 GB), 
+3.2M x table[c_prm * X + c_ori]  (table size: 84 MB)

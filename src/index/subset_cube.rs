@@ -2,7 +2,7 @@ use super::Twistable;
 use crate::TWISTER;
 use crate::cubies::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SubsetCube {
     pub c_prm: usize, // 8! = 40'320
     pub xy_prm: usize, // 8! = 40'320

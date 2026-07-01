@@ -1,6 +1,5 @@
 use crate::*;
 use num_format::ToFormattedString;
-use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct TwoPhaseSolver<'a> {
@@ -8,7 +7,6 @@ pub struct TwoPhaseSolver<'a> {
     phase_2: &'a DistanceTable,
     corners: &'a DistanceTable,
     twists: Vec<Twist>,
-    search_depths: HashMap<u8, usize>,
     phase_1_probes: usize,
     phase_2_probes: usize,
     corner_probes: usize,
@@ -25,7 +23,6 @@ impl<'a> TwoPhaseSolver<'a> {
             phase_1,
             phase_2,
             corners,
-            search_depths: HashMap::new(),
             twists: Vec::new(),
             phase_1_probes: 0,
             phase_2_probes: 0,
@@ -36,12 +33,6 @@ impl<'a> TwoPhaseSolver<'a> {
 
     pub fn print_stats(&self) {
         let locale = &num_format::Locale::de_CH;
-        println!("Search depths:");
-        let mut sorted_depths: Vec<_> = self.search_depths.iter().collect();
-        sorted_depths.sort_by_key(|(depth, _)| *depth);
-        for (depth, count) in sorted_depths {
-            println!("  Depth {}: {}", depth, count.to_formatted_string(locale));
-        }
         println!("Phase 1 probes: {}", self.phase_1_probes.to_formatted_string(locale));
         println!("Phase 2 probes: {}", self.phase_2_probes.to_formatted_string(locale));
         println!("Corner probes: {}", self.corner_probes.to_formatted_string(locale));
@@ -76,7 +67,6 @@ impl<'a> TwoPhaseSolver<'a> {
                 if subset_distance > p1_depth {
                     continue;
                 }
-                *self.search_depths.entry(p1_depth).or_insert(0) += 1;
                 let result = self.search_phase_1(cube, p1_depth, max_solution_length - p1_depth);
                 if result {
                     let drained_solution: Vec<Twist> = self.twists.drain(..).collect();
@@ -113,10 +103,6 @@ impl<'a> TwoPhaseSolver<'a> {
     fn search_phase_1(&mut self, cube: Cube, p1_depth: u8, p2_depth: u8) -> bool {
         self.phase_1_probes += 1;
 
-        if p1_depth == 0 {
-            return self.search_phase_2(cube.subset_cube(), p2_depth);
-        }
-
         if p1_depth + p2_depth < 10 {
             self.corner_probes += 1;
             let corner_distance = self.corners.distance(cube.corner_index());
@@ -124,6 +110,10 @@ impl<'a> TwoPhaseSolver<'a> {
                 self.corner_cuts += 1;
                 return false;
             }
+        }
+
+        if p1_depth == 0 {
+            return self.search_phase_2(cube.subset_cube(), p2_depth);
         }
 
         let mut twists;

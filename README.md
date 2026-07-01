@@ -135,7 +135,7 @@ cargo run --release --bin rubikscube <file>
 
 The file is expected to contain a space-separated sequence of twists on each line of the file. Each line is interpreted as the sequence of twists that are applied to a solved cube. The result is interpreted as an input cube state.
 
-This project comes with two files:
+This project comes with multiple files:
 
 - `test_pos_small.txt` contains 1'000 input sequences. Containing:
   - 1 empty sequence
@@ -144,71 +144,42 @@ This project comes with two files:
   - the [superflip](https://en.wikipedia.org/wiki/Superflip) sequence
   - the rest are randomly generated sequences
 - `test_pos_10k.txt` contains 10'000 randomly generated sequences
+- `test_pos_100k.txt` contains 100'000 randomly generated sequences
+- `test_pos_1000k.txt` contains 1000'000 randomly generated sequences
 
 To run them, run
 ```bash
 cargo run --release --bin rubikscube test_pos_small.txt
 cargo run --release --bin rubikscube test_pos_10k.txt
+cargo run --release --bin rubikscube test_pos_100k.txt
+cargo run --release --bin rubikscube test_pos_1000k.txt
 ```
 
-Here's an example output of `test_pos_10k.txt` on an AMD Ryzen 9 9950X3D 16-Core Processor with HT and DDR5 RAM with 4x 32-bit channels at 3600 MT/s.
-If solved `test_pos_10k.txt` in 5.1.8s (1’960 cubes per second) with a single thread.
+Here's an example output of `test_pos_100k.txt` on an AMD Ryzen 9 9950X3D 16-Core Processor with HT and DDR5 RAM with 4x 32-bit channels at 3600 MT/s.
 ```
-Corners table loaded in: 20.5527ms
-Subset table loaded in: 3.3475454s
-Coset table loaded in: 5.5890508s
-Total time taken: 4.0622122s
-Average time per solve: 406.221µs
-Search depths:
-  Depth 5: 1
-  Depth 6: 31
-  Depth 7: 331
-  Depth 8: 3’004
-  Depth 9: 18’549
-  Depth 10: 28’799
-  Depth 11: 10’384
-  Depth 12: 1’304
-  Depth 13: 26
-Phase 1 probes: 41’926’051
-Phase 2 probes: 6’521’976
-Subset cuts: 0
-Corner probes: 3’204’916
-Corner cuts: 757’023 (23.62%)
-No twist cuts: 7’251’917
+Corners table loaded in: 21.425ms
+Subset table loaded in: 3.4001138s
+Coset table loaded in: 5.9552021s
+Total time taken: 38.2318628s
+Average time per solve: 382.318µs
+Phase 1 probes: 438’334’884
+Phase 2 probes: 48’126’735
+Corner probes: 92’388’454
+Corner cuts: 28’057’375 (30.37%)
 ```
 
 Here's an example output of `test_pos_1000k.txt`
 ```
-Corners table loaded in: 19.5791ms
-Subset table loaded in: 3.3308001s
-Coset table loaded in: 5.5211043s
-Total time taken: 416.1073947s
-Average time per solve: 416.107µs
-Search depths:
-  Depth 4: 19
-  Depth 5: 226
-  Depth 6: 2’858
-  Depth 7: 31’083
-  Depth 8: 309’626
-  Depth 9: 1’854’509
-  Depth 10: 2’853’725
-  Depth 11: 1’055’209
-  Depth 12: 138’029
-  Depth 13: 3’289
-  Depth 14: 4
-Phase 1 probes: 4’462’756’553
-Phase 2 probes: 682’582’666
-Subset cuts: 0
-Corner probes: 370’546’203
-Corner cuts: 91’704’115 (24.75%)
-No twist cuts: 770’409’921
+Corners table loaded in: 21.3063ms
+Subset table loaded in: 3.7992586s
+Coset table loaded in: 5.7837773s
+Total time taken: 394.3724944s
+Average time per solve: 394.372µs
+Phase 1 probes: 4’363’693’600
+Phase 2 probes: 481’014’171
+Corner probes: 917’360’424
+Corner cuts: 278’059’113 (30.31%)
 ```
-
-41M x table[c_ori * X + e_ori * Y + z_loc] (table size: 16.5 GB)
-33M * (avg twists) x  cube.twisted (115 ns)
-6M x multiple subset.twisted (13.0 ns) & table[c_prm * X + xy_prm * Y + z_prm] (table size: 18.1 GB), 
-3.2M x table[c_prm * X + c_ori]  (table size: 84 MB)
-
 
 ### Running Benchmarks
 
@@ -219,39 +190,46 @@ cargo run --release --bin benchmark
 
 Here's an example output of an AMD Ryzen 9 9950X3D 16-Core Processor with DDR5 RAM at 3600 MT/s
 ```
-nth_permutation (len 4)       40.7 ns
-nth_permutation (len 8)       70.6 ns
-permutation_index (len 4)      5.2 ns
-permutation_index (len 8)      9.9 ns
-nth_combination (12, 4)       52.4 ns
-nth_combination2 (12, 4)      32.0 ns
-encode (base 2)               14.1 ns
-encode (base 3)               12.1 ns
-decode (base 2)               36.9 ns
-decode (base 3)               29.9 ns
-Corners twist                 25.7 ns
-Corners conjugated_by         61.7 ns
-Corners from_indices         122.8 ns
+Corners table loaded in: 21.382ms
+Subset table loaded in: 3.439301s
+Coset table loaded in: 6.0979665s
+nth_permutation (len 4)       39.1 ns
+nth_permutation (len 8)       71.3 ns
+nth_combination (12, 4)       54.1 ns
+nth_combination2 (12, 4)      30.0 ns
+permutation_index (len 4)      5.1 ns
+permutation_index (len 8)      9.8 ns
+encode (base 2)               13.6 ns
+encode (base 3)               12.2 ns
+decode (base 2)               41.5 ns
+decode (base 3)               34.1 ns
+Corners twist                 26.1 ns
+Corners conjugated_by         61.6 ns
+Corners from_indices         126.1 ns
 Corners prm_index              7.4 ns
-Corners ori_index              5.5 ns
-Edges twist                   26.5 ns
-Edges conjugated_by           69.4 ns
-Edges from_indices           326.2 ns
-Edges from_subset_indices    107.5 ns
-Edges x_loc_prm_index         30.6 ns
-Edges y_loc_prm_index         31.3 ns
-Edges z_loc_prm_index         30.6 ns
-Edges xy_prm_index            24.8 ns
-Edges ori_index                4.5 ns
-SubsetCube twisted            13.0 ns
-SubsetCube from_index         18.2 ns
-SubsetCube index               1.0 ns
-Cube twisted                  14.5 ns
-Cube from_corner_index        31.3 ns
-Cube from_coset_index         31.9 ns
-Cube corner_index              0.8 ns
-Cube subset_cube              15.2 ns
-Cube coset_index               1.1 ns
+Corners ori_index              5.4 ns
+Edges twist                   26.8 ns
+Edges conjugated_by           69.9 ns
+Edges from_indices           337.1 ns
+Edges from_subset_indices    118.5 ns
+Edges x_loc_prm_index         31.5 ns
+Edges y_loc_prm_index         31.6 ns
+Edges z_loc_prm_index         31.7 ns
+Edges xy_prm_index            26.2 ns
+Edges ori_index                4.4 ns
+SubsetCube twisted            13.4 ns
+SubsetCube from_index         18.0 ns
+SubsetCube index               0.8 ns
+Cube twisted                   8.2 ns
+Cube from_corner_index        34.0 ns
+Cube from_coset_index         33.2 ns
+Cube corner_index              0.7 ns
+Cube subset_cube              16.2 ns
+Cube coset_index               0.8 ns
+Corners distance               9.6 ns
+Coset distance                79.0 ns
+Subset distance               29.1 ns
+TwoPhaseSolver phase_2      3234.3 ns
 ```
 
 ### Running the GUI

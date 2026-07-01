@@ -22,7 +22,7 @@ use std::ops::Mul;
 /// twisted relative to its solved state. The sum of all 8 corner orientations
 /// is always 0 mod 3 (parity constraint).
 ///
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Corners {
     prm: Permutation<8>,
     ori: Orientation<8, 3>,

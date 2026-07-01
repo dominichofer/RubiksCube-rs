@@ -7,7 +7,7 @@
 ///   | ↓     ↑ |  +
 ///   |   D→  R | /
 ///   +---------+
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Twist {
     L1, L2, L3, // Left face
     R1, R2, R3, // Right face
@@ -17,7 +17,7 @@ pub enum Twist {
     B1, B2, B3, // Back face
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Axis {
     X, Y, Z,
 }
