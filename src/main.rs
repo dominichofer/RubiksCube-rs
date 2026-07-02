@@ -1,5 +1,74 @@
 use rubikscube::*;
 
+#[cfg(target_os = "windows")]
+fn pin_to_core() -> std::io::Result<()> {
+    use windows_sys::Win32::Foundation::HANDLE;
+    use windows_sys::Win32::System::Threading::{GetCurrentProcess, SetProcessAffinityMask};
+
+    unsafe {
+        let process: HANDLE = GetCurrentProcess();
+
+        if SetProcessAffinityMask(process, 1) == 0 {
+            return Err(std::io::Error::last_os_error());
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn pin_to_core() -> std::io::Result<()> {
+    unsafe {
+        let mut cpu_set = std::mem::zeroed::<libc::cpu_set_t>();
+        libc::CPU_ZERO(&mut cpu_set);
+        libc::CPU_SET(0, &mut cpu_set);
+
+        if libc::sched_setaffinity(0, std::mem::size_of::<libc::cpu_set_t>(), &cpu_set) != 0 {
+            return Err(std::io::Error::last_os_error());
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn set_priority() -> std::io::Result<()> {
+    use windows_sys::Win32::Foundation::HANDLE;
+    use windows_sys::Win32::System::Threading::{GetCurrentProcess, HIGH_PRIORITY_CLASS, SetPriorityClass};
+
+    unsafe {
+        let process: HANDLE = GetCurrentProcess();
+
+        if SetPriorityClass(process, HIGH_PRIORITY_CLASS) == 0 {
+            return Err(std::io::Error::last_os_error());
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn set_priority() -> std::io::Result<()> {
+    unsafe {
+        // -10 requests higher priority; may require additional privileges.
+        if libc::setpriority(libc::PRIO_PROCESS, 0, -10) != 0 {
+            return Err(std::io::Error::last_os_error());
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(not(any(target_os = "windows", target_os = "linux")))]
+fn pin_to_core() -> std::io::Result<()> {
+    Ok(())
+}
+
+#[cfg(not(any(target_os = "windows", target_os = "linux")))]
+fn set_priority() -> std::io::Result<()> {
+    Ok(())
+}
+
 /// Parse a string of space-separated twist names into a vector of Twist values.
 /// Anything onwards from '#' is ignored.
 fn parse_line(input: &str) -> Vec<Twist> {
@@ -18,6 +87,13 @@ fn read_twist_file(path: &str) -> Vec<Vec<Twist>> {
 }
 
 fn main() {
+    if let Err(err) = pin_to_core() {
+        eprintln!("Warning: could not pin process to one core: {err}");
+    }
+    if let Err(err) = set_priority() {
+        eprintln!("Warning: could not raise process priority: {err}");
+    }
+
     init_twister();
 
     let args: Vec<String> = std::env::args().collect();

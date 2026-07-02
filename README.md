@@ -157,28 +157,36 @@ cargo run --release --bin rubikscube test_pos_1000k.txt
 
 Here's an example output of `test_pos_100k.txt` on an AMD Ryzen 9 9950X3D 16-Core Processor with HT and DDR5 RAM with 4x 32-bit channels at 3600 MT/s.
 ```
-Corners table loaded in: 21.425ms
-Subset table loaded in: 3.4001138s
-Coset table loaded in: 5.9552021s
-Total time taken: 38.2318628s
-Average time per solve: 382.318µs
-Phase 1 probes: 438’334’884
-Phase 2 probes: 48’126’735
-Corner probes: 92’388’454
-Corner cuts: 28’057’375 (30.37%)
+Corners table loaded in: 18.2006ms
+Subset table loaded in: 3.4053676s
+Coset table loaded in: 5.7394215s
+Total time taken: 31.6495559s
+Average time per solve: 316.495µs
+Phase 1: 443’308’238
+Phase 2: 48’126’967
+Phase 1 dst: 366’404’317
+Phase 2 dst: 53’535’633
+Corner dst: 95’107’772
+Corner cuts: 28’776’954 (30.26%)
+Twists: 442’683’682
+Slack cuts: 4’252’291
 ```
 
 Here's an example output of `test_pos_1000k.txt`
 ```
-Corners table loaded in: 21.3063ms
-Subset table loaded in: 3.7992586s
-Coset table loaded in: 5.7837773s
-Total time taken: 394.3724944s
-Average time per solve: 394.372µs
-Phase 1 probes: 4’363’693’600
-Phase 2 probes: 481’014’171
-Corner probes: 917’360’424
-Corner cuts: 278’059’113 (30.31%)
+orners table loaded in: 18.2284ms
+Subset table loaded in: 3.4627392s
+Coset table loaded in: 5.8389217s
+Total time taken: 323.1418839s
+Average time per solve: 323.141µs
+Phase 1: 4’413’210’006
+Phase 2: 481’014’779
+Phase 1 dst: 3’647’064’504
+Phase 2 dst: 535’087’348
+Corner dst: 944’285’944
+Corner cuts: 285’130’723 (30.20%)
+Twists: 4’406’961’429
+Slack cuts: 42’431’134
 ```
 
 ### Running Benchmarks
