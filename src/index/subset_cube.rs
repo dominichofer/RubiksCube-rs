@@ -1,5 +1,6 @@
 use super::Twistable;
 use crate::TWISTER;
+use crate::SUBSET_TWISTER;
 use crate::cubies::*;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -41,28 +42,20 @@ impl SubsetCube {
         }
         Self { c_prm, xy_prm, z_prm }
     }
-
-    pub fn twisted(&self, twist: Twist) -> Self {
-        Self {
-            c_prm: TWISTER.twisted_c_prm(self.c_prm, twist),
-            xy_prm: TWISTER.twisted_subset_e_xy_prm(self.xy_prm, twist),
-            z_prm: TWISTER.twisted_subset_e_z_prm(self.z_prm, twist),
-        }
-    }
-
-    pub fn twisted_by(&self, twists: &[Twist]) -> Self {
-        twists
-            .iter()
-            .fold(*self, |index, &twist| index.twisted(twist))
-    }
 }
 
 impl Twistable for SubsetCube {
     fn twisted(&self, twist: Twist) -> Self {
-        self.twisted(twist)
+        Self {
+            c_prm: TWISTER.twisted_c_prm(self.c_prm, twist),
+            xy_prm: SUBSET_TWISTER.twisted_subset_e_xy_prm(self.xy_prm, twist),
+            z_prm: SUBSET_TWISTER.twisted_subset_e_z_prm(self.z_prm, twist),
+        }
     }
     fn twisted_by(&self, twists: &[Twist]) -> Self {
-        self.twisted_by(twists)
+        twists
+            .iter()
+            .fold(*self, |index, &twist| index.twisted(twist))
     }
 }
 

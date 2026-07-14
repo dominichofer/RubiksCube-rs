@@ -1,6 +1,7 @@
 use super::twist::*;
 use rand::{rngs::StdRng, RngExt, SeedableRng};
 
+/// Random twist generator
 pub struct RandomTwistGen {
     rng: StdRng,
     twists: Vec<Twist>,
@@ -39,7 +40,7 @@ mod tests {
 
     #[test]
     fn test_gen_twists() {
-        let mut rng = RandomTwistGen::new(42, &H0_TWISTS);
+        let mut rng = RandomTwistGen::new(43, &H0_TWISTS);
         let twists = rng.gen_twists(100);
         assert_eq!(twists.len(), 100);
         for twist in twists {

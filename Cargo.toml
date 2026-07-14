@@ -8,7 +8,6 @@ num-format = "0.4.4"
 rand = "0.10.2"
 rayon = "1.12.0"
 plotters = { version = "0.3" }
-kiss3d = { version = "0.44.0", features = ["egui"] }
 windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_System_Threading"] }
 libc = "0.2.186"
 
@@ -18,14 +17,6 @@ itertools = "0.15.0"
 [[bin]]
 name = "benchmark"
 path = "src/benchmark.rs"
-
-[[bin]]
-name = "correlation"
-path = "src/correlation.rs"
-
-[[bin]]
-name = "gui"
-path = "src/gui.rs"
 
 [[bin]]
 name = "create"

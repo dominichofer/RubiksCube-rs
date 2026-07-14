@@ -13,7 +13,7 @@ fn main() {
     let twist_sequences: usize = args[1].parse().expect("Failed to parse twist sequences");
     let file: &str = &args[2];
 
-    let stored_tables = StoredTables::load("config.txt");
+    let (corners_table, subset_table, coset_table) = get_tables();
 
     let mut rnd_twist = RandomTwistGen::new(42, &ALL_TWISTS);
     let cubes = Vec::from_iter((0..twist_sequences)
@@ -29,9 +29,9 @@ fn main() {
 
     cubes.par_iter().for_each(|&cube| {
         let mut solver = TwoPhaseSolver::new(
-            &stored_tables.coset,
-            &stored_tables.subset,
-            &stored_tables.corners,
+            &coset_table,
+            &subset_table,
+            &corners_table,
         );
         let solution = solver.solve(cube, 20).unwrap();
         assert!(cube.twisted_by(&solution) == Cube::solved(), "Incorrect solution found! Solution: {:?}", solution);

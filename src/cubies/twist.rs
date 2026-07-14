@@ -40,30 +40,28 @@ pub const H0_TWISTS: [Twist; 10] = [
     Twist::B2,
 ];
 
-impl TryFrom<u32> for Twist {
-    type Error = ();
-
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
+impl From<u32> for Twist {
+    fn from(value: u32) -> Self {
         match value {
-            0 => Ok(Twist::L1),
-            1 => Ok(Twist::L2),
-            2 => Ok(Twist::L3),
-            3 => Ok(Twist::R1),
-            4 => Ok(Twist::R2),
-            5 => Ok(Twist::R3),
-            6 => Ok(Twist::U1),
-            7 => Ok(Twist::U2),
-            8 => Ok(Twist::U3),
-            9 => Ok(Twist::D1),
-            10 => Ok(Twist::D2),
-            11 => Ok(Twist::D3),
-            12 => Ok(Twist::F1),
-            13 => Ok(Twist::F2),
-            14 => Ok(Twist::F3),
-            15 => Ok(Twist::B1),
-            16 => Ok(Twist::B2),
-            17 => Ok(Twist::B3),
-            _ => Err(()),
+            0 => Twist::L1,
+            1 => Twist::L2,
+            2 => Twist::L3,
+            3 => Twist::R1,
+            4 => Twist::R2,
+            5 => Twist::R3,
+            6 => Twist::U1,
+            7 => Twist::U2,
+            8 => Twist::U3,
+            9 => Twist::D1,
+            10 => Twist::D2,
+            11 => Twist::D3,
+            12 => Twist::F1,
+            13 => Twist::F2,
+            14 => Twist::F3,
+            15 => Twist::B1,
+            16 => Twist::B2,
+            17 => Twist::B3,
+            _ => unsafe { std::hint::unreachable_unchecked() },
         }
     }
 }
@@ -138,6 +136,14 @@ impl Twist {
     }
 }
 
+pub fn inverse(twists: &[Twist]) -> Vec<Twist> {
+    twists.iter().rev().map(|t| t.inverse()).collect()
+}
+
+pub fn conjugate_by_inv(twists: &[Twist], rot: Axis) -> Vec<Twist> {
+    twists.iter().map(|t| t.conjugate_by_inv(rot)).collect()
+}
+
 impl std::str::FromStr for Twist {
     type Err = String;
 
@@ -152,12 +158,21 @@ impl std::str::FromStr for Twist {
     }
 }
 
-pub fn inverse(twists: &[Twist]) -> Vec<Twist> {
-    twists.iter().rev().map(|t| t.inverse()).collect()
+/// Parse a string of space-separated twists into a Vec<Twist>.
+/// Anything onwards from '#' is ignored.
+fn parse_twists(input: &str) -> Vec<Twist> {
+    input
+        .split('#') // Split off comments
+        .next() // Take the part before the comment, or the whole line if there is no comment
+        .unwrap_or("") // Handle the case where the line is empty or only contains a comment
+        .split_whitespace()
+        .map(|s| s.parse().unwrap()) // Parse each twist name into a Twist value, panicking if any are invalid
+        .collect()
 }
 
-pub fn conjugate_by_inv(twists: &[Twist], rot: Axis) -> Vec<Twist> {
-    twists.iter().map(|t| t.conjugate_by_inv(rot)).collect()
+pub fn read_twist_file(path: &str) -> Vec<Vec<Twist>> {
+    let content = std::fs::read_to_string(path).unwrap();
+    content.lines().map(|line| parse_twists(line)).collect()
 }
 
 #[cfg(test)]
@@ -168,6 +183,13 @@ mod tests {
     fn test_parse() {
         assert_eq!("L1".parse::<Twist>().unwrap(), Twist::L1);
         assert!("XX".parse::<Twist>().is_err());
+    }
+
+    #[test]
+    fn test_parse_twists() {
+        let input = "L1 R2 U3 # Comment";
+        let expected = vec![Twist::L1, Twist::R2, Twist::U3];
+        assert_eq!(parse_twists(input), expected);
     }
 
     #[test]

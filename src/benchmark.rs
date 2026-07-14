@@ -4,7 +4,9 @@ use std::hint::black_box;
 use std::time::Instant;
 
 struct Benchmarker {
-    stored_tables: StoredTables,
+    corners_table: DistanceTable,
+    subset_table: DistanceTable,
+    coset_table: DirectionsTable,
     iterations: usize,
     rnd: StdRng,
     rnd_twist: Vec<Twist>,
@@ -17,7 +19,7 @@ struct Benchmarker {
 
 impl Benchmarker {
     fn new(iterations: usize) -> Self {
-        let stored_tables = StoredTables::load("config.txt");
+        let (corners_table, subset_table, coset_table) = get_tables();
         let mut rnd = StdRng::seed_from_u64(42);
         let mut rnd_twist_gen = RandomTwistGen::new(42, &ALL_TWISTS);
         let mut rnd_subset_twist_gen = RandomTwistGen::new(42, &H0_TWISTS);
@@ -29,7 +31,9 @@ impl Benchmarker {
         let rnd_cube = rnd_twists.iter().map(|t| Cube::solved().twisted_by(t)).collect();
         let rnd_subset_cube = rnd_subset_twists.iter().map(|t| SubsetCube::solved().twisted_by(t)).collect();
         Self {
-            stored_tables,
+            corners_table,
+            subset_table,
+            coset_table,
             iterations,
             rnd,
             rnd_twist,
@@ -83,9 +87,7 @@ impl Benchmarker {
     
     fn bench_nth_combination(&mut self) {
         let rnd_binomial_12_4 = self.test_vec_of_random_range(0..binomial(12, 4));
-        let mut out = [0usize; 4];
         self.bench("nth_combination (12, 4)", &rnd_binomial_12_4, |&i| { nth_combination(12, 4, i) });
-        self.bench("nth_combination2 (12, 4)", &rnd_binomial_12_4, |&i| { nth_combination2(12, i, &mut out) });
     }
 
     fn bench_encode(&mut self) {
@@ -185,24 +187,35 @@ impl Benchmarker {
     }
     
     fn bench_distances(&mut self) {
-        self.bench("Corners distance", &self.rnd_cube, |c| { self.stored_tables.corners.distance(c.corner_index()) });
-        self.bench("Coset distance", &self.rnd_cube, |c| { self.stored_tables.coset.distance(c.coset_index()) });
-        self.bench("Subset distance", &self.rnd_subset_cube, |c| { self.stored_tables.subset.distance(c.index()) });
+        self.bench("Corners distance", &self.rnd_cube, |c| { self.corners_table.distance(c.corner_index()) });
+        self.bench("Coset distance", &self.rnd_cube, |c| { self.coset_table.distance(c.coset_index()) });
+        self.bench("Subset distance", &self.rnd_subset_cube, |c| { self.subset_table.distance(c.index()) });
     }
 
     fn bench_phase_2(&mut self) {
         let mut solver = TwoPhaseSolver::new(
-            &self.stored_tables.coset,
-            &self.stored_tables.subset,
-            &self.stored_tables.corners
+            &self.coset_table,
+            &self.subset_table,
+            &self.corners_table
         );
-        let foo = self.rnd_subset_cube.iter().map(|&c| (c, self.stored_tables.subset.distance(c.index()))).collect::<Vec<_>>();
+        let foo = self.rnd_subset_cube.iter().map(|&c| (c, self.subset_table.distance(c.index()))).collect::<Vec<_>>();
         self.bench("TwoPhaseSolver phase_2", &foo, |&c| { solver.search_phase_2(c.0, c.1) });
     }
 }
 
 fn main() {
+    let start = Instant::now();
     init_twister();
+    println!("Twister initialized in {:.3} seconds", start.elapsed().as_secs_f64());
+
+    let start = Instant::now();
+    init_subset_twister();
+    println!("SubsetTwister initialized in {:.3} seconds", start.elapsed().as_secs_f64());
+
+    let start = Instant::now();
+    init_subset_index();
+    println!("SubsetIndex initialized in {:.3} seconds", start.elapsed().as_secs_f64());
+
     let mut benchmarker = Benchmarker::new(10_000_000);
     benchmarker.bench_nth_permutation();
     benchmarker.bench_nth_combination();

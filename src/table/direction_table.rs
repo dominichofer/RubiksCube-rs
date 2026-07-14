@@ -7,7 +7,10 @@ pub struct DirectionsAndDistance(u64);
 
 impl DirectionsAndDistance {
     pub fn new(less: TwistSet, more: TwistSet, distance: u8) -> Self {
-        Self((less.as_u64() << 32) | (more.as_u64() << 8) | (distance as u64))
+        let less = less.bits() as u64;
+        let more = more.bits() as u64;
+        let distance = distance as u64;
+        Self((less << 32) | (more << 8) | distance)
     }
 
     pub fn from_u64(value: u64) -> Self {
@@ -39,8 +42,7 @@ impl DirectionsTable {
         from_index: impl Fn(usize) -> Obj + Sync,
         index_size: usize,
     ) -> Self {
-        let distance_table =
-            DistanceTable::create(twists, origin, &index, &from_index, index_size);
+        let distance_table = DistanceTable::create(twists, origin, &index, &from_index, index_size);
         let table: Vec<DirectionsAndDistance> = (0..index_size)
             .into_par_iter()
             .map(|i| {
@@ -53,9 +55,9 @@ impl DirectionsTable {
                     let next = obj.twisted(twist);
                     let next_d = distance_table.distance(index(next));
                     if next_d < d {
-                        less |= twist;
+                        less.add(twist);
                     } else if next_d > d {
-                        more |= twist;
+                        more.add(twist);
                     }
                 }
 
@@ -78,7 +80,7 @@ impl DirectionsTable {
     }
 
     pub fn save_to_file(&self, path: &str) -> std::io::Result<()> {
-        let mut data = Vec::with_capacity(self.table.len() * 8);
+        let mut data = Vec::with_capacity(self.table.len() * size_of::<DirectionsAndDistance>());
         for entry in &self.table {
             data.extend_from_slice(&entry.0.to_le_bytes());
         }

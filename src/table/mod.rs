@@ -1,4 +1,5 @@
 pub mod direction_table;
+mod config_file;
 pub mod distance_table;
 pub mod stored_tables;
 

@@ -1,19 +1,14 @@
-use crate::math::*;
 use crate::corners::*;
 use crate::edges::*;
 use crate::twist::*;
-use crate::permutation::*;
 use rayon::prelude::*;
 
-// Size: 1’742’022 bytes (~1.66 MiB)
+// Size: 1’015’830 bytes (~0.97 MiB)
 pub struct Twister {
     c_ori: Vec<u16>, // 18 * 3^7 = 39’366
     c_prm: Vec<u16>, // 18 * 8! = 725’760
     e_ori: Vec<u16>, // 18 * 2^11 = 36’864
     e_loc_prm: Vec<LocPrm>, // 18 * (12 choose 4) * 4! = 213’840
-    subset_e_xy_prm: Vec<u16>, // 18 * 8! = 725’760
-    subset_e_z_prm: Vec<u8>, // 18 * 4! = 432
-    e_xy_prm: Vec<u16>, // (12 choose 4) * 4! * (12 choose 4) * 4! = 141’134’400
 }
 
 const COUNT: usize = ALL_TWISTS.len();
@@ -24,9 +19,6 @@ impl Twister {
         let mut c_prm = vec![0u16; COUNT * Corners::PRM_SIZE];
         let mut e_ori = vec![0u16; COUNT * Edges::ORI_SIZE];
         let mut e_loc_prm = vec![LocPrm::new(0, 0); COUNT * LocPrm::INDEX_SIZE];
-        let mut subset_e_xy_prm = vec![0u16; COUNT * factorial(8)];
-        let mut subset_e_z_prm = vec![0u8; COUNT * factorial(4)];
-        let mut e_xy_prm = vec![0u16; Edges::LOC_PRM_SIZE * Edges::LOC_PRM_SIZE];
 
         c_ori
             .par_chunks_mut(COUNT)
@@ -65,51 +57,8 @@ impl Twister {
                     chunk[twist as usize] = (twist * obj).loc_prm(Axis::Z);
                 }
             });
-        subset_e_xy_prm
-            .par_chunks_mut(COUNT)
-            .enumerate()
-            .for_each(|(i, chunk)| {
-                let obj = Edges::from_subset_indices(i, 0);
-                for twist in ALL_TWISTS {
-                    chunk[twist as usize] = (twist * obj).xy_prm_index() as u16;
-                }
-            });
-        subset_e_z_prm
-            .par_chunks_mut(COUNT)
-            .enumerate()
-            .for_each(|(i, chunk)| {
-                let obj = Edges::from_subset_indices(0, i);
-                for twist in ALL_TWISTS {
-                    chunk[twist as usize] = (twist * obj).loc_prm(Axis::Z).prm() as u8;
-                }
-            });
-        e_xy_prm
-            .par_iter_mut()
-            .enumerate()
-            .for_each(|(i, val)| {
-                let x_loc_prm = LocPrm::from_index(i / Edges::LOC_PRM_SIZE);
-                let y_loc_prm = LocPrm::from_index(i % Edges::LOC_PRM_SIZE);
-                let x_loc = nth_combination(12, 4, x_loc_prm.loc());
-                let y_loc = nth_combination(12, 4, y_loc_prm.loc());
-                let x_prm = Permutation::<4>::from_index(x_loc_prm.prm());
-                let y_prm = Permutation::<4>::from_index(y_loc_prm.prm());
-                let mut prm = [12; 12];
-                for i in 0..4 {
-                    prm[x_loc[i]] = x_prm[i];
-                    prm[y_loc[i]] = y_prm[i] + 4;
-                }
-                let mut prm2 = [0; 8];
-                let mut j = 0;
-                for &p in prm.iter() {
-                    if p < 8 {
-                        prm2[j] = p;
-                        j += 1;
-                    }
-                }
-                *val = permutation_index(&prm2) as u16;
-            });
 
-        Self { c_ori, c_prm, e_ori, e_loc_prm, subset_e_xy_prm, subset_e_z_prm, e_xy_prm }
+        Self { c_ori, c_prm, e_ori, e_loc_prm }
     }
 
     pub fn twisted_c_ori(&self, c_ori: usize, twist: Twist) -> usize {
@@ -123,15 +72,6 @@ impl Twister {
     }
     pub fn twisted_e_loc_prm(&self, e_loc_prm: LocPrm, twist: Twist) -> LocPrm {
         self.e_loc_prm[e_loc_prm.index() * COUNT + twist as usize]
-    }
-    pub fn twisted_subset_e_xy_prm(&self, e_xy_prm: usize, twist: Twist) -> usize {
-        self.subset_e_xy_prm[e_xy_prm * COUNT + twist as usize] as usize
-    }
-    pub fn twisted_subset_e_z_prm(&self, e_z_prm: usize, twist: Twist) -> usize {
-        self.subset_e_z_prm[e_z_prm * COUNT + twist as usize] as usize
-    }
-    pub fn e_xy_prm(&self, x_loc_prm: LocPrm, y_loc_prm: LocPrm) -> usize {
-        self.e_xy_prm[x_loc_prm.index() * Edges::LOC_PRM_SIZE + y_loc_prm.index()] as usize
     }
 }
 

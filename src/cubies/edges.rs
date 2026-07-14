@@ -1,10 +1,10 @@
 use super::math::*;
 use super::permutation::*;
-use super::orientation::*;
+use super::modvec::*;
 use super::twist::*;
 use std::ops::Mul;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct LocPrm {
     value: u16,
 }
@@ -54,7 +54,7 @@ impl LocPrm {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Edges {
     prm: Permutation<12>,
-    ori: Orientation<12, 2>,
+    ori: ModVec<12, 2>,
 }
 
 impl Edges {
@@ -62,11 +62,11 @@ impl Edges {
     pub const ORI_SIZE: usize = 2_usize.pow(11); // 2'048
 
     const fn new(prm: [usize; 12], ori: [usize; 12]) -> Self {
-        Self { prm: Permutation::new(prm), ori: Orientation::new(ori) }
+        Self { prm: Permutation::new(prm), ori: ModVec::new(ori) }
     }
 
     pub const fn solved() -> Self {
-        Self { prm: Permutation::identity(), ori: Orientation::identity() }
+        Self { prm: Permutation::identity(), ori: ModVec::identity() }
     }
 
     pub fn twist(twist: Twist) -> Self {
@@ -110,14 +110,6 @@ impl Edges {
             Axis::Z => Twist::D1 * Self::new([0, 1, 2, 3, 4, 5, 6, 7, 11, 8, 9, 10], [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]) * Twist::U3,
         };
         rot * (*self) * rot.inverse()
-    }
-
-    pub fn prm(&self) -> [usize; 12] {
-        self.prm.data()
-    }
-
-    pub fn ori(&self) -> [usize; 12] {
-        self.ori.data()
     }
 
     pub fn from_indices(x: LocPrm, y: LocPrm, z: LocPrm, ori_index: usize) -> Self {
@@ -192,10 +184,11 @@ impl Edges {
     }
 
     pub fn ori_index(&self) -> usize {
-        encode(&self.ori.data()[..11], 2)
+        encode(&self.ori[..11], 2)
     }
 }
 
+/// Edges * Edges
 impl Mul for Edges {
     type Output = Edges;
 
@@ -207,6 +200,7 @@ impl Mul for Edges {
     }
 }
 
+/// Twist * Edges
 impl Mul<Edges> for Twist {
     type Output = Edges;
 
@@ -215,6 +209,7 @@ impl Mul<Edges> for Twist {
     }
 }
 
+/// Edges * Twist
 impl Mul<Twist> for Edges {
     type Output = Edges;
 
@@ -223,37 +218,34 @@ impl Mul<Twist> for Edges {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use crate::twist_generator::*;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::twist_generator::*;
 
-//     #[test]
-//     fn test_indexing() {
-//         let mut rnd = RandomTwistGen::new(181086, &ALL_TWISTS);
-//         let mut e = Edges::solved();
-//         for _ in 0..100_000 {
-//             e = Edges::twist(rnd.gen_twist()) * e;
-//             let x_loc = e.x_loc_index();
-//             let y_loc = e.y_loc_index();
-//             let z_loc = e.z_loc_index();
-//             let x_prm = e.x_prm_index();
-//             let y_prm = e.y_prm_index();
-//             let z_prm = e.z_prm_index();
-//             let ori = e.ori_index();
-//             assert_eq!(e, Edges::from_indices(x_loc, y_loc, z_loc, x_prm, y_prm, z_prm, ori));
-//         }
-//     }
+    #[test]
+    fn test_indexing() {
+        let mut rnd = RandomTwistGen::new(181086, &ALL_TWISTS);
+        let mut e = Edges::solved();
+        for _ in 0..100_000 {
+            e = Edges::twist(rnd.gen_twist()) * e;
+            let x_locprm = e.loc_prm(Axis::X);
+            let y_locprm = e.loc_prm(Axis::Y);
+            let z_locprm = e.loc_prm(Axis::Z);
+            let ori = e.ori_index();
+            assert_eq!(e, Edges::from_indices(x_locprm, y_locprm, z_locprm, ori));
+        }
+    }
 
-//     #[test]
-//     fn test_subset_indexing() {
-//         let mut rnd = RandomTwistGen::new(181086, &H0_TWISTS);
-//         let mut e = Edges::solved();
-//         for _ in 0..100_000 {
-//             e = Edges::twist(rnd.gen_twist()) * e;
-//             let xy_prm = e.xy_prm_index();
-//             let z_prm = e.z_prm_index();
-//             assert_eq!(e, Edges::from_subset_indices(xy_prm, z_prm));
-//         }
-//     }
-// }
+    #[test]
+    fn test_subset_indexing() {
+        let mut rnd = RandomTwistGen::new(181086, &H0_TWISTS);
+        let mut e = Edges::solved();
+        for _ in 0..100_000 {
+            e = Edges::twist(rnd.gen_twist()) * e;
+            let xy_prm = e.xy_prm_index();
+            let z_prm = e.loc_prm(Axis::Z).prm();
+            assert_eq!(e, Edges::from_subset_indices(xy_prm, z_prm));
+        }
+    }
+}

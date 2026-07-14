@@ -1,8 +1,7 @@
 use crate::math::*;
 use std::ops::{Mul, Index};
-use std::fmt;
 
-// Lexicographic index of the permutation (0 to N!-1)
+/// Lexicographic index of the permutation (0 to N!-1).
 pub fn permutation_index(permutation: &[usize]) -> usize {
     assert!(permutation.len() <= 64, "Permutation too long to encode in usize");
     let size = permutation.len();
@@ -24,15 +23,16 @@ pub fn permutation_index(permutation: &[usize]) -> usize {
     index
 }
 
-pub fn nth_permutation(mut index: usize, size: usize) -> Vec<usize> {
+/// Returns the nth permutation of size elements in lexicographically sorted order.
+pub fn nth_permutation(mut n: usize, size: usize) -> Vec<usize> {
     assert!(size <= 64, "Permutation size too large to encode in usize");
     let mut unused = 0xFFFFFFFFFFFFFFFFusize;
     let mut permutation = vec![0usize; size];
 
     for i in (0..size).rev() {
         let f = factorial(i);
-        let pos = index / f;
-        index %= f;
+        let pos = n / f;
+        n %= f;
 
         // Find the pos-th set bit in unused
         let mut mask = unused;
@@ -47,6 +47,7 @@ pub fn nth_permutation(mut index: usize, size: usize) -> Vec<usize> {
     permutation
 }
 
+/// Returns true if the permutation represented by the lexicographical index is an even permutation.
 pub fn is_even_permutation(lexicographical_index: usize) -> bool {
     // Convert the index to its factoradic representation and sum the digits.
     let mut index = lexicographical_index;
@@ -60,7 +61,8 @@ pub fn is_even_permutation(lexicographical_index: usize) -> bool {
     sum % 2 == 0
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+/// Represents a permutation of a fixed length.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Permutation<const LEN: usize> {
     map: [usize; LEN],
 }
@@ -80,19 +82,12 @@ impl<const LEN: usize> Permutation<LEN> {
         Self { map }
     }
 
-    pub const fn data(&self) -> [usize; LEN] {
-        self.map
-    }
-
     pub fn iter(&self) -> impl Iterator<Item = &usize> {
         self.map.iter()
     }
 
     pub fn inverse(&self) -> Self {
-        let mut inv = [0usize; LEN];
-        for i in 0..LEN {
-            inv[self.map[i]] = i;
-        }
+        let inv = std::array::from_fn(|i| self.map.iter().position(|&x| x == i).unwrap());
         Self { map: inv }
     }
 
@@ -106,6 +101,16 @@ impl<const LEN: usize> Permutation<LEN> {
     }
 }
 
+/// Implement Indexing for Permutation
+impl<const LEN: usize> Index<usize> for Permutation<LEN> {
+    type Output = usize;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.map[index]
+    }
+}
+
+/// Implement Permutation * Permutation
 impl<const LEN: usize> Mul for Permutation<LEN> {
     type Output = Self;
 
@@ -114,25 +119,12 @@ impl<const LEN: usize> Mul for Permutation<LEN> {
     }
 }
 
+/// Implement Permutation * [T; N]
 impl<T: Copy, const N: usize> Mul<[T; N]> for Permutation<N> {
     type Output = [T; N];
 
     fn mul(self, rhs: [T; N]) -> [T; N] {
         std::array::from_fn(|i| rhs[self.map[i]])
-    }
-}
-
-impl<const LEN: usize> fmt::Display for Permutation<LEN> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self.map)
-    }
-}
-
-impl<const LEN: usize> Index<usize> for Permutation<LEN> {
-    type Output = usize;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.map[index]
     }
 }
 

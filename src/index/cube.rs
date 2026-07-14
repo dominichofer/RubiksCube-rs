@@ -1,7 +1,7 @@
-use super::{TWISTER, Twistable, SubsetCube};
+use super::{TWISTER, SUBSET_INDEX, Twistable, SubsetCube};
 use crate::{LocPrm, cubies::*};
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cube {
     c_ori: usize, // 3^7 = 2'187 (defines coset index)
     c_prm: usize, // 8! = 40'320 (defines subset index)
@@ -13,7 +13,7 @@ pub struct Cube {
 
 impl Cube {
     pub const CORNER_INDEX_SIZE: usize = Corners::ORI_SIZE * Corners::PRM_SIZE; // 88'179'840
-    pub const SUBSET_INDEX_SIZE: usize = Corners::PRM_SIZE / 2 * factorial(8) * factorial(4);  // 19'508'428'800
+    pub const SUBSET_INDEX_SIZE: usize = Corners::PRM_SIZE * factorial(8) * factorial(4) / 2;  // 19'508'428'800
     pub const COSETS_INDEX_SIZE: usize = Corners::ORI_SIZE * Edges::ORI_SIZE * binomial(12, 4); // 2'217'093'120
 
     pub fn solved() -> Self {
@@ -49,7 +49,7 @@ impl Cube {
     pub fn subset_cube(&self) -> SubsetCube {
         SubsetCube {
             c_prm: self.c_prm,
-            xy_prm: TWISTER.e_xy_prm(self.x_loc_prm, self.y_loc_prm),
+            xy_prm: SUBSET_INDEX.e_xy_prm(self.x_loc_prm, self.y_loc_prm),
             z_prm: self.z_loc_prm.prm(),
         }
     }
@@ -81,8 +81,8 @@ impl Cube {
 
     pub fn conjugated_by(&self, rot: Axis) -> Self {
         let corners = Corners::from_indices(self.c_prm, self.c_ori).conjugated_by(rot);
-        let edges = Edges::from_indices(self.x_loc_prm, self.y_loc_prm, self.z_loc_prm, self.e_ori).conjugated_by(rot);
-
+        let mut edges = Edges::from_indices(self.x_loc_prm, self.y_loc_prm, self.z_loc_prm, self.e_ori);
+        edges = edges.conjugated_by(rot);
         Self {
             c_ori: corners.ori_index(),
             c_prm: corners.prm_index(),
@@ -95,7 +95,8 @@ impl Cube {
 
     pub fn inverse(&self) -> Self {
         let corners = Corners::from_indices(self.c_prm, self.c_ori).inverse();
-        let edges = Edges::from_indices(self.x_loc_prm, self.y_loc_prm, self.z_loc_prm, self.e_ori).inverse();
+        let mut edges = Edges::from_indices(self.x_loc_prm, self.y_loc_prm, self.z_loc_prm, self.e_ori);
+        edges = edges.inverse();
         Self {
             c_ori: corners.ori_index(),
             c_prm: corners.prm_index(),
@@ -110,7 +111,7 @@ impl Cube {
 impl Twistable for Cube {
     #[inline(always)]
     fn twisted(&self, twist: Twist) -> Self {
-        Cube {
+        Self {
             c_ori: TWISTER.twisted_c_ori(self.c_ori, twist),
             c_prm: TWISTER.twisted_c_prm(self.c_prm, twist),
             e_ori: TWISTER.twisted_e_ori(self.e_ori, twist),

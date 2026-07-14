@@ -7,10 +7,14 @@ pub struct TwoPhaseSolver<'a> {
     phase_2: &'a DistanceTable,
     corners: &'a DistanceTable,
     twists: Vec<Twist>,
-    phase_1_probes: usize,
-    phase_2_probes: usize,
-    corner_probes: usize,
+    fkt_phase_1: usize,
+    fkt_phase_2: usize,
+    fkt_phase_1_dst: usize,
+    fkt_phase_2_dst: usize,
+    fkt_corner_dst: usize,
     corner_cuts: usize,
+    fkt_twist: usize,
+    slack_cuts: usize,
 }
 
 impl<'a> TwoPhaseSolver<'a> {
@@ -24,19 +28,27 @@ impl<'a> TwoPhaseSolver<'a> {
             phase_2,
             corners,
             twists: Vec::new(),
-            phase_1_probes: 0,
-            phase_2_probes: 0,
-            corner_probes: 0,
+            fkt_phase_1: 0,
+            fkt_phase_2: 0,
+            fkt_phase_1_dst: 0,
+            fkt_phase_2_dst: 0,
+            fkt_corner_dst: 0,
             corner_cuts: 0,
+            fkt_twist: 0,
+            slack_cuts: 0,
         }
     }
 
     pub fn print_stats(&self) {
         let locale = &num_format::Locale::de_CH;
-        println!("Phase 1 probes: {}", self.phase_1_probes.to_formatted_string(locale));
-        println!("Phase 2 probes: {}", self.phase_2_probes.to_formatted_string(locale));
-        println!("Corner probes: {}", self.corner_probes.to_formatted_string(locale));
-        println!("Corner cuts: {} ({:.2}%)", self.corner_cuts.to_formatted_string(locale), (self.corner_cuts as f64 / self.corner_probes as f64) * 100.0);
+        println!("Phase 1: {}", self.fkt_phase_1.to_formatted_string(locale));
+        println!("Phase 2: {}", self.fkt_phase_2.to_formatted_string(locale));
+        println!("Phase 1 dst: {}", self.fkt_phase_1_dst.to_formatted_string(locale));
+        println!("Phase 2 dst: {}", self.fkt_phase_2_dst.to_formatted_string(locale));
+        println!("Corner dst: {}", self.fkt_corner_dst.to_formatted_string(locale));
+        println!("Corner cuts: {} ({:.2}%)", self.corner_cuts.to_formatted_string(locale), (self.corner_cuts as f64 / self.fkt_corner_dst as f64) * 100.0);
+        println!("Twists: {}", self.fkt_twist.to_formatted_string(locale));
+        println!("Slack cuts: {}", self.slack_cuts.to_formatted_string(locale));
     }
 
     pub fn solve(&mut self, cube: Cube, max_solution_length: u8) -> Result<Vec<Twist>, String> {
@@ -79,8 +91,9 @@ impl<'a> TwoPhaseSolver<'a> {
     }
 
     pub fn search_phase_2(&mut self, mut subset_cube: SubsetCube, depth: u8) -> bool {
-        self.phase_2_probes += 1;
+        self.fkt_phase_2 += 1;
 
+        self.fkt_phase_2_dst += 1;
         let solution_distance = self.phase_2.distance(subset_cube.index());
         if solution_distance > depth {
             return false;
@@ -89,6 +102,7 @@ impl<'a> TwoPhaseSolver<'a> {
         for d in (1..=solution_distance).rev() {
             for twist in H0_TWISTS {
                 let next = subset_cube.twisted(twist);
+                self.fkt_phase_2_dst += 1;
                 let next_d = self.phase_2.distance(next.index());
                 if next_d < d {
                     self.twists.push(twist);
@@ -101,10 +115,11 @@ impl<'a> TwoPhaseSolver<'a> {
     }
 
     fn search_phase_1(&mut self, cube: Cube, p1_depth: u8, p2_depth: u8) -> bool {
-        self.phase_1_probes += 1;
+        self.fkt_phase_1 += 1;
 
+        // Check corner distance
         if p1_depth + p2_depth < 10 {
-            self.corner_probes += 1;
+            self.fkt_corner_dst += 1;
             let corner_distance = self.corners.distance(cube.corner_index());
             if corner_distance > p1_depth + p2_depth {
                 self.corner_cuts += 1;
@@ -123,12 +138,21 @@ impl<'a> TwoPhaseSolver<'a> {
             twists = TwistSet::FULL;
         }
         if p1_depth == 1 {
+            // H0 twists don't lead to a subset cube, so we omit them.
             twists.remove(TwistSet::H0);
         }
 
         let coset_index = cube.coset_index();
+        self.fkt_phase_1_dst += 1;
         let subset_distance = self.phase_1.distance(coset_index);
         let slack = p1_depth - subset_distance;
+
+        if subset_distance == 0 && p1_depth < 5 {
+            // It takes at least 5 moves to reach a subset cube from an other subset cube, so we can prune this branch.
+            self.slack_cuts += 1;
+            return false;
+        }
+
         if slack == 0 {
             // Without slack, we need to take the shortest path.
             twists.keep_only(self.phase_1.less_distance(coset_index));
@@ -137,12 +161,9 @@ impl<'a> TwoPhaseSolver<'a> {
             // With 1 move of slack, we cannot take any moves that increase the distance.
             twists.remove(self.phase_1.more_distance(coset_index));
         }
-        if subset_distance == 1 && p1_depth > 1 {
-            // If we're 1 move away from the subset, but have more than 1 move to get there, we must not take the move that gets us there immediately.
-            twists.remove(self.phase_1.less_distance(coset_index));
-        }
         
         for twist in twists.iter() {
+            self.fkt_twist += 1;
             let next_cube = cube.twisted(twist);
             self.twists.push(twist);
             let found_solution = self.search_phase_1(next_cube, p1_depth - 1, p2_depth);
@@ -154,36 +175,3 @@ impl<'a> TwoPhaseSolver<'a> {
         false
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-
-//     #[test]
-//     fn test_two_phase_solver() {
-//         let phase_1_table = DirectionsTable::from_file("tables/phase_1_directions.tbl");
-//         let phase_2_table = subset_distance_table("tables/subset_distance.tbl");
-//         let corner_table = coset_distance_table("tables/coset_distance.tbl");
-
-//         let mut solver = TwoPhaseSolver::new(phase_1_table, phase_2_table, corner_table);
-
-//         let scramble = vec![
-//             Twist::U, Twist::R, Twist::UPrime, Twist::L, Twist::D, Twist::FPrime,
-//             Twist::B, Twist::RPrime, Twist::DPrime, Twist::LPrime,
-//         ];
-//         let mut cube = Cube::solved();
-//         for twist in &scramble {
-//             cube = cube.twisted(*twist);
-//         }
-
-//         let solution = solver.solve(cube, 20);
-//         assert!(solution.is_some());
-//         let solution = solution.unwrap();
-
-//         let mut test_cube = cube;
-//         for twist in &solution {
-//             test_cube = test_cube.twisted(*twist);
-//         }
-//         assert_eq!(test_cube, Cube::solved());
-//     }
-// }

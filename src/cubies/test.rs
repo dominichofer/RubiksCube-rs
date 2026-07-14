@@ -6,6 +6,7 @@ mod tests {
     use crate::twist::*;
     use std::ops::Mul;
 
+    /// Cubies of a Rubik's Cube.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     struct Cubies {
         pub corners: Corners,
@@ -14,16 +15,13 @@ mod tests {
 
     impl Cubies {
         pub fn solved() -> Self { Self { corners: Corners::solved(), edges: Edges::solved() } }
-
         pub fn twist(twist: Twist) -> Self { Self { corners: Corners::twist(twist), edges: Edges::twist(twist) } }
-
         pub fn twists(twists: &[Twist]) -> Self { Self { corners: Corners::twists(twists), edges: Edges::twists(twists) } }
-        
         pub fn inverse(&self) -> Self { Self { corners: self.corners.inverse(), edges: self.edges.inverse() } }
-
         pub fn conjugated_by(&self, rot: Axis) -> Self { Self { corners: self.corners.conjugated_by(rot), edges: self.edges.conjugated_by(rot) } }
     }
 
+    /// Cubies * Cubies
     impl Mul for Cubies {
         type Output = Cubies;
 
@@ -32,6 +30,7 @@ mod tests {
         }
     }
 
+    /// Twist * Cubies
     impl Mul<Cubies> for Twist {
         type Output = Cubies;
 
@@ -90,7 +89,8 @@ mod tests {
         let mut rnd = RandomTwistGen::new(12345678, &ALL_TWISTS);
         for _ in 0..100_000 {
             let rnd_cube = Cubies::twists(&rnd.gen_twists(100));
-            assert_eq!(rnd_cube * rnd_cube.inverse(), Cubies::solved(), "Cube multiplied by its inverse should yield the solved state, failed for cube {:?}", rnd_cube);
+            assert_eq!(rnd_cube * rnd_cube.inverse(), Cubies::solved(), "A cube multiplied by its inverse should yield the solved state, failed for cube {:?}", rnd_cube);
+            assert_eq!(rnd_cube.inverse() * rnd_cube, Cubies::solved(), "The inverse of a cube multiplied by the cube should yield the solved state, failed for cube {:?}", rnd_cube);
         }
     }
 

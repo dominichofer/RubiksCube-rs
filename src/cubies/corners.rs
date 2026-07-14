@@ -1,6 +1,6 @@
 use super::math::*;
 use super::permutation::*;
-use super::orientation::*;
+use super::modvec::*;
 use super::twist::*;
 use std::ops::Mul;
 
@@ -18,14 +18,13 @@ use std::ops::Mul;
 ///   4---------5
 ///
 /// Orientation scheme:
-/// Each corner has an orientation value 0, 1, or 2 representing how much it is
-/// twisted relative to its solved state. The sum of all 8 corner orientations
-/// is always 0 mod 3 (parity constraint).
-///
+/// Each corner has orientation 0 or 1 or 2.
+/// They represent how much it is twisted relative to its solved state.
+/// The sum of all 8 corner orientations is always 0 mod 3 (parity constraint).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Corners {
     prm: Permutation<8>,
-    ori: Orientation<8, 3>,
+    ori: ModVec<8, 3>,
 }
 
 impl Corners {
@@ -34,11 +33,11 @@ impl Corners {
     pub const INDEX_SIZE: usize = Self::PRM_SIZE * Self::ORI_SIZE; // 88'179'840
 
     const fn new(prm: [usize; 8], ori: [usize; 8]) -> Self {
-        Self { prm: Permutation::new(prm), ori: Orientation::new(ori) }
+        Self { prm: Permutation::new(prm), ori: ModVec::new(ori) }
     }
 
     pub const fn solved() -> Self {
-        Self { prm: Permutation::identity(), ori: Orientation::identity() }
+        Self { prm: Permutation::identity(), ori: ModVec::identity() }
     }
 
     pub fn twist(twist: Twist) -> Self {
@@ -84,20 +83,12 @@ impl Corners {
         rot * (*self) * rot.inverse()
     }
 
-    pub fn prm(&self) -> [usize; 8] {
-        self.prm.data()
-    }
-
-    pub fn ori(&self) -> [usize; 8] {
-        self.ori.data()
-    }
-
     pub fn from_indices(prm: usize, ori: usize) -> Self {
-        let mut o = decode(ori.into(), 3, 7);
+        let mut o = decode(ori, 3, 7);
         o.push((7 * 3 - o.iter().sum::<usize>()) % 3); // Parity constraint
         Self {
             prm: Permutation::from_index(prm),
-            ori: Orientation::new(o.try_into().unwrap()),
+            ori: ModVec::new(o.try_into().unwrap()),
         }
     }
 
@@ -106,10 +97,11 @@ impl Corners {
     }
 
     pub fn ori_index(&self) -> usize {
-        encode(&self.ori.data()[..7], 3)
+        encode(&self.ori[..7], 3)
     }
 }
 
+/// Corners * Corners
 impl Mul for Corners {
     type Output = Corners;
 
@@ -121,6 +113,7 @@ impl Mul for Corners {
     }
 }
 
+/// Twist * Corners
 impl Mul<Corners> for Twist {
     type Output = Corners;
 
@@ -129,6 +122,7 @@ impl Mul<Corners> for Twist {
     }
 }
 
+/// Corners * Twist
 impl Mul<Twist> for Corners {
     type Output = Corners;
 

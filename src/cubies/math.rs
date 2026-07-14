@@ -1,3 +1,4 @@
+/// Encodes a slice of usize values into a single usize value using the specified base.
 pub fn encode(data: &[usize], base: usize) -> usize {
     let mut result = 0;
     for &value in data {
@@ -6,6 +7,7 @@ pub fn encode(data: &[usize], base: usize) -> usize {
     result
 }
 
+/// Decodes a single usize value into a vector of usize values using the specified base and length.
 pub fn decode(mut value: usize, base: usize, length: usize) -> Vec<usize> {
     let mut result = vec![0; length];
     for i in (0..length).rev() {
@@ -15,6 +17,8 @@ pub fn decode(mut value: usize, base: usize, length: usize) -> Vec<usize> {
     result
 }
 
+/// Returns the factorial of n (n!).
+/// Valid for n in the range [0, 20]. For n > 20, the result will overflow usize.
 pub const fn factorial(n: usize) -> usize {
     const PRECOMPUTED: [usize; 21] = [
         1,
@@ -43,6 +47,7 @@ pub const fn factorial(n: usize) -> usize {
     PRECOMPUTED[n]
 }
 
+/// Returns the binomial coefficient "n choose k", which is the number of ways to choose k elements from a set of n elements.
 pub const fn binomial(n: usize, k: usize) -> usize {
     if k > n {
         return 0;
@@ -76,9 +81,9 @@ pub const fn binomial(n: usize, k: usize) -> usize {
     result
 }
 
-// Returns the index of the combination
-// in the lexicographically sorted list of all possible
-// combinations of n elements taken k at a time.
+/// Returns the index of the combination
+/// in the lexicographically sorted list of all possible
+/// combinations of n elements taken k at a time.
 pub const fn combination_index(n: usize, combination: &[usize]) -> usize {
     let mut index = 0;
     let mut i = 0;
@@ -95,6 +100,8 @@ pub const fn combination_index(n: usize, combination: &[usize]) -> usize {
     index
 }
 
+/// Returns the index-th combination of n elements taken k at a time
+/// in lexicographically sorted order.
 pub fn nth_combination(n: usize, k: usize, mut index: usize) -> Vec<usize> {
     if k < 1 || k > n {
         return vec![];
@@ -116,27 +123,6 @@ pub fn nth_combination(n: usize, k: usize, mut index: usize) -> Vec<usize> {
         }
     }
     combination
-}
-
-pub fn nth_combination2(n: usize, mut index: usize, out: &mut [usize]) {
-    let k = out.len();
-     if k < 1 || k > n {
-        return;
-    }
-
-    let mut size = 0;
-    for i in 0..n {
-        let count = binomial(n - 1 - i, k - size - 1);
-        if count > index {
-            out[size] = i;
-            size += 1;
-            if size == k {
-                break;
-            }
-        } else {
-            index -= count;
-        }
-    }
 }
 
 #[cfg(test)]
@@ -164,38 +150,38 @@ mod tests {
 
     #[test]
     fn test_combination_index() {
-        assert_eq!(combination_index(1, &[0_usize]), 0);
+        assert_eq!(combination_index(1, &[0]), 0);
 
-        assert_eq!(combination_index(2, &[0_usize]), 0);
-        assert_eq!(combination_index(2, &[1_usize]), 1);
-        assert_eq!(combination_index(2, &[0_usize, 1_usize]), 0);
+        assert_eq!(combination_index(2, &[0]), 0);
+        assert_eq!(combination_index(2, &[1]), 1);
+        assert_eq!(combination_index(2, &[0, 1]), 0);
 
-        assert_eq!(combination_index(5, &[0_usize, 1_usize]), 0);
-        assert_eq!(combination_index(5, &[0_usize, 2_usize]), 1);
-        assert_eq!(combination_index(5, &[0_usize, 3_usize]), 2);
-        assert_eq!(combination_index(5, &[0_usize, 4_usize]), 3);
-        assert_eq!(combination_index(5, &[1_usize, 2_usize]), 4);
-        assert_eq!(combination_index(5, &[1_usize, 3_usize]), 5);
-        assert_eq!(combination_index(5, &[1_usize, 4_usize]), 6);
-        assert_eq!(combination_index(5, &[2_usize, 3_usize]), 7);
-        assert_eq!(combination_index(5, &[2_usize, 4_usize]), 8);
-        assert_eq!(combination_index(5, &[3_usize, 4_usize]), 9);
-        assert_eq!(combination_index(5, &[0_usize, 1_usize, 2_usize]), 0);
-        assert_eq!(combination_index(5, &[0_usize, 1_usize, 3_usize]), 1);
-        assert_eq!(combination_index(5, &[0_usize, 1_usize, 4_usize]), 2);
-        assert_eq!(combination_index(5, &[0_usize, 2_usize, 3_usize]), 3);
-        assert_eq!(combination_index(5, &[0_usize, 2_usize, 4_usize]), 4);
-        assert_eq!(combination_index(5, &[0_usize, 3_usize, 4_usize]), 5);
-        assert_eq!(combination_index(5, &[1_usize, 2_usize, 3_usize]), 6);
-        assert_eq!(combination_index(5, &[1_usize, 2_usize, 4_usize]), 7);
-        assert_eq!(combination_index(5, &[1_usize, 3_usize, 4_usize]), 8);
-        assert_eq!(combination_index(5, &[2_usize, 3_usize, 4_usize]), 9);
-        assert_eq!(combination_index(5, &[0_usize, 1_usize, 2_usize, 3_usize]), 0);
-        assert_eq!(combination_index(5, &[0_usize, 1_usize, 2_usize, 4_usize]), 1);
-        assert_eq!(combination_index(5, &[0_usize, 1_usize, 3_usize, 4_usize]), 2);
-        assert_eq!(combination_index(5, &[0_usize, 2_usize, 3_usize, 4_usize]), 3);
-        assert_eq!(combination_index(5, &[1_usize, 2_usize, 3_usize, 4_usize]), 4);
-        assert_eq!(combination_index(5, &[0_usize, 1_usize, 2_usize, 3_usize, 4_usize]), 0);
+        assert_eq!(combination_index(5, &[0, 1]), 0);
+        assert_eq!(combination_index(5, &[0, 2]), 1);
+        assert_eq!(combination_index(5, &[0, 3]), 2);
+        assert_eq!(combination_index(5, &[0, 4]), 3);
+        assert_eq!(combination_index(5, &[1, 2]), 4);
+        assert_eq!(combination_index(5, &[1, 3]), 5);
+        assert_eq!(combination_index(5, &[1, 4]), 6);
+        assert_eq!(combination_index(5, &[2, 3]), 7);
+        assert_eq!(combination_index(5, &[2, 4]), 8);
+        assert_eq!(combination_index(5, &[3, 4]), 9);
+        assert_eq!(combination_index(5, &[0, 1, 2]), 0);
+        assert_eq!(combination_index(5, &[0, 1, 3]), 1);
+        assert_eq!(combination_index(5, &[0, 1, 4]), 2);
+        assert_eq!(combination_index(5, &[0, 2, 3]), 3);
+        assert_eq!(combination_index(5, &[0, 2, 4]), 4);
+        assert_eq!(combination_index(5, &[0, 3, 4]), 5);
+        assert_eq!(combination_index(5, &[1, 2, 3]), 6);
+        assert_eq!(combination_index(5, &[1, 2, 4]), 7);
+        assert_eq!(combination_index(5, &[1, 3, 4]), 8);
+        assert_eq!(combination_index(5, &[2, 3, 4]), 9);
+        assert_eq!(combination_index(5, &[0, 1, 2, 3]), 0);
+        assert_eq!(combination_index(5, &[0, 1, 2, 4]), 1);
+        assert_eq!(combination_index(5, &[0, 1, 3, 4]), 2);
+        assert_eq!(combination_index(5, &[0, 2, 3, 4]), 3);
+        assert_eq!(combination_index(5, &[1, 2, 3, 4]), 4);
+        assert_eq!(combination_index(5, &[0, 1, 2, 3, 4]), 0);
     }
 
     #[test]
@@ -204,8 +190,8 @@ mod tests {
             for k in 1..=n {
                 let size = binomial(n, k);
                 for index in 0..size {
-                    let comb = nth_combination(n, k, index);
-                    assert_eq!(combination_index(n, &comb), index);
+                    let combination = nth_combination(n, k, index);
+                    assert_eq!(combination_index(n, &combination), index);
                 }
             }
         }

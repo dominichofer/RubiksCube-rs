@@ -44,7 +44,7 @@ impl DistanceTable {
                 }
             });
 
-            if !changed.load(Ordering::Relaxed) {
+            if changed.load(Ordering::Relaxed) == false {
                 break;
             }
         }
@@ -66,10 +66,6 @@ impl DistanceTable {
 
     pub fn distance(&self, index: usize) -> u8 {
         self.table[index]
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = (usize, u8)> + '_ {
-        self.table.iter().enumerate().map(|(i, &d)| (i, d))
     }
 }
 

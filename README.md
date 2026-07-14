@@ -11,6 +11,7 @@ A Rubik’s Cube is a 3×3×3 grid of smaller cubes, called cubies, arranged to 
 - 6 fixed center cubies
 
 The core cubie is not modeled, as it does not affect the state.
+The center cubies are modeled as fixed to reduce the degrees of freedom by taking advantage of the symmetries of the cube.
 
 A cube state is defined entirely by the positions and orientations of the corner and edge cubies.
 
@@ -204,7 +205,6 @@ Coset table loaded in: 6.0979665s
 nth_permutation (len 4)       39.1 ns
 nth_permutation (len 8)       71.3 ns
 nth_combination (12, 4)       54.1 ns
-nth_combination2 (12, 4)      30.0 ns
 permutation_index (len 4)      5.1 ns
 permutation_index (len 8)      9.8 ns
 encode (base 2)               13.6 ns

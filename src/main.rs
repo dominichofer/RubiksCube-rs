@@ -69,33 +69,7 @@ fn set_priority() -> std::io::Result<()> {
     Ok(())
 }
 
-/// Parse a string of space-separated twist names into a vector of Twist values.
-/// Anything onwards from '#' is ignored.
-fn parse_line(input: &str) -> Vec<Twist> {
-    input
-        .split('#') // Split off comments
-        .next() // Take the part before the comment, or the whole line if there is no comment
-        .unwrap_or("") // Handle the case where the line is empty or only contains a comment
-        .split_whitespace()
-        .map(|s| s.parse().unwrap()) // Parse each twist name into a Twist value, panicking if any are invalid
-        .collect()
-}
-
-fn read_twist_file(path: &str) -> Vec<Vec<Twist>> {
-    let content = std::fs::read_to_string(path).unwrap();
-    content.lines().map(|line| parse_line(line)).collect()
-}
-
 fn main() {
-    if let Err(err) = pin_to_core() {
-        eprintln!("Warning: could not pin process to one core: {err}");
-    }
-    if let Err(err) = set_priority() {
-        eprintln!("Warning: could not raise process priority: {err}");
-    }
-
-    init_twister();
-
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
         eprintln!("Usage: {} <path_to_pos_file>", args[0]);
@@ -103,18 +77,24 @@ fn main() {
     }
     let pos_file_path = &args[1];
 
-    let stored_tables = StoredTables::load("config.txt");
-
-    let mut solver = TwoPhaseSolver::new(
-        &stored_tables.coset,
-        &stored_tables.subset,
-        &stored_tables.corners,
-    );
+    init_twister();
+    init_subset_twister();
+    init_subset_index();
+    pin_to_core().unwrap_or_else(|err| eprintln!("Warning: could not pin process to one core: {err}"));
+    set_priority().unwrap_or_else(|err| eprintln!("Warning: could not raise process priority: {err}"));
 
     let twist_sequences = read_twist_file(pos_file_path);
     assert!(twist_sequences.len() > 0, "No twist sequences found in the file!");
     let positions = Vec::from_iter(twist_sequences.iter().map(|twists| Cube::solved().twisted_by(twists)));
-    
+
+    let (corners_table, subset_table, coset_table) = get_tables();
+
+    let mut solver = TwoPhaseSolver::new(
+        &coset_table,
+        &subset_table,
+        &corners_table,
+    );
+        
     let mut total_time = std::time::Duration::ZERO;
     for (i, cube) in positions.iter().enumerate() {
         let start = std::time::Instant::now();
