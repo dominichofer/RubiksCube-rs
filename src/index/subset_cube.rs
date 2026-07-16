@@ -48,8 +48,8 @@ impl Twistable for SubsetCube {
     fn twisted(&self, twist: Twist) -> Self {
         Self {
             c_prm: TWISTER.twisted_c_prm(self.c_prm, twist),
-            xy_prm: SUBSET_TWISTER.twisted_subset_e_xy_prm(self.xy_prm, twist),
-            z_prm: SUBSET_TWISTER.twisted_subset_e_z_prm(self.z_prm, twist),
+            xy_prm: SUBSET_TWISTER.twisted_xy_prm(self.xy_prm, twist),
+            z_prm: SUBSET_TWISTER.twisted_z_prm(self.z_prm, twist),
         }
     }
     fn twisted_by(&self, twists: &[Twist]) -> Self {

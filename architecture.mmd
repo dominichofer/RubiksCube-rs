@@ -1,53 +1,99 @@
 classDiagram
+    namespace Math {
+        class Permutation {
+            - map: [usize; LEN]
+            + inverse()
+            + index() usize
+            + from_indices(indices: [usize; LEN])
+        }
+        class ModVec {
+            - values: [usize; LEN]
+            + inverse()
+        }
+    }
+    
     namespace Cubies {
         class Corners {
-            - prm: [usize; 8]
-            - ori: [usize; 8]
-            + twisted(twist) [28 ns]
-            + rotated_colours(rot) [56 ns]
-            + from_indices(prm, ori) [78 ns]
-            + prm_index() [8 ns]
-            + ori_index() [6 ns]
+            - prm: Permutation<8>
+            - ori: ModVec<8, 3>
+            + twist(Twist)
+            + inverse()
+            + conjugated_by(Axis)
+            + from_indices(prm, ori)
+            + prm_index()
+            + ori_index()
         }
         class Edges {
-            - prm: [usize; 12]
-            - ori: [usize; 12]
-            + twisted(twist) [32 ns]
-            + rotated_colours(rot) [82 ns]
-            + from_indices(slice_prm, non_slice_prm, slice_loc_index, ori) [216 ns]
-            + slice_prm_index() [21 ns]
-            + non_slice_prm_index() [24 ns]
-            + slice_loc_index() [26 ns]
-            + ori_index() [4 ns]
+            - prm: Permutation<12>
+            - ori: ModVec<12, 2>
+            + twist(Twist)
+            + inverse()
+            + conjugated_by(Axis)
+            + from_indices(x: LocPrm, y: LocPrm, z: LocPrm, ori)
+            + from_subset_indices(xy_prm, z_prm)
+            + loc_prm(Axis)
+            + xy_prm_index()
+            + ori_index()
         }
     }
-    namespace Indices {
-        class SubsetIndex {
-            - c_prm
-            - e_slice_prm
-            - e_non_slice_prm
-            + from_index(idx)
-            + index()
-            + is_solved()
-        }
-    }
+    Corners ..> Permutation
+    Corners ..> ModVec
+    Edges ..> Permutation
+    Edges ..> ModVec
 
-    class Twister {
-        + twisted_c_ori(c_ori, twist) usize
-        + twisted_c_prm(c_prm, twist) usize
-        + twisted_e_slice_prm(e_slice_prm, e_slice_loc, twist) usize
-        + twisted_e_non_slice_prm(e_non_slice_prm, e_slice_loc, twist) usize
-        + twisted_e_slice_loc(e_slice_loc, twist) usize
-        + twisted_e_ori(e_ori, twist) usize
+    namespace LookupTables {
+        class Twister {
+            + twisted_c_ori(c_ori, Twist) usize
+            + twisted_c_prm(c_prm, Twist) usize
+            + twisted_e_ori(e_ori, Twist) usize
+            + twisted_e_loc_prm(e_loc_prm, Twist) LocPrm
+        }
+        class SubsetIndex {
+            + e_xy_prm(x_loc_prm: LocPrm, y_loc_prm: LocPrm) usize
+        }
+        class SubsetTwister {
+            + twisted_xy_prm(xy_prm, Twist) usize
+            + twisted_z_prm(z_prm, Twist) usize
+        }
     }
     Twister ..> Corners
     Twister ..> Edges
+    SubsetTwister ..> Edges
+    SubsetIndex ..> Edges
+
+    namespace Index {
+        class Cube {
+            - c_ori
+            - c_prm
+            - e_ori
+            - x_loc_prm
+            - y_loc_prm
+            - z_loc_prm
+            + corner_index()
+            + from_corner_index(index)
+            + subset_cube() SubsetCube
+            + coset_index()
+            + from_coset_index(index)
+            + inverse()
+            + conjugated_by(Axis)
+        }
+        class SubsetCube {
+            - c_prm
+            - xy_prm
+            - z_prm
+            + index()
+            + from_index(index)
+        }
+    }
+    Cube ..> Twister
+    Cube ..> SubsetIndex
+    SubsetCube ..> SubsetTwister
 
     class DistanceTable {
         + distance(idx)
     }
-    DistanceTable ..> SubsetIndex
-    DistanceTable ..> Twister
+    DistanceTable ..> Cube
+    DistanceTable ..> SubsetCube
 
     class DirectionTable {
         + distance(idx)
@@ -57,7 +103,7 @@ classDiagram
     DirectionTable ..> DistanceTable
 
     class TwoPhaseSolver {
-        + solve(cube) Twists
+        + solve(Cube) Twists
     }
     TwoPhaseSolver ..> DistanceTable
     TwoPhaseSolver ..> DirectionTable

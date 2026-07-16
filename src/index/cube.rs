@@ -79,10 +79,10 @@ impl Cube {
         }
     }
 
-    pub fn conjugated_by(&self, rot: Axis) -> Self {
-        let corners = Corners::from_indices(self.c_prm, self.c_ori).conjugated_by(rot);
+    pub fn inverse(&self) -> Self {
+        let corners = Corners::from_indices(self.c_prm, self.c_ori).inverse();
         let mut edges = Edges::from_indices(self.x_loc_prm, self.y_loc_prm, self.z_loc_prm, self.e_ori);
-        edges = edges.conjugated_by(rot);
+        edges = edges.inverse();
         Self {
             c_ori: corners.ori_index(),
             c_prm: corners.prm_index(),
@@ -93,10 +93,10 @@ impl Cube {
         }
     }
 
-    pub fn inverse(&self) -> Self {
-        let corners = Corners::from_indices(self.c_prm, self.c_ori).inverse();
+    pub fn conjugated_by(&self, rot: Axis) -> Self {
+        let corners = Corners::from_indices(self.c_prm, self.c_ori).conjugated_by(rot);
         let mut edges = Edges::from_indices(self.x_loc_prm, self.y_loc_prm, self.z_loc_prm, self.e_ori);
-        edges = edges.inverse();
+        edges = edges.conjugated_by(rot);
         Self {
             c_ori: corners.ori_index(),
             c_prm: corners.prm_index(),

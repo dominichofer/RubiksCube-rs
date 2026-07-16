@@ -37,10 +37,10 @@ impl SubsetTwister {
         Self { subset_e_xy_prm, subset_e_z_prm }
     }
 
-    pub fn twisted_subset_e_xy_prm(&self, e_xy_prm: usize, twist: Twist) -> usize {
+    pub fn twisted_xy_prm(&self, e_xy_prm: usize, twist: Twist) -> usize {
         self.subset_e_xy_prm[e_xy_prm * COUNT + twist as usize] as usize
     }
-    pub fn twisted_subset_e_z_prm(&self, e_z_prm: usize, twist: Twist) -> usize {
+    pub fn twisted_z_prm(&self, e_z_prm: usize, twist: Twist) -> usize {
         self.subset_e_z_prm[e_z_prm * COUNT + twist as usize] as usize
     }
 }
