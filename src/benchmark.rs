@@ -215,6 +215,9 @@ fn main() {
     let start = Instant::now();
     init_subset_index();
     println!("SubsetIndex initialized in {:.3} seconds", start.elapsed().as_secs_f64());
+    
+    pin_process_to_core().unwrap_or_else(|err| eprintln!("Warning: could not pin process to one core: {err}"));
+    set_process_priority().unwrap_or_else(|err| eprintln!("Warning: could not raise process priority: {err}"));
 
     let mut benchmarker = Benchmarker::new(10_000_000);
     benchmarker.bench_nth_permutation();
