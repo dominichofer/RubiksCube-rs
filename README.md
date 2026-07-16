@@ -158,11 +158,8 @@ cargo run --release --bin rubikscube test_pos_1000k.txt
 
 Here's an example output of `test_pos_100k.txt` on an AMD Ryzen 9 9950X3D 16-Core Processor with HT and DDR5 RAM with 4x 32-bit channels at 3600 MT/s.
 ```
-Corners table loaded in: 18.2006ms
-Subset table loaded in: 3.4053676s
-Coset table loaded in: 5.7394215s
-Total time taken: 31.6495559s
-Average time per solve: 316.495µs
+Total time taken: 30.7557862s
+Average time per solve: 307.557µs
 Phase 1: 443’308’238
 Phase 2: 48’126’967
 Phase 1 dst: 366’404’317
@@ -175,11 +172,8 @@ Slack cuts: 4’252’291
 
 Here's an example output of `test_pos_1000k.txt`
 ```
-orners table loaded in: 18.2284ms
-Subset table loaded in: 3.4627392s
-Coset table loaded in: 5.8389217s
-Total time taken: 323.1418839s
-Average time per solve: 323.141µs
+Total time taken: 306.6161887s
+Average time per solve: 306.616µs
 Phase 1: 4’413’210’006
 Phase 2: 481’014’779
 Phase 1 dst: 3’647’064’504
@@ -199,45 +193,45 @@ cargo run --release --bin benchmark
 
 Here's an example output of an AMD Ryzen 9 9950X3D 16-Core Processor with DDR5 RAM at 3600 MT/s
 ```
-Corners table loaded in: 21.382ms
-Subset table loaded in: 3.439301s
-Coset table loaded in: 6.0979665s
-nth_permutation (len 4)       39.1 ns
-nth_permutation (len 8)       71.3 ns
-nth_combination (12, 4)       54.1 ns
+Twister initialized in 0.003 seconds
+SubsetTwister initialized in 0.001 seconds
+SubsetIndex initialized in 0.660 seconds
+nth_permutation (len 4)       39.9 ns
+nth_permutation (len 8)       69.0 ns
+nth_combination (12, 4)       51.4 ns
 permutation_index (len 4)      5.1 ns
-permutation_index (len 8)      9.8 ns
-encode (base 2)               13.6 ns
-encode (base 3)               12.2 ns
-decode (base 2)               41.5 ns
-decode (base 3)               34.1 ns
-Corners twist                 26.1 ns
-Corners conjugated_by         61.6 ns
-Corners from_indices         126.1 ns
-Corners prm_index              7.4 ns
-Corners ori_index              5.4 ns
-Edges twist                   26.8 ns
-Edges conjugated_by           69.9 ns
-Edges from_indices           337.1 ns
-Edges from_subset_indices    118.5 ns
-Edges x_loc_prm_index         31.5 ns
+permutation_index (len 8)      9.5 ns
+encode (base 2)               13.4 ns
+encode (base 3)               11.4 ns
+decode (base 2)               42.0 ns
+decode (base 3)               34.7 ns
+Corners twist                 27.6 ns
+Corners conjugated_by         65.7 ns
+Corners from_indices         108.5 ns
+Corners prm_index              7.3 ns
+Corners ori_index              5.3 ns
+Edges twist                   28.0 ns
+Edges conjugated_by           75.2 ns
+Edges from_indices           368.2 ns
+Edges from_subset_indices     62.9 ns
+Edges x_loc_prm_index         30.8 ns
 Edges y_loc_prm_index         31.6 ns
-Edges z_loc_prm_index         31.7 ns
-Edges xy_prm_index            26.2 ns
-Edges ori_index                4.4 ns
-SubsetCube twisted            13.4 ns
-SubsetCube from_index         18.0 ns
-SubsetCube index               0.8 ns
-Cube twisted                   8.2 ns
-Cube from_corner_index        34.0 ns
-Cube from_coset_index         33.2 ns
+Edges z_loc_prm_index         31.5 ns
+Edges xy_prm_index            26.9 ns
+Edges ori_index                4.2 ns
+SubsetCube twisted            14.4 ns
+SubsetCube from_index         20.0 ns
+SubsetCube index               0.6 ns
+Cube twisted                   8.8 ns
+Cube from_corner_index        28.7 ns
+Cube from_coset_index         29.0 ns
 Cube corner_index              0.7 ns
-Cube subset_cube              16.2 ns
+Cube subset_cube              10.2 ns
 Cube coset_index               0.8 ns
-Corners distance               9.6 ns
-Coset distance                79.0 ns
-Subset distance               29.1 ns
-TwoPhaseSolver phase_2      3234.3 ns
+Corners distance               4.4 ns
+Coset distance                13.2 ns
+Subset distance               53.2 ns
+TwoPhaseSolver phase_2      2216.2 ns
 ```
 
 ### Running the GUI
