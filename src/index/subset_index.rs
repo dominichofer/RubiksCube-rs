@@ -1,6 +1,5 @@
 use crate::math::*;
 use crate::edges::*;
-use crate::permutation::*;
 use rayon::prelude::*;
 
 // Size: 141’134’400 bytes (~134.6 MiB)

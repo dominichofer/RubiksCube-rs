@@ -82,6 +82,17 @@ impl<const LEN: usize> Permutation<LEN> {
         Self { map }
     }
 
+    pub fn rotation<const ROT_LEN: usize>(map: [usize; ROT_LEN]) -> Self {
+        let mut full_map = [0; LEN];
+        for i in 0..LEN {
+            full_map[i] = i;
+        }
+        for i in 0..ROT_LEN {
+            full_map[map[i]] = map[(i - 1 + ROT_LEN) % ROT_LEN];
+        }
+        Self { map: full_map }
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = &usize> {
         self.map.iter()
     }
@@ -101,7 +112,7 @@ impl<const LEN: usize> Permutation<LEN> {
     }
 }
 
-/// Implement Indexing for Permutation
+/// Permutation[index]
 impl<const LEN: usize> Index<usize> for Permutation<LEN> {
     type Output = usize;
 
@@ -110,7 +121,7 @@ impl<const LEN: usize> Index<usize> for Permutation<LEN> {
     }
 }
 
-/// Implement Permutation * Permutation
+/// Permutation * Permutation
 impl<const LEN: usize> Mul for Permutation<LEN> {
     type Output = Self;
 
@@ -119,7 +130,7 @@ impl<const LEN: usize> Mul for Permutation<LEN> {
     }
 }
 
-/// Implement Permutation * [T; N]
+/// Permutation * [T; N]
 impl<T: Copy, const N: usize> Mul<[T; N]> for Permutation<N> {
     type Output = [T; N];
 
@@ -152,6 +163,13 @@ mod tests {
         let prm = Permutation::new([1, 0, 2]); // Arbitrary
         assert_eq!(Permutation::identity() * prm, prm);
         assert_eq!(prm * Permutation::identity(), prm);
+    }
+
+    #[test]
+    fn test_rotation() {
+        let prm = Permutation::<5>::rotation([1, 2, 3]);
+        let expected = Permutation::new([0, 3, 1, 2, 4]);
+        assert_eq!(prm, expected);
     }
 
     #[test]

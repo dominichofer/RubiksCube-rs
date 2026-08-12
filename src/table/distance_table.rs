@@ -1,4 +1,4 @@
-use crate::cubies::*;
+use crate::twist::*;
 use crate::index::*;
 use rayon::prelude::*;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};

@@ -59,11 +59,17 @@ Yes.
 All other colour rotations are correlated with one of the former three.
 See "cargo run --release --bin correlation"
 
-## Q4: cube20src can do:
+## Q4:
+### cube20src can do:
 With "wsl ./twophase -s 20 -q < test_pos_....txt"
 Solved 10'000 sequences in 7.21284 seconds with 7'308'506 probes.
 Solved 100'000 sequences in 41.0652 seconds with 80'213'112 probes.
 Solved 1'000'000 sequences in 371.121 seconds with 790'457'803 probes.
+### rob-twophase can do:
+With "wsl echo "bench" | ./twophase -t 1 -l 20 -m 1000"
+Solved 10'000 sequences in Avg. Time: 0.239 ms
+Solved 100'000 sequences in Avg. Time: 0.24486 ms
+Solved 1'000'000 sequences in Avg. Time: 0.22373 ms
 
 # Open research questions
 

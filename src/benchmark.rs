@@ -61,28 +61,40 @@ impl Benchmarker {
     }
     
     fn bench<T, R, F: FnMut(&T) -> R>(&self, name: &str, items: &[T], mut function: F) {
+        let size = items.len();
         let start = Instant::now();
-        for item in items {
+        for item in items.iter().take(size / 3) {
             black_box(function(item));
         }
-        let ns = start.elapsed().as_nanos() as f64 / items.len() as f64;
-        println!("{:<25} {:>8.1} ns", name, ns);
+        let ns_1 = start.elapsed().as_nanos() as f64 / items.len() as f64;
+
+        let start = Instant::now();
+        for item in items.iter().skip(size / 3).take(size / 3) {
+            black_box(function(item));
+        }
+        let ns_2 = start.elapsed().as_nanos() as f64 / items.len() as f64;
+
+        let start = Instant::now();
+        for item in items.iter().skip(2 * size / 3).take(size / 3) {
+            black_box(function(item));
+        }
+        let ns_3 = start.elapsed().as_nanos() as f64 / items.len() as f64;
+
+        let sd = ((ns_1 - ns_2).powi(2) + (ns_1 - ns_3).powi(2) + (ns_2 - ns_3).powi(2)) / 3.0;
+        println!("{:<25} {:>8.1} ns {:>8.1} ns {:>8.1} ns    sd:{:>2.1} ns", name, ns_1, ns_2, ns_3, sd.sqrt());
     }
     
-    fn bench_nth_permutation(&mut self) {
+    fn bench_permutation(&mut self) {
         let rnd_factorial_4 = self.test_vec_of_random_range(0..factorial(4));
         let rnd_factorial_8 = self.test_vec_of_random_range(0..factorial(8));
-        self.bench("nth_permutation (len 4)", &rnd_factorial_4, |&i| Permutation::<4>::from_index(i));
-        self.bench("nth_permutation (len 8)", &rnd_factorial_8, |&i| Permutation::<8>::from_index(i));
-    }
-    
-    fn bench_permutation_index(&mut self) {
-        let rnd_factorial_4 = self.test_vec_of_random_range(0..factorial(4));
-        let rnd_factorial_8 = self.test_vec_of_random_range(0..factorial(8));
+        self.bench("Permutation::<4>::from_index", &rnd_factorial_4, |&i| Permutation::<4>::from_index(i));
+        self.bench("Permutation::<8>::from_index", &rnd_factorial_8, |&i| Permutation::<8>::from_index(i));
         let rnd_permutation_4: Vec<Permutation<4>> = rnd_factorial_4.iter().map(|&i| Permutation::<4>::from_index(i)).collect();
         let rnd_permutation_8: Vec<Permutation<8>> = rnd_factorial_8.iter().map(|&i| Permutation::<8>::from_index(i)).collect();
-        self.bench("permutation_index (len 4)", &rnd_permutation_4, |p| { p.index() });
-        self.bench("permutation_index (len 8)", &rnd_permutation_8, |p| { p.index() });
+        self.bench("Permutation::<4>::index", &rnd_permutation_4, |p| { p.index() });
+        self.bench("Permutation::<8>::index", &rnd_permutation_8, |p| { p.index() });
+        self.bench("is_even_permutation (4)", &rnd_factorial_4, |&i| is_even_permutation(i));
+        self.bench("is_even_permutation (8)", &rnd_factorial_8, |&i| is_even_permutation(i));
     }
     
     fn bench_nth_combination(&mut self) {
@@ -188,8 +200,8 @@ impl Benchmarker {
     
     fn bench_distances(&mut self) {
         self.bench("Corners distance", &self.rnd_cube, |c| { self.corners_table.distance(c.corner_index()) });
-        self.bench("Coset distance", &self.rnd_cube, |c| { self.coset_table.distance(c.coset_index()) });
         self.bench("Subset distance", &self.rnd_subset_cube, |c| { self.subset_table.distance(c.index()) });
+        self.bench("Coset distance", &self.rnd_cube, |c| { self.coset_table.distance(c.coset_index()) });
     }
 
     fn bench_phase_2(&mut self) {
@@ -220,9 +232,8 @@ fn main() {
     set_process_priority().unwrap_or_else(|err| eprintln!("Warning: could not raise process priority: {err}"));
 
     let mut benchmarker = Benchmarker::new(10_000_000);
-    benchmarker.bench_nth_permutation();
     benchmarker.bench_nth_combination();
-    benchmarker.bench_permutation_index();
+    benchmarker.bench_permutation();
     benchmarker.bench_encode();
     benchmarker.bench_decode();
     benchmarker.bench_corners();

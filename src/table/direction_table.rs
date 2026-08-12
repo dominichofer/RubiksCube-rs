@@ -1,4 +1,4 @@
-use crate::cubies::*;
+use crate::twist::*;
 use crate::index::*;
 use crate::table::DistanceTable;
 use rayon::prelude::*;

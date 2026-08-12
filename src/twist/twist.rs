@@ -1,3 +1,5 @@
+use super::axis::*;
+
 /// Face twist, where the number indicates how many quarter turns to perform.
 ///      +---------+
 ///     /    ←B   /|
@@ -15,11 +17,6 @@ pub enum Twist {
     D1, D2, D3, // Down face
     F1, F2, F3, // Front face
     B1, B2, B3, // Back face
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Axis {
-    X, Y, Z,
 }
 
 pub const ALL_TWISTS: [Twist; 18] = [

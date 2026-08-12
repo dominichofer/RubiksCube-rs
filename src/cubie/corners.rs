@@ -1,7 +1,5 @@
-use super::math::*;
-use super::permutation::*;
-use super::modvec::*;
-use super::twist::*;
+use crate::math::*;
+use crate::twist::*;
 use std::ops::Mul;
 
 /// Represents the corner pieces of a Rubik's cube.
@@ -134,7 +132,6 @@ impl Mul<Twist> for Corners {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::twist_generator::*;
 
     #[test]
     fn test_indexing() {

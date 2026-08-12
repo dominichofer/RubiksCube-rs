@@ -21,6 +21,15 @@ impl<const LEN: usize, const DIVISOR: usize> ModVec<LEN, DIVISOR> {
     }
 }
 
+/// ModVec[index]
+impl<const LEN: usize, const DIVISOR: usize> Index<usize> for ModVec<LEN, DIVISOR> {
+    type Output = usize;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.values[index]
+    }
+}
+
 /// ModVec[..index]
 impl<const LEN: usize, const DIVISOR: usize> Index<RangeTo<usize>> for ModVec<LEN, DIVISOR> {
     type Output = [usize];

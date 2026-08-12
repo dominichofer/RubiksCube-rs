@@ -89,7 +89,6 @@ pub trait Twistable: Sized + Copy {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::twist_generator::*;
 
     // Tests 'twisted_c_prm' and 'twisted_c_ori'
     #[test]

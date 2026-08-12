@@ -1,7 +1,7 @@
-use super::Twistable;
-use crate::TWISTER;
-use crate::SUBSET_TWISTER;
-use crate::cubies::*;
+use crate::math::*;
+use crate::twist::*;
+use super::{Twistable, TWISTER, SUBSET_TWISTER};
+use crate::cubie::*;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SubsetCube {

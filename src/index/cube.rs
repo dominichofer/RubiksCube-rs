@@ -1,5 +1,8 @@
-use super::{TWISTER, SUBSET_INDEX, Twistable, SubsetCube};
-use crate::{LocPrm, cubies::*};
+use crate::math::*;
+use crate::twist::*;
+use crate::cubie::*;
+use super::subset_cube::*;
+use super::{Twistable, TWISTER, SUBSET_INDEX};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cube {

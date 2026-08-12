@@ -131,26 +131,28 @@ impl<'a> TwoPhaseSolver<'a> {
             return self.search_phase_2(cube.subset_cube(), p2_depth);
         }
 
-        let mut twists;
-        if let Some(&previous_twist) = self.twists.last() {
-            twists = unique_twists_after(previous_twist);
-        } else {
-            twists = TwistSet::FULL;
-        }
-        if p1_depth == 1 {
-            // H0 twists don't lead to a subset cube, so we omit them.
-            twists.remove(TwistSet::H0);
-        }
-
         let coset_index = cube.coset_index();
         self.fkt_phase_1_dst += 1;
         let subset_distance = self.phase_1.distance(coset_index);
         let slack = p1_depth - subset_distance;
 
+        let mut twists = match self.twists.last() {
+            Some(twist) => unique_twists_after(*twist),
+            None => TwistSet::FULL,
+        };
+
         if subset_distance == 0 && p1_depth < 5 {
             // It takes at least 5 moves to reach a subset cube from an other subset cube, so we can prune this branch.
             self.slack_cuts += 1;
             return false;
+        }
+
+        // Saves ~1% of phase 1 searches.
+        if subset_distance == 1 && slack > 0 && slack < 5 {
+            // It takes at least 5 moves to reach a subset cube from an other subset cube.
+            // Taking the shortest path will lead to this situation.
+            // So we need to take a detour.
+            twists.remove(self.phase_1.less_distance(coset_index));
         }
 
         if slack == 0 {

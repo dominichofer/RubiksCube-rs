@@ -1,7 +1,6 @@
-use crate::cubies::*;
+use crate::twist::*;
 use crate::index::*;
 use crate::table::*;
-use crate::table::config_file::read_config_file;
 
 pub fn get_tables() -> (DistanceTable, DistanceTable, DirectionsTable) {
     let config = read_config_file("config.txt");

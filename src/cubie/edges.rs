@@ -1,7 +1,5 @@
-use super::math::*;
-use super::permutation::*;
-use super::modvec::*;
-use super::twist::*;
+use crate::math::*;
+use crate::twist::*;
 use std::ops::Mul;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -186,6 +184,10 @@ impl Edges {
     pub fn ori_index(&self) -> usize {
         encode(&self.ori[..11], 2)
     }
+
+    pub fn face_color_of_corner(&self, index: usize, axis: Axis) -> Color {
+        Color::White
+    }
 }
 
 /// Edges * Edges
@@ -221,7 +223,6 @@ impl Mul<Twist> for Edges {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::twist_generator::*;
 
     #[test]
     fn test_indexing() {
